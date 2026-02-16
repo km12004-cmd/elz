@@ -1,0 +1,263 @@
+.header {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  width: 100%;
+  min-height: 200px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.menuButton {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.16);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.menuButton span {
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: white;
+  transform-origin: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.menuButton:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.menuButtonActive span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menuButtonActive span:nth-child(2) {
+  opacity: 0;
+}
+
+.menuButtonActive span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+  max-width: 480px;
+}
+
+.user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.authButtons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.authButton {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s;
+}
+
+.authButton:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.authButton:active {
+  transform: translateY(1px);
+}
+
+.authButtonPrimary {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.95);
+  color: #4c1d95;
+}
+
+.authButtonPrimary:hover {
+  background: white;
+}
+
+.userLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+  transition: background 0.15s;
+}
+
+.userLink:hover {
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.nickname {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.avatarFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.welcomeContent {
+  margin-top: auto;
+}
+
+.welcomeContent h1 {
+  font-size: 48px;
+  font-weight: 600;
+  margin: 0;
+  margin-bottom: -8px;
+  letter-spacing: -0.02em;
+}
+
+.welcomeContent p {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+@media (max-width: 1200px) {
+  .header {
+    padding: 20px 24px;
+  }
+
+  .welcomeContent h1 {
+    font-size: 42px;
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    min-height: 176px;
+    padding: 16px;
+  }
+
+  .topBar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px 12px;
+  }
+
+  .menuButton {
+    display: flex;
+  }
+
+  .search {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+
+  .user {
+    margin-left: 0;
+    justify-self: end;
+  }
+
+  .authButtons {
+    gap: 8px;
+  }
+
+  .authButton {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .welcomeContent h1 {
+    font-size: 38px;
+    margin-bottom: -4px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    min-height: 160px;
+    padding: 14px 12px;
+  }
+
+  .topBar {
+    gap: 10px;
+  }
+
+  .authButton {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .userLink {
+    padding: 5px 8px 5px 10px;
+    gap: 8px;
+  }
+
+  .nickname {
+    display: none;
+  }
+
+  .welcomeContent h1 {
+    font-size: 32px;
+  }
+
+  .welcomeContent p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .topBar {
+    grid-template-columns: auto 1fr;
+  }
+
+  .user {
+    grid-column: 2;
+  }
+
+  .authButtons {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+}
