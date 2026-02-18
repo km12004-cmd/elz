@@ -3,6 +3,7 @@ export function extractErrorMessage(error) {
   const detail = data?.detail;
 
   if (typeof data === 'string' && data.trim()) return data;
+  if (typeof data?.error === 'string' && data.error.trim()) return data.error;
   if (typeof detail === 'string' && detail.trim()) return detail;
 
   if (Array.isArray(detail)) {

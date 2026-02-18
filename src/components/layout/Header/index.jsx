@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styles from './header.module.css';
 import { Link } from 'react-router-dom';
-import { SearchInput } from '../../ui/SearchSong';
 import { useAuth } from '../../../auth/useAuth';
 import AuthModal from '../../auth/AuthModal';
 import SignInForm from '../../auth/SignInForm';
@@ -28,10 +27,6 @@ function Header({ isSidebarOpen, onMenuClick }) {
           <span />
           <span />
         </button>
-
-        <div className={styles.search}>
-          <SearchInput />
-        </div>
 
         <div className={styles.user}>
           {!isAuthenticated ? (

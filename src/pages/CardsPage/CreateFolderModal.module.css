@@ -1,0 +1,116 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 70;
+  padding: 16px;
+}
+
+.modal {
+  width: min(460px, 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  background:
+    radial-gradient(circle at 90% -10%, rgba(167, 139, 250, 0.16), transparent 44%),
+    var(--color-bg-content);
+  padding: 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+}
+
+.input {
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.58);
+  color: var(--color-text-main);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #a78bfa;
+}
+
+.counter {
+  margin-top: -2px;
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.errorText {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.36);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.actions {
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+}
+
+.primaryButton,
+.ghostButton {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.08s, opacity 0.15s, background 0.15s;
+}
+
+.primaryButton {
+  background: linear-gradient(120deg, #a78bfa 0%, #8b5cf6 100%);
+  color: #fff;
+}
+
+.ghostButton {
+  background: rgba(255, 255, 255, 0.09);
+  color: #f5f3ff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.primaryButton:disabled,
+.ghostButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.primaryButton:active,
+.ghostButton:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 520px) {
+  .actions {
+    flex-direction: column;
+  }
+}

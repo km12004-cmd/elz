@@ -5,10 +5,10 @@ import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import PlaceholderPage from './pages/PlaceholderPage';
 import ProfilePage from './pages/ProfilePage';
+import PlaylistPage, { PlaylistDetailPage } from './pages/PlaylistPage';
+import CardsPage, { FolderPage } from './pages/CardsPage';
 
 const placeholderRoutes = [
-  { path: '/playlist', title: 'Playlist' },
-  { path: '/cards', title: 'Cards' },
   { path: '/grammar', title: 'Grammar' },
   { path: '/achievements', title: 'Achievements' },
 ];
@@ -58,6 +58,11 @@ function App() {
             {placeholderRoutes.map(({ path, title }) => (
               <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
             ))}
+            <Route path="/cards" element={<CardsPage />} />
+            <Route path="/cards/:folderId" element={<FolderPage />} />
+            <Route path="/playlists" element={<PlaylistPage />} />
+            <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
+            <Route path="/playlist" element={<PlaylistPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -55,12 +55,6 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-.search {
-  flex: 1;
-  min-width: 0;
-  max-width: 480px;
-}
-
 .user {
   margin-left: auto;
   display: flex;
@@ -179,23 +173,13 @@
   }
 
   .topBar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .menuButton {
     display: flex;
-  }
-
-  .search {
-    grid-column: 1 / -1;
-    max-width: none;
-  }
-
-  .user {
-    margin-left: 0;
-    justify-self: end;
   }
 
   .authButtons {
@@ -247,14 +231,6 @@
 }
 
 @media (max-width: 430px) {
-  .topBar {
-    grid-template-columns: auto 1fr;
-  }
-
-  .user {
-    grid-column: 2;
-  }
-
   .authButtons {
     flex-wrap: wrap;
     justify-content: flex-end;

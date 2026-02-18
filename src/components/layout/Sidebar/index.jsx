@@ -6,9 +6,8 @@ import { NavLink } from 'react-router-dom';
 
 const sections = [
   { name: 'HOME', to: '/' },
-  { name: 'PLAYLIST', to: '/playlist' },
+  { name: 'PLAYLISTS', to: '/playlists' },
   { name: 'CARDS', to: '/cards' },
-  { name: 'GRAMMAR', to: '/grammar' },
   { name: 'ACHIEVEMENTS', to: '/achievements' },
 ];
 
@@ -46,7 +45,7 @@ function Sidebar({ isOpen, onClose }) {
         </li>
         <li>
           <a href="https://www.instagram.com/elzaman.kg/">
-            <img className={styles.socialMediaIcon} src={instagram} alt="inst" />
+            <img className={styles.socialMediaIcon} src={instagram} alt="instagram" />
           </a>
         </li>
       </ul>
