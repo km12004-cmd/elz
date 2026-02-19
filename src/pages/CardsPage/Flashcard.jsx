@@ -14,6 +14,8 @@ function Flashcard({ card, onDelete, isDeleting }) {
 
   return (
     <article className={styles.card}>
+      <p className={styles.hint}>Tap card to flip</p>
+
       <div
         className={styles.flipArea}
         role="button"
@@ -43,6 +45,7 @@ function Flashcard({ card, onDelete, isDeleting }) {
         className={styles.deleteButton}
         onClick={onDelete}
         disabled={isDeleting}
+        title="Delete this card"
       >
         {isDeleting ? 'Deleting...' : 'Delete'}
       </button>

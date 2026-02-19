@@ -1,17 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './header.module.css';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../../auth/useAuth';
 import AuthModal from '../../auth/AuthModal';
 import SignInForm from '../../auth/SignInForm';
 import SignUpForm from '../../auth/SignUpForm';
 
 function Header({ isSidebarOpen, onMenuClick }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const userMenuRef = useRef(null);
+
   const [authView, setAuthView] = useState(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
   const nickname = user?.nickname ?? 'User';
 
   const closeAuth = () => setAuthView(null);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return undefined;
+
+    const onDocumentClick = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onDocumentClick);
+    return () => document.removeEventListener('mousedown', onDocumentClick);
+  }, [isUserMenuOpen]);
+
+  const onLogout = () => {
+    setIsUserMenuOpen(false);
+    signOut();
+    navigate('/', { replace: true });
+  };
 
   return (
     <header className={styles.header}>
@@ -21,8 +45,7 @@ function Header({ isSidebarOpen, onMenuClick }) {
           className={`${styles.menuButton} ${isSidebarOpen ? styles.menuButtonActive : ''}`}
           onClick={onMenuClick}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isSidebarOpen}
-        >
+          aria-expanded={isSidebarOpen}>
           <span />
           <span />
           <span />
@@ -35,39 +58,63 @@ function Header({ isSidebarOpen, onMenuClick }) {
                 type="button"
                 className={styles.authButton}
                 onClick={() => setAuthView('signIn')}
-              >
+                title="Sign in">
                 Sign in
               </button>
               <button
                 type="button"
                 className={`${styles.authButton} ${styles.authButtonPrimary}`}
                 onClick={() => setAuthView('signUp')}
-              >
+                title="Create account">
                 Sign up
               </button>
             </div>
           ) : (
-            <Link to="/profile" className={styles.userLink}>
-              <span className={styles.nickname}>{nickname}</span>
-              {user?.avatarUrl ? (
-                <img
-                  className={styles.avatar}
-                  src={user.avatarUrl}
-                  alt={`${nickname} avatar`}
-                />
-              ) : (
-                <span className={styles.avatarFallback}>
-                  {nickname.slice(0, 1).toUpperCase()}
-                </span>
-              )}
-            </Link>
+            <div className={styles.userMenu} ref={userMenuRef}>
+              <button
+                type="button"
+                className={styles.userMenuTrigger}
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                aria-haspopup="menu"
+                aria-expanded={isUserMenuOpen}
+                title="Open profile menu">
+                <span className={styles.nickname}>{nickname}</span>
+                {user?.avatarUrl ? (
+                  <img className={styles.avatar} src={user.avatarUrl} alt={`${nickname} avatar`} />
+                ) : (
+                  <span className={styles.avatarFallback}>
+                    {nickname.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <span className={`${styles.chevron} ${isUserMenuOpen ? styles.chevronOpen : ''}`} />
+              </button>
+
+              {isUserMenuOpen ? (
+                <div className={styles.userDropdown} role="menu" aria-label="User menu">
+                  <Link
+                    to="/profile"
+                    className={styles.userDropdownItem}
+                    role="menuitem"
+                    onClick={() => setIsUserMenuOpen(false)}>
+                    Profile
+                  </Link>
+                  <button
+                    type="button"
+                    className={`${styles.userDropdownItem} ${styles.userDropdownDanger}`}
+                    role="menuitem"
+                    onClick={onLogout}>
+                    Logout
+                  </button>
+                </div>
+              ) : null}
+            </div>
           )}
         </div>
       </div>
 
       <div className={styles.welcomeContent}>
         <h1>el zaman</h1>
-        <p>Preserve the Kyrgyz language through songs and games</p>
+        <p>Preserve the Kyrgyz language through songs, cards, and daily practice.</p>
       </div>
 
       <AuthModal isOpen={authView === 'signIn'} title="Sign in" onClose={closeAuth}>

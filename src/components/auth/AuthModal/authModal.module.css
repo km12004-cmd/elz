@@ -1,22 +1,24 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(10px);
+  background: rgba(6, 9, 18, 0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  z-index: 50;
+  z-index: 70;
 }
 
 .modal {
   width: 100%;
   max-width: 520px;
-  background: var(--color-bg-card);
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 14px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(188, 165, 255, 0.34);
+  background:
+    radial-gradient(circle at 88% -10%, rgba(177, 148, 255, 0.1), transparent 50%),
+    rgba(13, 17, 30, 0.94);
+  box-shadow: var(--shadow-soft);
   overflow: hidden;
 }
 
@@ -25,12 +27,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 18px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(167, 180, 219, 0.22);
 }
 
 .title {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 19px;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
@@ -38,15 +40,16 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(19, 25, 41, 0.78);
+  color: #e0d8ff;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition-base), border-color var(--transition-base);
 }
 
 .close:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(24, 31, 50, 0.9);
+  border-color: rgba(188, 165, 255, 0.34);
 }
 
 .content {

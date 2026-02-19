@@ -1,173 +1,271 @@
 .page {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-soft);
   background:
-    radial-gradient(circle at 95% -15%, rgba(167, 139, 250, 0.2), transparent 38%),
-    radial-gradient(circle at -10% 18%, rgba(99, 102, 241, 0.14), transparent 34%),
-    var(--color-bg-content);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 18px;
+    var(--gradient-surface-soft),
+    var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
 }
 
 .eyebrow {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #c4b5fd;
+  color: #d2c0ff;
 }
 
 .title {
-  margin-top: 4px;
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
 }
 
-.subtitle,
-.mutedText,
-.playlistMeta,
-.playlistDescription {
-  margin-top: 4px;
-  font-size: 13px;
-  color: #a1a1aa;
+.subtitle {
+  margin-top: 8px;
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
 }
 
 .primaryButton,
 .deleteButton,
 .playlistMainButton {
-  border: 0;
   border-radius: 12px;
-  font-size: 14px;
-  font-weight: 800;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.08s, opacity 0.15s, background 0.15s;
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    opacity var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .primaryButton {
-  background: linear-gradient(120deg, #a78bfa 0%, #8b5cf6 100%);
-  color: #fff;
-  padding: 10px 14px;
-}
-
-.deleteButton {
-  background: rgba(248, 113, 113, 0.16);
-  border: 1px solid rgba(248, 113, 113, 0.42);
-  color: #fecaca;
-  padding: 8px 11px;
-  white-space: nowrap;
-}
-
-.playlistMainButton {
-  flex: 1;
-  text-align: left;
-  color: inherit;
-  background: transparent;
-  padding: 0;
-}
-
-.primaryButton:active,
-.deleteButton:active,
-.playlistMainButton:active {
-  transform: translateY(1px);
-}
-
-.primaryButton:disabled,
-.deleteButton:disabled,
-.playlistMainButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.errorText,
-.successText {
-  margin-top: 12px;
-  border-radius: 10px;
-  padding: 10px 12px;
+  align-self: flex-start;
+  padding: 10px 16px;
   font-size: 13px;
+  font-weight: 800;
+  color: #f4f2ff;
+  background: var(--gradient-accent-soft);
+  border-color: rgba(188, 165, 255, 0.42);
+  box-shadow: 0 8px 18px rgba(20, 14, 42, 0.32);
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(20, 14, 42, 0.38);
+}
+
+.statusRow {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  border-radius: 999px;
+  border: 1px solid rgba(188, 165, 255, 0.36);
+  background: rgba(139, 92, 246, 0.12);
+  color: #eae3ff;
+  padding: 5px 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
+.loadingRow {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
 .errorText {
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.36);
-  border: 1px solid rgba(248, 113, 113, 0.35);
-}
-
-.successText {
-  color: #bbf7d0;
-  background: rgba(20, 83, 45, 0.34);
-  border: 1px solid rgba(74, 222, 128, 0.35);
-}
-
-.mutedText {
   margin-top: 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 111, 132, 0.4);
+  background: rgba(65, 16, 28, 0.42);
+  padding: 10px 12px;
+  color: #ffd2dc;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .playlistGrid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  gap: 14px;
 }
 
 .playlistCard {
-  padding: 12px;
+  height: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 23, 39, 0.78);
+  backdrop-filter: blur(4px);
+  padding: 14px;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.03);
-  color: inherit;
-  border-radius: 12px;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
 }
 
 .playlistCard:hover {
-  border-color: #a78bfa;
-  background: rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(188, 165, 255, 0.38);
+  background: rgba(22, 28, 46, 0.88);
+  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+}
+
+.playlistMainButton {
+  flex: 1;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.playlistMainButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.playlistTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playlistIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  border: 1px solid rgba(188, 165, 255, 0.38);
+  background: rgba(139, 92, 246, 0.16);
+  color: #ede6ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.playlistArrow {
+  font-size: 16px;
+  color: rgba(221, 212, 248, 0.64);
 }
 
 .playlistTitle {
-  font-size: 17px;
-  font-weight: 800;
-  color: #f8fafc;
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #f3f0ff;
   overflow-wrap: anywhere;
+}
+
+.playlistDescription,
+.playlistDescriptionMuted,
+.playlistMeta {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.playlistDescriptionMuted {
+  color: var(--color-text-muted);
+}
+
+.playlistMeta {
+  margin-top: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #bcaedd;
+}
+
+.deleteButton {
+  width: 100%;
+  border-color: rgba(255, 111, 132, 0.44);
+  background: rgba(255, 111, 132, 0.08);
+  color: #ffc0cb;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: rgba(255, 111, 132, 0.24);
+  color: #ffe0e6;
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.skeletonIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.skeletonTitle {
+  margin-top: 8px;
+  width: 74%;
+  height: 20px;
+}
+
+.skeletonDescription {
+  width: 96%;
+  height: 12px;
 }
 
 @media (max-width: 760px) {
   .page {
-    padding: 12px;
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
+    padding: 16px;
   }
 
   .header {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .title {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .primaryButton {
     width: 100%;
+    text-align: center;
   }
 
-  .playlistCard {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .deleteButton {
-    width: 100%;
+  .playlistGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }

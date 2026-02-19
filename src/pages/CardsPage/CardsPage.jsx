@@ -7,6 +7,11 @@ import {
 } from '../../api/flashcards';
 import { useAuth } from '../../auth/useAuth';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Skeleton from '../../components/ui/Skeleton';
+import Toast from '../../components/ui/Toast';
 import CreateFolderModal from './CreateFolderModal';
 import styles from './CardsPage.module.css';
 
@@ -47,6 +52,7 @@ function CardsPage() {
   const [createError, setCreateError] = useState('');
 
   const [deletingFolderId, setDeletingFolderId] = useState(null);
+  const [folderToDelete, setFolderToDelete] = useState(null);
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
@@ -130,12 +136,17 @@ function CardsPage() {
     }
   };
 
-  const handleDeleteFolder = async (folder) => {
-    const folderId = normalizeId(folder?.id);
-    if (!folderId) return;
+  const openDeleteDialog = (folder) => {
+    if (!normalizeId(folder?.id)) return;
+    setFolderToDelete(folder);
+  };
 
-    const confirmed = window.confirm(`Delete folder "${folder.name}"?`);
-    if (!confirmed) return;
+  const confirmDeleteFolder = async () => {
+    const folderId = normalizeId(folderToDelete?.id);
+    if (!folderId) {
+      setFolderToDelete(null);
+      return;
+    }
 
     clearMessages();
     setDeletingFolderId(folderId);
@@ -146,6 +157,7 @@ function CardsPage() {
         previousFolders.filter((item) => normalizeId(item.id) !== folderId),
       );
       setActionSuccess('Folder deleted');
+      setFolderToDelete(null);
     } catch (error) {
       setActionError(extractErrorMessage(error));
     } finally {
@@ -153,13 +165,15 @@ function CardsPage() {
     }
   };
 
+  const folderToDeleteId = normalizeId(folderToDelete?.id);
+
   return (
     <section className={styles.page}>
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Cards</p>
           <h2 className={styles.title}>My Folders</h2>
-          <p className={styles.subtitle}>Open a folder to create and review your flashcards.</p>
+          <p className={styles.subtitle}>Build compact decks and review your vocabulary faster.</p>
         </div>
 
         <button
@@ -169,54 +183,97 @@ function CardsPage() {
             setCreateError('');
             setIsCreateModalOpen(true);
           }}
+          title="Create a new folder"
         >
-          Create Folder
+          + Create Folder
         </button>
       </header>
 
-      {actionError ? <p className={styles.errorText}>{actionError}</p> : null}
-      {actionSuccess ? <p className={styles.successText}>{actionSuccess}</p> : null}
+      <div className={styles.statusRow}>
+        <span className={styles.badge}>{folders.length} folders</span>
+      </div>
+
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
 
-      {isLoading ? <p className={styles.mutedText}>Loading folders...</p> : null}
-      {!isLoading && folders.length === 0 ? (
-        <p className={styles.mutedText}>You do not have any folders yet</p>
+      {isLoading ? (
+        <>
+          <div className={styles.loadingRow}>
+            <LoadingSpinner size="sm" />
+            <span>Loading folders...</span>
+          </div>
+          <ul className={styles.folderGrid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <li key={`folder-skeleton-${index}`}>
+                <article className={styles.folderCard}>
+                  <Skeleton className={styles.skeletonIcon} />
+                  <Skeleton className={styles.skeletonTitle} />
+                  <Skeleton className={styles.skeletonMeta} />
+                </article>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : null}
 
-      <ul className={styles.folderGrid}>
-        {folders.map((folder, index) => {
-          const folderId = normalizeId(folder.id);
-          const isDeleting = deletingFolderId === folderId;
+      {!isLoading && folders.length === 0 ? (
+        <EmptyState
+          kind="folder"
+          title="No folders created"
+          description="Create your first folder to organize cards by topic and keep sessions focused."
+          actionLabel="Create folder"
+          onAction={() => {
+            setCreateError('');
+            setIsCreateModalOpen(true);
+          }}
+        />
+      ) : null}
 
-          return (
-            <li key={folderId ?? `folder-${index}`}>
-              <article className={styles.folderCard}>
-                <button
-                  type="button"
-                  className={styles.folderMainButton}
-                  onClick={() => {
-                    if (!folderId) return;
-                    navigate(`/cards/${folderId}`);
-                  }}
-                  disabled={!folderId}
-                >
-                  <p className={styles.folderName}>{folder.name}</p>
-                  <p className={styles.folderMeta}>{countCards(folder)} cards</p>
-                </button>
+      {!isLoading && folders.length > 0 ? (
+        <ul className={styles.folderGrid}>
+          {folders.map((folder, index) => {
+            const folderId = normalizeId(folder.id);
+            const isDeleting = deletingFolderId === folderId;
 
-                <button
-                  type="button"
-                  className={styles.deleteButton}
-                  onClick={() => handleDeleteFolder(folder)}
-                  disabled={isDeleting || !folderId}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </article>
-            </li>
-          );
-        })}
-      </ul>
+            return (
+              <li key={folderId ?? `folder-${index}`}>
+                <article className={styles.folderCard}>
+                  <button
+                    type="button"
+                    className={styles.folderMainButton}
+                    onClick={() => {
+                      if (!folderId) return;
+                      navigate(`/cards/${folderId}`);
+                    }}
+                    disabled={!folderId}
+                    title="Open folder"
+                  >
+                    <div className={styles.folderTopRow}>
+                      <span className={styles.folderIcon} aria-hidden="true">
+                        📁
+                      </span>
+                      <span className={styles.folderArrow} aria-hidden="true">
+                        ↗
+                      </span>
+                    </div>
+                    <p className={styles.folderName}>{folder.name}</p>
+                    <p className={styles.folderMeta}>{countCards(folder)} cards</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.deleteButton}
+                    onClick={() => openDeleteDialog(folder)}
+                    disabled={isDeleting || !folderId}
+                    title="Delete folder"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
 
       {isCreateModalOpen ? (
         <CreateFolderModal
@@ -231,6 +288,25 @@ function CardsPage() {
           onCreate={handleCreateFolder}
         />
       ) : null}
+
+      <ConfirmDialog
+        isOpen={Boolean(folderToDelete)}
+        title="Delete folder"
+        description={`This will remove "${folderToDelete?.name ?? 'folder'}" and all cards inside it.`}
+        confirmLabel="Delete"
+        isProcessing={Boolean(folderToDeleteId && deletingFolderId === folderToDeleteId)}
+        onCancel={() => {
+          if (deletingFolderId) return;
+          setFolderToDelete(null);
+        }}
+        onConfirm={confirmDeleteFolder}
+      />
+
+      <Toast
+        type={actionError ? 'error' : 'success'}
+        message={actionError || actionSuccess}
+        onClose={clearMessages}
+      />
     </section>
   );
 }

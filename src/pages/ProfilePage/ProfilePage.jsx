@@ -91,38 +91,36 @@ function ProfilePage() {
         <div className={styles.identity}>
           <div className={styles.avatarWrapper}>
             {user?.avatarUrl ? (
-              <img
-                className={styles.avatar}
-                src={user.avatarUrl}
-                alt={`${nickname} avatar`}
-              />
+              <img className={styles.avatar} src={user.avatarUrl} alt={`${nickname} avatar`} />
             ) : (
               <span className={styles.avatarFallback}>{avatarLetter}</span>
             )}
           </div>
 
           <div className={styles.userInfo}>
+            <p className={styles.eyebrow}>Profile</p>
             <h2 className={styles.nickname}>{nickname}</h2>
-            <div className={styles.metaRow}>
-              <span className={styles.metaItem}>{email}</span>
-              <span className={styles.metaItem}>Member since {memberSince}</span>
-            </div>
+            <p className={styles.email}>{email}</p>
+            <span className={styles.memberPill}>Member since {memberSince}</span>
           </div>
         </div>
 
-        <button type="button" className={styles.logoutButton} onClick={onLogout}>
+        <button type="button" className={styles.logoutButton} onClick={onLogout} title="Sign out">
           Logout
         </button>
       </div>
 
       <div className={styles.content}>
-        <h3 className={styles.sectionTitle}>Profile</h3>
-        <p className={styles.subtitle}>Data from your registration</p>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Account Details</h3>
+          <p className={styles.subtitle}>Your registration data and profile metadata.</p>
+        </div>
 
         <div className={styles.infoGrid}>
           {profileItems.map((item) => (
             <article key={item.label} className={styles.infoCard}>
               <p className={styles.infoLabel}>{item.label}</p>
+              <span className={styles.separator} />
               <p className={styles.infoValue}>{item.value}</p>
             </article>
           ))}

@@ -1,27 +1,29 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.58);
+  z-index: 80;
+  padding: 16px;
+  background: rgba(6, 9, 18, 0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 70;
-  padding: 16px;
 }
 
 .modal {
   width: min(460px, 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(167, 139, 250, 0.5);
+  border-radius: 18px;
+  border: 1px solid rgba(188, 165, 255, 0.34);
   background:
-    radial-gradient(circle at 90% -10%, rgba(167, 139, 250, 0.16), transparent 44%),
-    var(--color-bg-content);
+    radial-gradient(circle at 88% -12%, rgba(177, 148, 255, 0.1), transparent 50%),
+    rgba(13, 17, 30, 0.94);
+  box-shadow: var(--shadow-soft);
   padding: 16px;
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 25px;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -33,17 +35,17 @@
 }
 
 .label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #c4b5fd;
+  color: #d2c0ff;
 }
 
 .input {
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  border-radius: 10px;
-  background: rgba(17, 24, 39, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+  background: rgba(16, 21, 36, 0.8);
   color: var(--color-text-main);
   padding: 10px 12px;
   font-size: 14px;
@@ -51,19 +53,19 @@
 
 .input:focus {
   outline: none;
-  border-color: #a78bfa;
+  border-color: rgba(188, 165, 255, 0.46);
 }
 
 .counter {
   margin-top: -2px;
   font-size: 12px;
-  color: #a1a1aa;
+  color: var(--color-text-muted);
 }
 
 .errorText {
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.36);
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #ffd2dc;
+  background: rgba(65, 16, 28, 0.42);
+  border: 1px solid rgba(255, 111, 132, 0.4);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 13px;
@@ -78,35 +80,40 @@
 
 .primaryButton,
 .ghostButton {
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.08s, opacity 0.15s, background 0.15s;
+  transition: background var(--transition-base), border-color var(--transition-base), opacity var(--transition-base), transform var(--transition-base);
 }
 
 .primaryButton {
-  background: linear-gradient(120deg, #a78bfa 0%, #8b5cf6 100%);
-  color: #fff;
+  color: #f4f2ff;
+  background: var(--gradient-accent-soft);
+  border-color: rgba(188, 165, 255, 0.42);
+}
+
+.primaryButton:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .ghostButton {
-  background: rgba(255, 255, 255, 0.09);
-  color: #f5f3ff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(19, 25, 41, 0.78);
+  color: #ece8ff;
+}
+
+.ghostButton:hover:not(:disabled) {
+  border-color: rgba(188, 165, 255, 0.3);
+  background: rgba(24, 31, 50, 0.9);
 }
 
 .primaryButton:disabled,
 .ghostButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.primaryButton:active,
-.ghostButton:active {
-  transform: translateY(1px);
 }
 
 @media (max-width: 520px) {

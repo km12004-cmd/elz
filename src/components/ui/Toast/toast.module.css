@@ -1,0 +1,72 @@
+.toastViewport {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 90;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 260px;
+  max-width: min(420px, calc(100vw - 32px));
+  border-radius: 12px;
+  border: 1px solid var(--color-border-soft);
+  background: rgba(16, 21, 35, 0.92);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  animation: pageFadeIn 0.22s ease both;
+}
+
+.toastInfo {
+  border-color: rgba(130, 145, 198, 0.45);
+}
+
+.toastSuccess {
+  border-color: rgba(83, 216, 138, 0.4);
+  box-shadow: 0 18px 40px rgba(14, 39, 28, 0.45);
+}
+
+.toastError {
+  border-color: rgba(255, 111, 132, 0.45);
+  box-shadow: 0 18px 40px rgba(52, 14, 24, 0.45);
+}
+
+.message {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #ece8ff;
+}
+
+.closeButton {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1px solid rgba(172, 184, 219, 0.28);
+  background: rgba(27, 34, 54, 0.8);
+  color: #d7ddf5;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+.closeButton:hover {
+  background: rgba(53, 64, 95, 0.75);
+  border-color: rgba(200, 211, 243, 0.45);
+}
+
+@media (max-width: 720px) {
+  .toastViewport {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .toast {
+    max-width: none;
+  }
+}

@@ -8,6 +8,11 @@ import {
 } from '../../api/playlists';
 import { useAuth } from '../../auth/useAuth';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Skeleton from '../../components/ui/Skeleton';
+import Toast from '../../components/ui/Toast';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import styles from './PlaylistPage.module.css';
 
@@ -43,6 +48,7 @@ function PlaylistPage() {
   const [createError, setCreateError] = useState('');
 
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
+  const [playlistToDelete, setPlaylistToDelete] = useState(null);
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
@@ -156,12 +162,17 @@ function PlaylistPage() {
     }
   };
 
-  const handleDeletePlaylist = async (playlist) => {
-    const playlistId = normalizeId(playlist?.id);
-    if (!playlistId) return;
+  const openDeleteDialog = (playlist) => {
+    if (!normalizeId(playlist?.id)) return;
+    setPlaylistToDelete(playlist);
+  };
 
-    const confirmed = window.confirm(`Delete playlist "${playlist.title}"?`);
-    if (!confirmed) return;
+  const confirmDeletePlaylist = async () => {
+    const playlistId = normalizeId(playlistToDelete?.id);
+    if (!playlistId) {
+      setPlaylistToDelete(null);
+      return;
+    }
 
     clearMessages();
     setDeletingPlaylistId(playlistId);
@@ -170,6 +181,7 @@ function PlaylistPage() {
       await deletePlaylist({ token, playlistId });
       await loadPlaylists();
       setActionSuccess('Playlist deleted');
+      setPlaylistToDelete(null);
     } catch (error) {
       setActionError(extractErrorMessage(error));
     } finally {
@@ -177,13 +189,15 @@ function PlaylistPage() {
     }
   };
 
+  const playlistToDeleteId = normalizeId(playlistToDelete?.id);
+
   return (
     <section className={styles.page}>
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Library</p>
           <h2 className={styles.title}>My Playlists</h2>
-          <p className={styles.subtitle}>Open a playlist to view songs and add new tracks.</p>
+          <p className={styles.subtitle}>Open a playlist to manage songs and keep your lessons organized.</p>
         </div>
 
         <button
@@ -193,57 +207,103 @@ function PlaylistPage() {
             setCreateError('');
             setIsCreateModalOpen(true);
           }}
+          title="Create a new playlist"
         >
-          Create Playlist
+          + Create Playlist
         </button>
       </header>
 
-      {actionError ? <p className={styles.errorText}>{actionError}</p> : null}
-      {actionSuccess ? <p className={styles.successText}>{actionSuccess}</p> : null}
+      <div className={styles.statusRow}>
+        <span className={styles.badge}>{playlists.length} playlists</span>
+      </div>
+
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
 
-      {isLoading ? <p className={styles.mutedText}>Loading playlists...</p> : null}
-      {!isLoading && playlists.length === 0 ? (
-        <p className={styles.mutedText}>No playlists yet</p>
+      {isLoading ? (
+        <>
+          <div className={styles.loadingRow}>
+            <LoadingSpinner size="sm" />
+            <span>Loading playlists...</span>
+          </div>
+          <ul className={styles.playlistGrid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <li key={`playlist-skeleton-${index}`}>
+                <article className={styles.playlistCard}>
+                  <Skeleton className={styles.skeletonIcon} />
+                  <Skeleton className={styles.skeletonTitle} />
+                  <Skeleton className={styles.skeletonDescription} />
+                  <Skeleton className={styles.skeletonDescription} />
+                </article>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : null}
 
-      <ul className={styles.playlistGrid}>
-        {playlists.map((playlist, index) => {
-          const playlistId = normalizeId(playlist.id);
-          const isDeleting = deletingPlaylistId === playlistId;
+      {!isLoading && playlists.length === 0 ? (
+        <EmptyState
+          kind="playlist"
+          title="No playlists yet"
+          description="Create your first playlist to collect songs for focused learning sessions."
+          actionLabel="Create playlist"
+          onAction={() => {
+            setCreateError('');
+            setIsCreateModalOpen(true);
+          }}
+        />
+      ) : null}
 
-          return (
-            <li key={playlistId ?? `playlist-${index}`}>
-              <article className={styles.playlistCard}>
-                <button
-                  type="button"
-                  className={styles.playlistMainButton}
-                  onClick={() => {
-                    if (!playlistId) return;
-                    navigate(`/playlists/${playlistId}`);
-                  }}
-                  disabled={!playlistId}
-                >
-                  <p className={styles.playlistTitle}>{playlist.title}</p>
-                  {playlist.description ? (
-                    <p className={styles.playlistDescription}>{playlist.description}</p>
-                  ) : null}
-                  <p className={styles.playlistMeta}>{playlist.songsCount ?? 0} songs</p>
-                </button>
+      {!isLoading && playlists.length > 0 ? (
+        <ul className={styles.playlistGrid}>
+          {playlists.map((playlist, index) => {
+            const playlistId = normalizeId(playlist.id);
+            const isDeleting = deletingPlaylistId === playlistId;
 
-                <button
-                  type="button"
-                  className={styles.deleteButton}
-                  onClick={() => handleDeletePlaylist(playlist)}
-                  disabled={isDeleting || !playlistId}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </article>
-            </li>
-          );
-        })}
-      </ul>
+            return (
+              <li key={playlistId ?? `playlist-${index}`}>
+                <article className={styles.playlistCard}>
+                  <button
+                    type="button"
+                    className={styles.playlistMainButton}
+                    onClick={() => {
+                      if (!playlistId) return;
+                      navigate(`/playlists/${playlistId}`);
+                    }}
+                    disabled={!playlistId}
+                    title="Open playlist"
+                  >
+                    <div className={styles.playlistTopRow}>
+                      <span className={styles.playlistIcon} aria-hidden="true">
+                        ♫
+                      </span>
+                      <span className={styles.playlistArrow} aria-hidden="true">
+                        ↗
+                      </span>
+                    </div>
+                    <p className={styles.playlistTitle}>{playlist.title}</p>
+                    {playlist.description ? (
+                      <p className={styles.playlistDescription}>{playlist.description}</p>
+                    ) : (
+                      <p className={styles.playlistDescriptionMuted}>No description yet</p>
+                    )}
+                    <p className={styles.playlistMeta}>{playlist.songsCount ?? 0} songs</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.deleteButton}
+                    onClick={() => openDeleteDialog(playlist)}
+                    disabled={isDeleting || !playlistId}
+                    title="Delete playlist"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
 
       {isCreateModalOpen ? (
         <CreatePlaylistModal
@@ -259,6 +319,25 @@ function PlaylistPage() {
           onCreate={handleCreatePlaylist}
         />
       ) : null}
+
+      <ConfirmDialog
+        isOpen={Boolean(playlistToDelete)}
+        title="Delete playlist"
+        description={`This will remove "${playlistToDelete?.title ?? 'playlist'}" from your library.`}
+        confirmLabel="Delete"
+        isProcessing={Boolean(playlistToDeleteId && deletingPlaylistId === playlistToDeleteId)}
+        onCancel={() => {
+          if (deletingPlaylistId) return;
+          setPlaylistToDelete(null);
+        }}
+        onConfirm={confirmDeletePlaylist}
+      />
+
+      <Toast
+        type={actionError ? 'error' : 'success'}
+        message={actionError || actionSuccess}
+        onClose={clearMessages}
+      />
     </section>
   );
 }

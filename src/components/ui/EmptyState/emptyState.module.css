@@ -1,0 +1,56 @@
+.emptyState {
+  border-radius: 16px;
+  border: 1px dashed rgba(188, 165, 255, 0.34);
+  background:
+    radial-gradient(circle at 10% -30%, rgba(139, 92, 246, 0.14), transparent 64%),
+    rgba(20, 25, 41, 0.62);
+  padding: 22px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.36);
+  background: rgba(139, 92, 246, 0.12);
+  color: rgba(231, 223, 255, 0.96);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  max-width: 460px;
+}
+
+.actionButton {
+  margin-top: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(188, 165, 255, 0.38);
+  background: linear-gradient(126deg, rgba(139, 92, 246, 0.4) 0%, rgba(121, 91, 217, 0.3) 100%);
+  color: #f0eaff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(20, 14, 42, 0.34);
+}

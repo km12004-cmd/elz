@@ -1,11 +1,27 @@
 .card {
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(19, 24, 39, 0.78);
+  backdrop-filter: blur(4px);
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.card:hover {
+  border-color: rgba(188, 165, 255, 0.36);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+}
+
+.hint {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #bcaedd;
 }
 
 .flipArea {
@@ -31,10 +47,10 @@
   position: absolute;
   inset: 0;
   border-radius: 12px;
-  border: 1px solid rgba(167, 139, 250, 0.34);
+  border: 1px solid rgba(188, 165, 255, 0.32);
   background:
-    radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.24), transparent 44%),
-    rgba(17, 24, 39, 0.72);
+    radial-gradient(circle at 86% -8%, rgba(177, 148, 255, 0.14), transparent 50%),
+    rgba(18, 23, 39, 0.88);
   padding: 14px;
   backface-visibility: hidden;
   display: flex;
@@ -51,32 +67,33 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #c4b5fd;
+  color: #d2c0ff;
 }
 
 .faceText {
   margin-top: 8px;
   font-size: 21px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.15;
-  color: #f8fafc;
+  color: #f5f2ff;
   overflow-wrap: anywhere;
 }
 
 .deleteButton {
-  border: 1px solid rgba(248, 113, 113, 0.42);
-  background: rgba(248, 113, 113, 0.16);
-  color: #fecaca;
+  border: 1px solid rgba(255, 111, 132, 0.44);
+  background: rgba(255, 111, 132, 0.08);
+  color: #ffc0cb;
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.08s, opacity 0.15s, background 0.15s;
+  transition: background var(--transition-base), opacity var(--transition-base);
 }
 
-.deleteButton:active {
-  transform: translateY(1px);
+.deleteButton:hover:not(:disabled) {
+  background: rgba(255, 111, 132, 0.24);
+  color: #ffe0e6;
 }
 
 .deleteButton:disabled {

@@ -7,6 +7,11 @@ import {
 } from '../../api/playlists';
 import { useAuth } from '../../auth/useAuth';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Skeleton from '../../components/ui/Skeleton';
+import Toast from '../../components/ui/Toast';
 import styles from './PlaylistDetailPage.module.css';
 
 const EMPTY_ITEMS = [];
@@ -46,6 +51,7 @@ function PlaylistDetailPage() {
 
   const [addingSongId, setAddingSongId] = useState(null);
   const [removingSongId, setRemovingSongId] = useState(null);
+  const [songToRemove, setSongToRemove] = useState(null);
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
@@ -143,9 +149,12 @@ function PlaylistDetailPage() {
     }
   };
 
-  const removeSong = async (songId) => {
-    const normalizedSongId = parsePositiveInteger(songId);
-    if (!normalizedPlaylistId || !normalizedSongId) return;
+  const confirmRemoveSong = async () => {
+    const normalizedSongId = parsePositiveInteger(songToRemove?.id);
+    if (!normalizedPlaylistId || !normalizedSongId) {
+      setSongToRemove(null);
+      return;
+    }
 
     clearMessages();
     setRemovingSongId(String(normalizedSongId));
@@ -159,6 +168,7 @@ function PlaylistDetailPage() {
 
       await loadPlaylist();
       setActionSuccess('Song removed from playlist');
+      setSongToRemove(null);
     } catch (error) {
       setActionError(extractErrorMessage(error));
     } finally {
@@ -171,12 +181,14 @@ function PlaylistDetailPage() {
     await addSong(manualSongId);
   };
 
+  const songToRemoveId = normalizeId(songToRemove?.id);
+
   return (
     <section className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <button type="button" className={styles.ghostButton} onClick={() => navigate('/playlists')}>
-            Back
+            Back to playlists
           </button>
           <button type="button" className={styles.ghostButton} onClick={loadPlaylist} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Refresh'}
@@ -188,118 +200,160 @@ function PlaylistDetailPage() {
         {playlistDetail?.playlist?.description ? (
           <p className={styles.subtitle}>{playlistDetail.playlist.description}</p>
         ) : null}
+        <p className={styles.metaText}>{songs.length} songs inside</p>
       </header>
 
-      {actionError ? <p className={styles.errorText}>{actionError}</p> : null}
-      {actionSuccess ? <p className={styles.successText}>{actionSuccess}</p> : null}
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
 
-      {isLoading ? <p className={styles.mutedText}>Loading playlist...</p> : null}
-
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Songs in playlist</h3>
-        {!isLoading && songs.length === 0 ? (
-          <p className={styles.mutedText}>This playlist has no songs yet</p>
-        ) : null}
-
-        <ul className={styles.songList}>
-          {songs.map((song, index) => {
-            const songId = normalizeId(song.id);
-
-            return (
-              <li key={songId ?? `song-${index}`} className={styles.songItem}>
-                <div className={styles.songMain}>
-                  <p className={styles.songTitle}>{song.title}</p>
-                  <p className={styles.songMeta}>
-                    {songId ? `Song id: ${songId}` : 'No song id'}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className={styles.ghostButton}
-                  onClick={() => removeSong(songId)}
-                  disabled={!songId || removingSongId === songId}
-                >
-                  {removingSongId === songId ? 'Removing...' : 'Remove'}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Add songs</h3>
-
-        <form className={styles.addByIdForm} onSubmit={handleManualAdd}>
-          <label className={styles.fieldLabel} htmlFor="add-song-by-id-input">
-            Add by song id
-          </label>
-          <div className={styles.addByIdRow}>
-            <input
-              id="add-song-by-id-input"
-              className={styles.input}
-              value={manualSongId}
-              onChange={(event) => setManualSongId(event.target.value)}
-              placeholder="e.g. 42"
-              inputMode="numeric"
-              disabled={Boolean(addingSongId)}
-            />
-            <button type="submit" className={styles.primaryButton} disabled={Boolean(addingSongId)}>
-              {addingSongId ? 'Adding...' : 'Add'}
-            </button>
+      {isLoading ? (
+        <>
+          <div className={styles.loadingRow}>
+            <LoadingSpinner size="sm" />
+            <span>Loading playlist...</span>
           </div>
-        </form>
-
-        <div className={styles.searchRow}>
-          <label className={styles.fieldLabel} htmlFor="playlist-available-search">
-            Search unlocked songs
-          </label>
-          <input
-            id="playlist-available-search"
-            className={styles.input}
-            type="text"
-            value={songSearchQuery}
-            onChange={(event) => setSongSearchQuery(event.target.value)}
-            placeholder="Search by title"
-          />
-        </div>
-
-        {!isLoading && availableSongs.length === 0 ? (
-          <p className={styles.mutedText}>No unlocked songs available</p>
-        ) : null}
-
-        {!isLoading && availableSongs.length > 0 && filteredAvailableSongs.length === 0 ? (
-          <p className={styles.mutedText}>No songs match your search</p>
-        ) : null}
-
-        <ul className={styles.songList}>
-          {filteredAvailableSongs.map((song, index) => {
-            const songId = normalizeId(song.id);
-            const isAdded = Boolean(songId && songsInPlaylist.has(songId));
-            const isAdding = Boolean(songId && addingSongId === songId);
-
-            return (
-              <li key={songId ?? `available-song-${index}`} className={styles.songItem}>
-                <div className={styles.songMain}>
-                  <p className={styles.songTitle}>{song.title}</p>
-                  <p className={styles.songMeta}>{songId ? `Song id: ${songId}` : 'No song id'}</p>
-                </div>
-
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={() => addSong(songId)}
-                  disabled={!songId || isAdded || isAdding}
-                >
-                  {isAdded ? 'Added' : isAdding ? 'Adding...' : 'Add'}
-                </button>
+          <ul className={styles.songList}>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <li key={`playlist-song-skeleton-${index}`} className={styles.songSkeleton}>
+                <Skeleton className={styles.skeletonTitle} />
+                <Skeleton className={styles.skeletonMeta} />
               </li>
-            );
-          })}
-        </ul>
-      </section>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {!isLoading ? (
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Songs in playlist</h3>
+
+          {songs.length === 0 ? (
+            <EmptyState
+              kind="playlist"
+              title="No songs yet"
+              description="Add songs from unlocked tracks or by id to start this playlist."
+            />
+          ) : (
+            <ul className={styles.songList}>
+              {songs.map((song, index) => {
+                const songId = normalizeId(song.id);
+
+                return (
+                  <li key={songId ?? `song-${index}`} className={styles.songItem}>
+                    <div className={styles.songMain}>
+                      <p className={styles.songTitle}>{song.title}</p>
+                      <p className={styles.songMeta}>{songId ? `Song id: ${songId}` : 'No song id'}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.outlineButton}
+                      onClick={() => setSongToRemove(song)}
+                      disabled={!songId || removingSongId === songId}
+                      title="Remove song from playlist"
+                    >
+                      {removingSongId === songId ? 'Removing...' : 'Remove'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
+      {!isLoading ? (
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Add songs</h3>
+
+          <form className={styles.addByIdForm} onSubmit={handleManualAdd}>
+            <label className={styles.fieldLabel} htmlFor="add-song-by-id-input">
+              Add by song id
+            </label>
+            <div className={styles.addByIdRow}>
+              <input
+                id="add-song-by-id-input"
+                className={styles.input}
+                value={manualSongId}
+                onChange={(event) => setManualSongId(event.target.value)}
+                placeholder="e.g. 42"
+                inputMode="numeric"
+                disabled={Boolean(addingSongId)}
+              />
+              <button type="submit" className={styles.primaryButton} disabled={Boolean(addingSongId)}>
+                {addingSongId ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+          </form>
+
+          <div className={styles.searchRow}>
+            <label className={styles.fieldLabel} htmlFor="playlist-available-search">
+              Search unlocked songs
+            </label>
+            <input
+              id="playlist-available-search"
+              className={styles.input}
+              type="text"
+              value={songSearchQuery}
+              onChange={(event) => setSongSearchQuery(event.target.value)}
+              placeholder="Search by title"
+            />
+          </div>
+
+          {availableSongs.length === 0 ? (
+            <p className={styles.mutedText}>No unlocked songs available</p>
+          ) : null}
+
+          {availableSongs.length > 0 && filteredAvailableSongs.length === 0 ? (
+            <p className={styles.mutedText}>No songs match your search</p>
+          ) : null}
+
+          <ul className={styles.songList}>
+            {filteredAvailableSongs.map((song, index) => {
+              const songId = normalizeId(song.id);
+              const isAdded = Boolean(songId && songsInPlaylist.has(songId));
+              const isAdding = Boolean(songId && addingSongId === songId);
+
+              return (
+                <li key={songId ?? `available-song-${index}`} className={styles.songItem}>
+                  <div className={styles.songMain}>
+                    <p className={styles.songTitle}>{song.title}</p>
+                    <p className={styles.songMeta}>{songId ? `Song id: ${songId}` : 'No song id'}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={() => addSong(songId)}
+                    disabled={!songId || isAdded || isAdding}
+                    title="Add song to playlist"
+                  >
+                    {isAdded ? 'Added' : isAdding ? 'Adding...' : 'Add'}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      <ConfirmDialog
+        isOpen={Boolean(songToRemove)}
+        title="Remove song"
+        description={`Remove "${songToRemove?.title ?? 'song'}" from this playlist?`}
+        confirmLabel="Remove"
+        isProcessing={Boolean(songToRemoveId && removingSongId === songToRemoveId)}
+        onCancel={() => {
+          if (removingSongId) return;
+          setSongToRemove(null);
+        }}
+        onConfirm={confirmRemoveSong}
+      />
+
+      <Toast
+        type={actionError ? 'error' : 'success'}
+        message={actionError || actionSuccess}
+        onClose={clearMessages}
+      />
     </section>
   );
 }

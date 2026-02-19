@@ -7,6 +7,11 @@ import {
 } from '../../api/flashcards';
 import { useAuth } from '../../auth/useAuth';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Skeleton from '../../components/ui/Skeleton';
+import Toast from '../../components/ui/Toast';
 import CreateCardModal from './CreateCardModal';
 import Flashcard from './Flashcard';
 import styles from './FolderPage.module.css';
@@ -36,6 +41,7 @@ function FolderPage() {
   const [createCardError, setCreateCardError] = useState('');
 
   const [deletingCardId, setDeletingCardId] = useState(null);
+  const [cardToDeleteId, setCardToDeleteId] = useState(null);
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
@@ -124,12 +130,12 @@ function FolderPage() {
     }
   };
 
-  const handleDeleteCard = async (cardId) => {
-    const normalizedCardId = normalizeId(cardId);
-    if (!normalizedFolderId || !normalizedCardId) return;
-
-    const confirmed = window.confirm('Delete this card?');
-    if (!confirmed) return;
+  const confirmDeleteCard = async () => {
+    const normalizedCardId = normalizeId(cardToDeleteId);
+    if (!normalizedFolderId || !normalizedCardId) {
+      setCardToDeleteId(null);
+      return;
+    }
 
     clearMessages();
     setDeletingCardId(normalizedCardId);
@@ -156,6 +162,7 @@ function FolderPage() {
       });
 
       setActionSuccess('Card deleted');
+      setCardToDeleteId(null);
     } catch (error) {
       setActionError(extractErrorMessage(error));
     } finally {
@@ -170,7 +177,7 @@ function FolderPage() {
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <button type="button" className={styles.ghostButton} onClick={() => navigate('/cards')}>
-            Back
+            Back to folders
           </button>
 
           <button
@@ -181,40 +188,66 @@ function FolderPage() {
               setIsCreateCardModalOpen(true);
             }}
             disabled={!folder}
+            title="Create a new card"
           >
-            Create Card
+            + Create Card
           </button>
         </div>
 
         <p className={styles.eyebrow}>Folder</p>
         <h2 className={styles.title}>{folder?.name ?? 'Folder'}</h2>
+        <p className={styles.metaText}>{cards.length} cards</p>
       </header>
 
-      {actionError ? <p className={styles.errorText}>{actionError}</p> : null}
-      {actionSuccess ? <p className={styles.successText}>{actionSuccess}</p> : null}
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
 
-      {isLoading ? <p className={styles.mutedText}>Loading cards...</p> : null}
-
-      {!isLoading && folder && cards.length === 0 ? (
-        <p className={styles.mutedText}>This folder has no cards yet</p>
+      {isLoading ? (
+        <>
+          <div className={styles.loadingRow}>
+            <LoadingSpinner size="sm" />
+            <span>Loading cards...</span>
+          </div>
+          <ul className={styles.cardsGrid}>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <li key={`card-skeleton-${index}`} className={styles.cardSkeleton}>
+                <Skeleton className={styles.skeletonFace} />
+                <Skeleton className={styles.skeletonButton} />
+              </li>
+            ))}
+          </ul>
+        </>
       ) : null}
 
-      <ul className={styles.cardsGrid}>
-        {cards.map((card, index) => {
-          const cardId = normalizeId(card.id);
+      {!isLoading && folder && cards.length === 0 ? (
+        <EmptyState
+          kind="folder"
+          title="No cards in this folder"
+          description="Create your first flashcard to start practicing this topic."
+          actionLabel="Create card"
+          onAction={() => {
+            setCreateCardError('');
+            setIsCreateCardModalOpen(true);
+          }}
+        />
+      ) : null}
 
-          return (
-            <li key={cardId ?? `folder-card-${index}`}>
-              <Flashcard
-                card={card}
-                isDeleting={deletingCardId === cardId}
-                onDelete={() => handleDeleteCard(cardId)}
-              />
-            </li>
-          );
-        })}
-      </ul>
+      {!isLoading && cards.length > 0 ? (
+        <ul className={styles.cardsGrid}>
+          {cards.map((card, index) => {
+            const cardId = normalizeId(card.id);
+
+            return (
+              <li key={cardId ?? `folder-card-${index}`}>
+                <Flashcard
+                  card={card}
+                  isDeleting={deletingCardId === cardId}
+                  onDelete={() => setCardToDeleteId(cardId)}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
 
       {isCreateCardModalOpen ? (
         <CreateCardModal
@@ -228,6 +261,25 @@ function FolderPage() {
           onCreate={handleCreateCard}
         />
       ) : null}
+
+      <ConfirmDialog
+        isOpen={Boolean(cardToDeleteId)}
+        title="Delete card"
+        description="This card will be removed from the folder permanently."
+        confirmLabel="Delete"
+        isProcessing={Boolean(cardToDeleteId && deletingCardId === cardToDeleteId)}
+        onCancel={() => {
+          if (deletingCardId) return;
+          setCardToDeleteId(null);
+        }}
+        onConfirm={confirmDeleteCard}
+      />
+
+      <Toast
+        type={actionError ? 'error' : 'success'}
+        message={actionError || actionSuccess}
+        onClose={clearMessages}
+      />
     </section>
   );
 }

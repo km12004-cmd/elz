@@ -1,11 +1,12 @@
 .page {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-soft);
   background:
-    radial-gradient(circle at 92% -10%, rgba(167, 139, 250, 0.2), transparent 36%),
-    radial-gradient(circle at -8% 20%, rgba(99, 102, 241, 0.14), transparent 34%),
-    var(--color-bg-content);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 18px;
+    var(--gradient-surface-soft),
+    var(--color-surface-glass);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+  padding: 24px;
 }
 
 .header {
@@ -20,123 +21,157 @@
 }
 
 .eyebrow {
-  margin-top: 10px;
-  font-size: 12px;
+  margin-top: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #c4b5fd;
+  color: #d2c0ff;
 }
 
 .title {
-  margin-top: 4px;
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
 }
 
-.subtitle,
-.mutedText,
-.songMeta {
-  margin-top: 4px;
-  font-size: 13px;
-  color: #a1a1aa;
+.subtitle {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.metaText {
+  margin-top: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #bcaedd;
 }
 
 .primaryButton,
-.ghostButton {
-  border: 0;
+.ghostButton,
+.outlineButton {
   border-radius: 12px;
-  font-size: 14px;
+  border: 1px solid transparent;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.08s, opacity 0.15s, background 0.15s;
-  padding: 9px 13px;
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    opacity var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .primaryButton {
-  background: linear-gradient(120deg, #a78bfa 0%, #8b5cf6 100%);
-  color: #fff;
+  padding: 9px 13px;
+  color: #f4f2ff;
+  background: var(--gradient-accent-soft);
+  border-color: rgba(188, 165, 255, 0.42);
+  box-shadow: 0 8px 18px rgba(20, 14, 42, 0.32);
+}
+
+.primaryButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(20, 14, 42, 0.38);
 }
 
 .ghostButton {
-  background: rgba(255, 255, 255, 0.09);
-  color: #f5f3ff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 9px 13px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(19, 25, 41, 0.78);
+  color: #ece8ff;
 }
 
-.primaryButton:active,
-.ghostButton:active {
-  transform: translateY(1px);
+.ghostButton:hover:not(:disabled) {
+  border-color: rgba(188, 165, 255, 0.3);
+  background: rgba(24, 31, 50, 0.9);
+}
+
+.outlineButton {
+  padding: 8px 12px;
+  border-color: rgba(255, 111, 132, 0.44);
+  background: rgba(255, 111, 132, 0.08);
+  color: #ffc0cb;
+}
+
+.outlineButton:hover:not(:disabled) {
+  background: rgba(255, 111, 132, 0.24);
 }
 
 .primaryButton:disabled,
-.ghostButton:disabled {
+.ghostButton:disabled,
+.outlineButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.errorText,
-.successText {
+.errorText {
   margin-top: 12px;
-  border-radius: 10px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 111, 132, 0.4);
+  background: rgba(65, 16, 28, 0.42);
   padding: 10px 12px;
+  color: #ffd2dc;
   font-size: 13px;
   font-weight: 700;
 }
 
-.errorText {
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.36);
-  border: 1px solid rgba(248, 113, 113, 0.35);
-}
-
-.successText {
-  color: #bbf7d0;
-  background: rgba(20, 83, 45, 0.34);
-  border: 1px solid rgba(74, 222, 128, 0.35);
+.loadingRow {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
 }
 
 .section {
-  margin-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 12px;
+  margin-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
 }
 
 .sectionTitle {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .addByIdForm,
 .searchRow {
-  margin-top: 10px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .fieldLabel {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #c4b5fd;
+  color: #d2c0ff;
 }
 
 .input {
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  border-radius: 10px;
-  background: rgba(17, 24, 39, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+  background: rgba(16, 21, 36, 0.8);
   color: var(--color-text-main);
   padding: 10px 12px;
   font-size: 14px;
+  transition: border-color var(--transition-base), background var(--transition-base);
 }
 
 .input:focus {
   outline: none;
-  border-color: #a78bfa;
+  border-color: rgba(188, 165, 255, 0.46);
+  background: rgba(20, 26, 43, 0.92);
 }
 
 .addByIdRow {
@@ -148,6 +183,13 @@
   flex: 1;
 }
 
+.mutedText,
+.songMeta {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
 .songList {
   margin-top: 10px;
   display: flex;
@@ -155,11 +197,15 @@
   gap: 8px;
 }
 
-.songItem {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.songItem,
+.songSkeleton {
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 23, 39, 0.78);
   padding: 10px;
+}
+
+.songItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -172,21 +218,37 @@
 
 .songTitle {
   font-size: 15px;
-  font-weight: 800;
-  color: #f8fafc;
+  font-weight: 700;
+  color: #f3f0ff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.songSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonTitle {
+  height: 14px;
+  width: 62%;
+}
+
+.skeletonMeta {
+  height: 11px;
+  width: 40%;
+}
+
 @media (max-width: 760px) {
   .page {
-    padding: 12px;
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
+    padding: 16px;
   }
 
   .title {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .headerTop {
@@ -195,7 +257,8 @@
   }
 
   .primaryButton,
-  .ghostButton {
+  .ghostButton,
+  .outlineButton {
     width: 100%;
   }
 

@@ -1,15 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
 
 :root {
-  --color-bg-main: #121212;
-  --color-bg-content: #18181b;
-  --color-bg-card: #202022;
-  
+  --color-bg-main: #0b0f1a;
+  --color-bg-content: #0e1222;
+  --color-bg-card: #141a2a;
+  --color-surface-glass: rgba(17, 22, 37, 0.78);
+  --color-surface-solid: rgba(16, 20, 34, 0.92);
+  --color-surface-elevated: rgba(255, 255, 255, 0.06);
+  --color-surface-hover: rgba(255, 255, 255, 0.09);
+
   --color-primary: #8b5cf6;
-  --color-primary-light: #a78bfa; 
-  
-  --color-text-main: #ffffff;
-  --color-text-secondary: #9ca3af;
+  --color-primary-soft: #bda2ff;
+  --color-secondary: #717aa4;
+
+  --color-text-main: #f3f0ff;
+  --color-text-secondary: #b0b5cb;
+  --color-text-muted: #8a90ab;
+
+  --color-border-soft: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(181, 156, 255, 0.34);
+  --color-border-accent: rgba(188, 165, 255, 0.46);
+
+  --gradient-surface-soft: radial-gradient(circle at 90% -14%, rgba(139, 92, 246, 0.12), transparent 52%);
+  --gradient-accent-soft: linear-gradient(126deg, rgba(139, 92, 246, 0.62) 0%, rgba(121, 91, 217, 0.5) 100%);
+
+  --color-success: #53d88a;
+  --color-danger: #ff6f84;
+
+  --shadow-soft: 0 18px 42px rgba(4, 8, 20, 0.42);
+  --shadow-glow: 0 0 0 rgba(139, 92, 246, 0.16);
+  --shadow-card: 0 12px 30px rgba(4, 8, 20, 0.36);
+  --shadow-lifted: 0 14px 28px rgba(4, 8, 20, 0.4);
+
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+
+  --transition-base: 0.24s ease;
 }
 
 *,
@@ -44,6 +71,17 @@ button,
 textarea,
 select {
   font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Sora', sans-serif;
+  color: var(--color-text-main);
 }
 
 html {
@@ -52,12 +90,79 @@ html {
 }
 
 body {
-  font-family: 'Nunito';
-  background-color: var(--color-bg-main);
+  font-family: 'Manrope', sans-serif;
+  background:
+    radial-gradient(circle at 14% -6%, rgba(139, 92, 246, 0.16), transparent 36%),
+    radial-gradient(circle at 88% 4%, rgba(120, 112, 165, 0.1), transparent 34%),
+    linear-gradient(150deg, #0b0f1a 0%, #0e1222 52%, #111827 100%);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.26);
+  color: #f9f7ff;
+}
+
+button,
+input,
+textarea,
+select,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(177, 148, 255, 0.7);
+  outline-offset: 2px;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 180% 0;
+  }
+
+  to {
+    background-position: -20% 0;
+  }
+}
+
+@keyframes headerGradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.22);
+  }
 }
