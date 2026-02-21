@@ -42,6 +42,73 @@
   font-size: 13px;
 }
 
+.levelsSection {
+  margin-top: 22px;
+}
+
+.levelsTitle {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.levelsSubtitle {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.levelsGrid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.levelCard {
+  border: 1px solid var(--color-border-soft);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.5));
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.levelCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 14px 30px rgba(35, 22, 67, 0.12);
+}
+
+.levelCard:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.45);
+  outline-offset: 2px;
+}
+
+.levelName {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.levelDescription {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  min-height: 56px;
+}
+
+.levelAction {
+  margin-top: auto;
+  color: rgba(89, 37, 199, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
 @media (max-width: 760px) {
   .page {
     border-radius: var(--radius-lg);
@@ -54,5 +121,13 @@
 
   .subtitle {
     font-size: 14px;
+  }
+
+  .levelsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .levelDescription {
+    min-height: 0;
   }
 }

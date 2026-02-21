@@ -20,6 +20,7 @@ function App() {
             <PlaceholderPage
               title="Home"
               subtitle="Preserve the Kyrgyz language through songs and games."
+              showLevels
             />
           }
         />

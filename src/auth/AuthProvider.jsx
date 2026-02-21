@@ -4,7 +4,9 @@ import { decodeJwtPayload } from '../utils/jwt';
 import { AuthContext } from './auth-context';
 
 const STORAGE_KEY = 'elzaman_auth';
-const EMPTY_AUTH = { token: null, user: null };
+const AUTH_SESSION_DAYS = 5;
+const AUTH_SESSION_TTL_MS = AUTH_SESSION_DAYS * 24 * 60 * 60 * 1000;
+const EMPTY_AUTH = { token: null, user: null, sessionStartedAt: null };
 
 function safeParseJson(value) {
   try {
@@ -20,21 +22,36 @@ function loadStoredAuth() {
 
   const token = typeof stored.token === 'string' ? stored.token : null;
   const user = stored.user && typeof stored.user === 'object' ? stored.user : null;
+  const rawStartedAt = Number(stored.sessionStartedAt);
+  const sessionStartedAt = Number.isFinite(rawStartedAt) && rawStartedAt > 0 ? rawStartedAt : Date.now();
 
-  return { token, user };
+  if (!token) return EMPTY_AUTH;
+
+  if (Date.now() - sessionStartedAt >= AUTH_SESSION_TTL_MS) {
+    localStorage.removeItem(STORAGE_KEY);
+    return EMPTY_AUTH;
+  }
+
+  return { token, user, sessionStartedAt };
 }
 
-function persistAuth({ token, user }) {
+function persistAuth({ token, user, sessionStartedAt }) {
   if (!token) {
     localStorage.removeItem(STORAGE_KEY);
     return;
   }
+
+  const resolvedStartedAt =
+    Number.isFinite(Number(sessionStartedAt)) && Number(sessionStartedAt) > 0
+      ? Number(sessionStartedAt)
+      : Date.now();
 
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({
       token,
       user: user ?? null,
+      sessionStartedAt: resolvedStartedAt,
     }),
   );
 }
@@ -184,13 +201,39 @@ function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
 }
 
 export function AuthProvider({ children }) {
-  const [{ token, user }, setAuth] = useState(() => loadStoredAuth());
+  const [{ token, user, sessionStartedAt }, setAuth] = useState(() => loadStoredAuth());
   const isAuthenticated = Boolean(token || user);
   const needsProfileHydration = Boolean(token && !hasRequiredProfileFields(user));
 
   useEffect(() => {
-    persistAuth({ token, user });
-  }, [token, user]);
+    persistAuth({ token, user, sessionStartedAt });
+  }, [token, user, sessionStartedAt]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const startedAt = Number(sessionStartedAt);
+    if (!Number.isFinite(startedAt) || startedAt <= 0) {
+      setAuth(EMPTY_AUTH);
+      return undefined;
+    }
+
+    const elapsed = Date.now() - startedAt;
+    const remainingMs = AUTH_SESSION_TTL_MS - elapsed;
+
+    if (remainingMs <= 0) {
+      setAuth(EMPTY_AUTH);
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setAuth(EMPTY_AUTH);
+    }, remainingMs);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [token, sessionStartedAt]);
 
   useEffect(() => {
     if (!needsProfileHydration || !token) return undefined;
@@ -214,6 +257,7 @@ export function AuthProvider({ children }) {
               tokenPayload,
               previousUser: prev.user,
             }),
+            sessionStartedAt: prev.sessionStartedAt,
           };
         });
       } catch {
@@ -250,6 +294,7 @@ export function AuthProvider({ children }) {
         tokenPayload,
         previousUser: prev.user,
       }),
+      sessionStartedAt: Date.now(),
     }));
 
     return nextToken;
