@@ -1,6 +1,6 @@
 import { ApiError, apiRequest } from './client';
 
-const PLAYLISTS_BASE_PATH = '/api/v1/playlists';
+const PLAYLISTS_BASE_PATH = '/api/playlists';
 
 function asObject(value) {
   return value && typeof value === 'object' ? value : null;

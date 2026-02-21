@@ -18,11 +18,11 @@ function readUser(data) {
 }
 
 export async function registerUser(payload) {
-  return apiRequest('/api/register', { method: 'POST', body: payload });
+  return apiRequest('/api/auth/register', { method: 'POST', body: payload });
 }
 
 export async function loginUser({ email, password }) {
-  const data = await apiRequest('/api/login', {
+  const data = await apiRequest('/api/auth/login', {
     method: 'POST',
     body: { email, password },
   });
@@ -43,7 +43,7 @@ export async function loginUser({ email, password }) {
 }
 
 export async function fetchProfile({ token } = {}) {
-  const data = await apiRequest('/api/profile', { token });
+  const data = await apiRequest('/api/auth/me', { token });
 
   if (!data || typeof data !== 'object') {
     throw new Error('Unexpected profile response');
@@ -53,5 +53,5 @@ export async function fetchProfile({ token } = {}) {
 }
 
 export async function logoutUser({ token } = {}) {
-  return apiRequest('/api/logout', { method: 'POST', token });
+  return apiRequest('/api/auth/logout', { method: 'POST', token });
 }

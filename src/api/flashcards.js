@@ -1,6 +1,6 @@
 import { ApiError, apiRequest } from './client';
 
-const FLASHCARDS_BASE_PATH = '/api/v1/flashcards';
+const FLASHCARDS_BASE_PATH = '/api/flashcards';
 const FLASHCARD_FOLDERS_BASE_PATH = `${FLASHCARDS_BASE_PATH}/folders`;
 const CARD_TEXT_MAX_LENGTH = 500;
 
