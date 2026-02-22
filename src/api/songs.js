@@ -1,6 +1,7 @@
 import { ApiError, apiRequest } from './client';
 
 const SONGS_BASE_PATH = '/api/songs';
+const TRACKS_BASE_PATH = '/api/tracks';
 
 const LEVEL_META = {
   1: { title: 'Beginner', description: 'Basic vocabulary and simple grammar patterns.' },
@@ -52,6 +53,21 @@ function normalizeDifficultyLevel(value) {
   return level === 1 || level === 2 || level === 3 ? level : null;
 }
 
+function normalizeTrackLevel(value) {
+  const level = normalizeInteger(value);
+  return typeof level === 'number' && level >= 1 ? level : null;
+}
+
+function normalizeOptionalPositiveId(value) {
+  const asInteger = normalizeInteger(value);
+  if (typeof asInteger === 'number') {
+    return asInteger > 0 ? String(asInteger) : null;
+  }
+
+  const asId = normalizeId(value);
+  return asId && asId !== '0' ? asId : null;
+}
+
 function isRetriableRouteError(error) {
   const status =
     typeof error?.status === 'number' && Number.isFinite(error.status)
@@ -73,6 +89,33 @@ async function requestFirstAvailable(paths, options) {
       if (!isRetriableRouteError(error)) {
         throw error;
       }
+    }
+  }
+
+  if (lastError) throw lastError;
+  throw new ApiError('Request failed');
+}
+
+function shouldRetryWithFallbackBody(error) {
+  return error instanceof ApiError && (error.status === 400 || error.status === 422);
+}
+
+async function requestWithFallbackBodies(path, { method = 'POST', token, bodies } = {}) {
+  if (!Array.isArray(bodies) || bodies.length === 0) {
+    return apiRequest(path, { method, token });
+  }
+
+  let lastError = null;
+
+  for (const body of bodies) {
+    try {
+      return await apiRequest(path, { method, token, body });
+    } catch (error) {
+      if (!shouldRetryWithFallbackBody(error)) {
+        throw error;
+      }
+
+      lastError = error;
     }
   }
 
@@ -133,6 +176,22 @@ function readSongsCollection(data) {
   return [];
 }
 
+function readTrackCardsCollection(data) {
+  const directCollection = readCollection(data, ['items', 'cards', 'templates', 'results']);
+  if (directCollection.length > 0) return directCollection;
+
+  const object = asObject(data);
+  if (!object) return [];
+
+  const nestedData = asObject(object.data);
+  if (nestedData) {
+    const nestedCollection = readCollection(nestedData, ['items', 'cards', 'templates', 'results']);
+    if (nestedCollection.length > 0) return nestedCollection;
+  }
+
+  return [];
+}
+
 function normalizeSongsCollection(data) {
   return readSongsCollection(data)
     .map(normalizeSong)
@@ -159,7 +218,46 @@ function normalizeSong(value) {
     durationSeconds: normalizeInteger(song.duration_seconds ?? song.durationSeconds ?? song.duration),
     originalLanguage: pickFirstString(song, ['original_language', 'originalLanguage', 'language']),
     isPublished: normalizeBoolean(song.is_published ?? song.isPublished),
+    youtubeUrl: pickFirstString(song, ['youtube_url', 'youtubeUrl', 'youtube', 'youtube_link']),
+    audioUrl: pickFirstString(song, ['audio_url', 'audioUrl', 'audio']),
   };
+}
+
+function normalizeTrackProgress(value, fallbackTrackId) {
+  const source = asObject(value?.data) ?? asObject(value) ?? {};
+
+  return {
+    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? fallbackTrackId,
+    status: pickFirstString(source, ['status']),
+    unlockedLevel: normalizeInteger(source.unlocked_level ?? source.unlockedLevel) ?? 0,
+    folderId: normalizeOptionalPositiveId(source.folder_id ?? source.folderId),
+    cardsAdded: normalizeInteger(source.cards_added ?? source.cardsAdded) ?? 0,
+    cardsExisting: normalizeInteger(source.cards_existing ?? source.cardsExisting) ?? 0,
+  };
+}
+
+function normalizeTrackCard(value, index, fallbackLevel) {
+  const card = asObject(value) ?? {};
+  const order = normalizeInteger(card.order) ?? index + 1;
+
+  return {
+    id: pickFirstId(card, ['id', 'card_id', 'flashcard_id']) ?? `track-card-${order}-${index}`,
+    level: normalizeTrackLevel(card.level) ?? fallbackLevel ?? null,
+    order,
+    kgText:
+      pickFirstString(card, ['kg_text', 'kgText', 'front_text', 'frontText', 'prompt_text', 'promptText']) ??
+      '',
+    ruText:
+      pickFirstString(card, ['ru_text', 'ruText', 'back_text', 'backText', 'answer_text', 'answerText']) ??
+      '',
+  };
+}
+
+function normalizeTrackCards(data, { fallbackLevel } = {}) {
+  return readTrackCardsCollection(data)
+    .map((item, index) => normalizeTrackCard(item, index, fallbackLevel))
+    .filter((card) => card.kgText || card.ruText)
+    .sort((left, right) => left.order - right.order);
 }
 
 function levelsFromSongs(songs) {
@@ -342,4 +440,113 @@ export async function fetchSongLyrics({ token, songId } = {}) {
     pickFirstString(object.data, ['lyrics_text', 'lyricsText', 'lyrics', 'text', 'content']) ??
     null
   );
+}
+
+export async function fetchTrackLearningState({ token, trackId } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const data = await apiRequest(`${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/learning-state`, {
+    token,
+  });
+
+  const normalized = normalizeTrackProgress(data, normalizedTrackId);
+
+  return {
+    trackId: normalized.trackId ?? normalizedTrackId,
+    status: normalized.status ?? 'not_started',
+    unlockedLevel: normalized.unlockedLevel,
+    folderId: normalized.folderId,
+  };
+}
+
+export async function markTrackAsListened({ token, trackId, percent = 100, secondsListened } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const normalizedPercent = Math.min(100, Math.max(0, normalizeInteger(percent) ?? 100));
+  const normalizedSeconds = Math.max(
+    0,
+    normalizeInteger(secondsListened) ?? 0,
+  );
+
+  const data = await requestWithFallbackBodies(
+    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/listened`,
+    {
+      method: 'POST',
+      token,
+      bodies: [
+        { percent: normalizedPercent, seconds_listened: normalizedSeconds },
+        { percent: normalizedPercent, secondsListened: normalizedSeconds },
+      ],
+    },
+  );
+
+  const normalized = normalizeTrackProgress(data, normalizedTrackId);
+
+  return {
+    trackId: normalized.trackId ?? normalizedTrackId,
+    status: normalized.status ?? 'listened',
+    unlockedLevel: normalized.unlockedLevel,
+    folderId: normalized.folderId,
+  };
+}
+
+export async function startTrackLearning({ token, trackId } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const data = await apiRequest(`${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/start-learning`, {
+    method: 'POST',
+    token,
+  });
+
+  const normalized = normalizeTrackProgress(data, normalizedTrackId);
+
+  return {
+    trackId: normalized.trackId ?? normalizedTrackId,
+    status: normalized.status ?? 'in_progress',
+    unlockedLevel: normalized.unlockedLevel,
+    folderId: normalized.folderId,
+    cardsAdded: normalized.cardsAdded,
+    cardsExisting: normalized.cardsExisting,
+  };
+}
+
+export async function fetchTrackFlashcardTemplates({ token, trackId, level = 1 } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const normalizedLevel = normalizeTrackLevel(level);
+  if (!normalizedLevel) throw new Error('Level must be greater than or equal to 1');
+
+  const data = await apiRequest(
+    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/flashcard-templates?level=${encodeURIComponent(
+      normalizedLevel,
+    )}`,
+    {
+      token,
+    },
+  );
+
+  return normalizeTrackCards(data, { fallbackLevel: normalizedLevel });
+}
+
+export async function fetchTrackLevelCards({ token, trackId, level } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const normalizedLevel = normalizeTrackLevel(level);
+  if (!normalizedLevel) throw new Error('Level must be greater than or equal to 1');
+
+  const data = await apiRequest(
+    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/levels/${encodeURIComponent(
+      normalizedLevel,
+    )}/cards`,
+    {
+      token,
+    },
+  );
+
+  return normalizeTrackCards(data, { fallbackLevel: normalizedLevel });
 }

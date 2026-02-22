@@ -155,25 +155,38 @@
   padding: 14px;
 }
 
-.coverArt {
-  aspect-ratio: 1 / 1;
+.playerWrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
   border: 1px solid rgba(188, 165, 255, 0.28);
   background:
     radial-gradient(circle at 76% 14%, rgba(132, 98, 255, 0.45), transparent 40%),
     radial-gradient(circle at 18% 84%, rgba(96, 165, 250, 0.36), transparent 56%),
     linear-gradient(148deg, #161737 0%, #111a32 57%, #111526 100%);
-  box-shadow: inset 0 0 26px rgba(2, 6, 15, 0.42);
-  display: grid;
-  place-items: center;
+  overflow: hidden;
 }
 
-.coverArt span {
-  color: rgba(242, 236, 255, 0.96);
-  font-family: 'Sora', sans-serif;
-  font-size: 48px;
-  font-weight: 800;
-  line-height: 1;
+.playerFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.playerFallback {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  border: 1px dashed rgba(188, 165, 255, 0.32);
+  background: rgba(19, 24, 42, 0.72);
+  color: #d4c6f0;
+  font-size: 13px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 12px;
 }
 
 .trackTitle {
@@ -189,6 +202,21 @@
   color: var(--color-text-secondary);
 }
 
+.playerLink {
+  margin-top: 8px;
+  color: #b7cfff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(183, 207, 255, 0.55);
+  text-underline-offset: 2px;
+  transition: color var(--transition-base);
+}
+
+.playerLink:hover {
+  color: #d6e4ff;
+}
+
 .trackBadge {
   margin-top: 10px;
   display: inline-flex;
@@ -201,6 +229,184 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.lessonActions {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.primaryActionButton,
+.secondaryActionButton {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 9px 12px;
+  transition:
+    transform var(--transition-base),
+    opacity var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base);
+}
+
+.primaryActionButton {
+  background: linear-gradient(160deg, rgba(136, 94, 255, 0.9) 0%, rgba(96, 165, 250, 0.88) 100%);
+  border-color: rgba(188, 165, 255, 0.46);
+  color: #f8f5ff;
+}
+
+.secondaryActionButton {
+  background: rgba(14, 19, 31, 0.7);
+  border-color: rgba(188, 165, 255, 0.3);
+  color: #e9dcff;
+}
+
+.primaryActionButton:hover:not(:disabled),
+.secondaryActionButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.primaryActionButton:disabled,
+.secondaryActionButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.taskPane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 100%;
+}
+
+.taskEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d2c0ff;
+}
+
+.taskTitle {
+  font-size: clamp(20px, 2.5vw, 30px);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.taskSubtitle {
+  color: rgba(216, 205, 243, 0.95);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.taskCardsGrid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  overflow: auto;
+  padding-right: 8px;
+}
+
+.taskCard {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 23, 40, 0.76);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.taskCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(188, 165, 255, 0.36);
+  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+}
+
+.taskCardHint {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #bcaedd;
+}
+
+.taskFlipArea {
+  perspective: 1200px;
+  border-radius: 12px;
+  min-height: 176px;
+  cursor: pointer;
+}
+
+.taskFlipArea:focus-visible {
+  outline: 2px solid rgba(188, 165, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.taskFlipInner {
+  position: relative;
+  min-height: 176px;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.taskFlipInnerFlipped {
+  transform: rotateY(180deg);
+}
+
+.taskFace {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.32);
+  background:
+    radial-gradient(circle at 86% -8%, rgba(177, 148, 255, 0.14), transparent 50%),
+    rgba(18, 23, 39, 0.88);
+  padding: 14px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.taskFaceBack {
+  transform: rotateY(180deg);
+}
+
+.taskFaceLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d2c0ff;
+}
+
+.taskFaceText {
+  margin-top: 8px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #f5f2ff;
+  overflow-wrap: anywhere;
+}
+
+.taskEmpty {
+  border-radius: 12px;
+  border: 1px dashed rgba(191, 168, 255, 0.42);
+  background: rgba(30, 27, 62, 0.44);
+  color: #dacdf8;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px;
 }
 
 .sidebarTitle {
@@ -249,7 +455,7 @@
 
 .skeletonCoverArt {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 16 / 9;
 }
 
 .skeletonTrackTitle {
@@ -298,6 +504,10 @@
   .lyricsPane {
     min-height: clamp(280px, 50vh, 500px);
   }
+
+  .taskCardsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -335,5 +545,9 @@
 
   .trackTitle {
     font-size: 20px;
+  }
+
+  .taskFaceText {
+    font-size: 16px;
   }
 }
