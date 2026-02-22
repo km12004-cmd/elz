@@ -1,6 +1,14 @@
 export function extractErrorMessage(error) {
   const data = error?.data;
   const detail = data?.detail;
+  const status =
+    typeof error?.status === 'number' && Number.isFinite(error.status)
+      ? error.status
+      : null;
+
+  if (status === 401) return 'Your session has expired. Please sign in again.';
+  if (status === 403) return 'You do not have access to this resource.';
+  if (status === 404) return 'Requested data was not found.';
 
   if (typeof data === 'string' && data.trim()) return data;
   if (typeof data?.error === 'string' && data.error.trim()) return data.error;

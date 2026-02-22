@@ -1,0 +1,339 @@
+.page {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-soft);
+  background:
+    radial-gradient(circle at 10% -28%, rgba(139, 92, 246, 0.18), transparent 54%),
+    radial-gradient(circle at 92% -10%, rgba(96, 165, 250, 0.12), transparent 46%),
+    var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ghostButton {
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.26);
+  background: rgba(13, 18, 30, 0.58);
+  color: #ece5ff;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.ghostButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(188, 165, 255, 0.44);
+  background: rgba(22, 29, 46, 0.76);
+}
+
+.ghostButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #d2c0ff;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.errorText {
+  border-radius: 11px;
+  border: 1px solid rgba(255, 111, 132, 0.4);
+  background: rgba(65, 16, 28, 0.42);
+  padding: 10px 12px;
+  color: #ffd2dc;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.loadingRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 330px);
+  gap: 14px;
+  align-items: start;
+  min-height: clamp(360px, 66vh, 640px);
+}
+
+.lyricsPane {
+  border-radius: 18px;
+  border: 1px solid rgba(188, 165, 255, 0.22);
+  background:
+    radial-gradient(circle at 84% 0%, rgba(96, 165, 250, 0.12), transparent 42%),
+    linear-gradient(156deg, rgba(22, 26, 52, 0.88) 0%, rgba(17, 22, 39, 0.92) 100%);
+  padding: clamp(16px, 2.2vw, 24px);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lyricsStatus {
+  font-size: 13px;
+  color: rgba(218, 206, 245, 0.9);
+}
+
+.lyricsList {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(182, 163, 229, 0.5) rgba(18, 20, 43, 0.35);
+}
+
+.lyricsLine {
+  color: #cbd3f3;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(24px, 3.1vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+.lyricsEmpty {
+  margin-top: 12px;
+  color: #cfc4ea;
+  font-size: 14px;
+}
+
+.infoSidebar {
+  position: sticky;
+  top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: start;
+}
+
+.trackCard,
+.infoPanel {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(16, 21, 36, 0.82);
+  padding: 14px;
+}
+
+.coverArt {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.28);
+  background:
+    radial-gradient(circle at 76% 14%, rgba(132, 98, 255, 0.45), transparent 40%),
+    radial-gradient(circle at 18% 84%, rgba(96, 165, 250, 0.36), transparent 56%),
+    linear-gradient(148deg, #161737 0%, #111a32 57%, #111526 100%);
+  box-shadow: inset 0 0 26px rgba(2, 6, 15, 0.42);
+  display: grid;
+  place-items: center;
+}
+
+.coverArt span {
+  color: rgba(242, 236, 255, 0.96);
+  font-family: 'Sora', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.trackTitle {
+  margin-top: 12px;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.trackArtist {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.trackBadge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(188, 165, 255, 0.5);
+  background: rgba(139, 92, 246, 0.18);
+  color: #e8dbff;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sidebarTitle {
+  font-size: 20px;
+  line-height: 1.08;
+}
+
+.metaList {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.metaRow {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.metaRow dt {
+  font-size: 12px;
+  color: #8ca5be;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.metaRow dd {
+  font-size: 13px;
+  color: #e4edf7;
+  overflow-wrap: anywhere;
+}
+
+.skeletonLyricsStatus {
+  width: 40%;
+  height: 16px;
+}
+
+.skeletonLyricsLine {
+  margin-top: 16px;
+  width: 96%;
+  height: 40px;
+}
+
+.skeletonCoverArt {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.skeletonTrackTitle {
+  margin-top: 12px;
+  width: 74%;
+  height: 24px;
+}
+
+.skeletonTrackMeta {
+  margin-top: 8px;
+  width: 52%;
+  height: 16px;
+}
+
+.skeletonInfoTitle {
+  width: 46%;
+  height: 24px;
+}
+
+.skeletonInfoRow {
+  margin-top: 10px;
+  width: 100%;
+  height: 14px;
+}
+
+@media (max-width: 1180px) {
+  .lyricsLine {
+    font-size: clamp(22px, 2.8vw, 34px);
+  }
+
+  .trackTitle {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .infoSidebar {
+    position: static;
+  }
+
+  .lyricsPane {
+    min-height: clamp(280px, 50vh, 500px);
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .headerTop {
+    flex-wrap: wrap;
+  }
+
+  .ghostButton {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .lyricsPane {
+    padding: 16px;
+  }
+
+  .lyricsList {
+    gap: 12px;
+  }
+
+  .lyricsLine {
+    font-size: clamp(20px, 6.8vw, 30px);
+  }
+
+  .trackTitle {
+    font-size: 20px;
+  }
+}

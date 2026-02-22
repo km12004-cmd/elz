@@ -4,6 +4,8 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import ProfilePage from './pages/ProfilePage';
 import PlaylistPage, { PlaylistDetailPage } from './pages/PlaylistPage';
 import CardsPage, { FolderPage } from './pages/CardsPage';
+import SongsLevelPage from './pages/SongsLevelPage';
+import SongLessonPage from './pages/SongLessonPage';
 
 const placeholderRoutes = [
   { path: '/grammar', title: 'Grammar' },
@@ -29,6 +31,8 @@ function App() {
         ))}
         <Route path="/cards" element={<CardsPage />} />
         <Route path="/cards/:folderId" element={<FolderPage />} />
+        <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
+        <Route path="/songs/:songId" element={<SongLessonPage />} />
         <Route path="/playlists" element={<PlaylistPage />} />
         <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
         <Route path="/playlist" element={<PlaylistPage />} />

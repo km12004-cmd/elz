@@ -55,3 +55,24 @@ export async function fetchProfile({ token } = {}) {
 export async function logoutUser({ token } = {}) {
   return apiRequest('/api/auth/logout', { method: 'POST', token });
 }
+
+export async function refreshUser({ token } = {}) {
+  const data = await apiRequest('/api/auth/refresh', {
+    method: 'POST',
+    token,
+  });
+
+  if (typeof data === 'string') {
+    return { token: data, user: null, raw: data };
+  }
+
+  if (!data || typeof data !== 'object') {
+    return { token: null, user: null, raw: data ?? null };
+  }
+
+  return {
+    token: typeof readToken(data) === 'string' ? readToken(data) : null,
+    user: readUser(data),
+    raw: data,
+  };
+}

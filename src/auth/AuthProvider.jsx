@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchProfile, loginUser, logoutUser, registerUser } from '../api/auth';
+import { fetchProfile, loginUser, logoutUser, refreshUser, registerUser } from '../api/auth';
 import { decodeJwtPayload } from '../utils/jwt';
 import { AuthContext } from './auth-context';
 
 const STORAGE_KEY = 'elzaman_auth';
-const AUTH_SESSION_DAYS = 5;
+const AUTH_SESSION_DAYS = 15;
 const AUTH_SESSION_TTL_MS = AUTH_SESSION_DAYS * 24 * 60 * 60 * 1000;
+const AUTH_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
 const EMPTY_AUTH = { token: null, user: null, sessionStartedAt: null };
 
 function safeParseJson(value) {
@@ -271,6 +272,51 @@ export function AuthProvider({ children }) {
       isCancelled = true;
     };
   }, [needsProfileHydration, token]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    let isCancelled = false;
+
+    const refreshAuth = async () => {
+      try {
+        const { token: refreshedToken, user: refreshedUser } = await refreshUser({ token });
+        if (isCancelled) return;
+
+        if (!refreshedToken && !refreshedUser) return;
+
+        setAuth((prev) => {
+          if (prev.token !== token) return prev;
+
+          const nextToken = refreshedToken ?? prev.token;
+          const tokenPayload = decodeJwtPayload(nextToken);
+
+          return {
+            token: nextToken,
+            user: refreshedUser
+              ? normalizeUser({
+                  email: prev.user?.email ?? refreshedUser?.email ?? null,
+                  userHint: mergeUserHints(prev.user, refreshedUser),
+                  tokenPayload,
+                  previousUser: prev.user,
+                })
+              : prev.user,
+            sessionStartedAt: prev.sessionStartedAt ?? Date.now(),
+          };
+        });
+      } catch {
+        // noop: keep current token when refresh endpoint is unavailable.
+      }
+    };
+
+    refreshAuth();
+    const intervalId = window.setInterval(refreshAuth, AUTH_REFRESH_INTERVAL_MS);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [token]);
 
   const signOut = useCallback(() => {
     const activeToken = token;
