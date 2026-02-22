@@ -230,6 +230,7 @@ function normalizeTrackProgress(value, fallbackTrackId) {
     trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? fallbackTrackId,
     status: pickFirstString(source, ['status']),
     unlockedLevel: normalizeInteger(source.unlocked_level ?? source.unlockedLevel) ?? 0,
+    unlockedGame: normalizeInteger(source.unlocked_game ?? source.unlockedGame) ?? 0,
     folderId: normalizeOptionalPositiveId(source.folder_id ?? source.folderId),
     cardsAdded: normalizeInteger(source.cards_added ?? source.cardsAdded) ?? 0,
     cardsExisting: normalizeInteger(source.cards_existing ?? source.cardsExisting) ?? 0,
@@ -456,6 +457,7 @@ export async function fetchTrackLearningState({ token, trackId } = {}) {
     trackId: normalized.trackId ?? normalizedTrackId,
     status: normalized.status ?? 'not_started',
     unlockedLevel: normalized.unlockedLevel,
+    unlockedGame: normalized.unlockedGame,
     folderId: normalized.folderId,
   };
 }
@@ -488,6 +490,7 @@ export async function markTrackAsListened({ token, trackId, percent = 100, secon
     trackId: normalized.trackId ?? normalizedTrackId,
     status: normalized.status ?? 'listened',
     unlockedLevel: normalized.unlockedLevel,
+    unlockedGame: normalized.unlockedGame,
     folderId: normalized.folderId,
   };
 }
@@ -507,6 +510,7 @@ export async function startTrackLearning({ token, trackId } = {}) {
     trackId: normalized.trackId ?? normalizedTrackId,
     status: normalized.status ?? 'in_progress',
     unlockedLevel: normalized.unlockedLevel,
+    unlockedGame: normalized.unlockedGame,
     folderId: normalized.folderId,
     cardsAdded: normalized.cardsAdded,
     cardsExisting: normalized.cardsExisting,

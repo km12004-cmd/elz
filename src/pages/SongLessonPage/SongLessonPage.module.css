@@ -378,6 +378,9 @@
   justify-content: center;
 }
 
+.taskFaceFront {
+}
+
 .taskFaceBack {
   transform: rotateY(180deg);
 }
@@ -407,6 +410,131 @@
   font-size: 14px;
   font-weight: 600;
   padding: 14px;
+}
+
+.pairsProgress {
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(205, 232, 255, 0.86);
+  font-weight: 700;
+}
+
+.pairsHint {
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(214, 197, 249, 0.9);
+}
+
+.pairsBoard {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pairsColumn {
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.22);
+  background: rgba(13, 19, 33, 0.68);
+  padding: 10px;
+  min-height: 160px;
+}
+
+.pairsColumnTitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c9d8ff;
+}
+
+.pairsList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.pairsButton {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(188, 165, 255, 0.24);
+  background:
+    radial-gradient(circle at 100% -18%, rgba(132, 98, 255, 0.22), transparent 46%),
+    rgba(24, 28, 52, 0.84);
+  color: #edf3ff;
+  padding: 10px 11px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    transform var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.pairsButton:hover:not(:disabled) {
+  border-color: rgba(188, 165, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.pairsButton:disabled {
+  cursor: not-allowed;
+}
+
+.pairsLeftButton {
+}
+
+.pairsLeftButtonSelected {
+  border-color: rgba(97, 179, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(97, 179, 255, 0.28) inset;
+}
+
+.pairsLeftButtonCorrect {
+  border-color: rgba(104, 211, 145, 0.7);
+  background:
+    radial-gradient(circle at 100% -18%, rgba(104, 211, 145, 0.28), transparent 46%),
+    rgba(20, 42, 34, 0.88);
+}
+
+.pairsLeftButtonWrong {
+  border-color: rgba(255, 111, 132, 0.64);
+  background:
+    radial-gradient(circle at 100% -18%, rgba(255, 111, 132, 0.26), transparent 46%),
+    rgba(52, 24, 34, 0.88);
+}
+
+.pairsOptionButton {
+}
+
+.pairsOptionButtonReady {
+  border-color: rgba(162, 214, 255, 0.55);
+}
+
+.pairsOptionButtonUsed {
+  opacity: 0.48;
+}
+
+.pairsMainText {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.pairsStateText {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(234, 238, 255, 0.88);
+  white-space: nowrap;
 }
 
 .sidebarTitle {
@@ -506,6 +634,10 @@
   }
 
   .taskCardsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pairsBoard {
     grid-template-columns: 1fr;
   }
 }
