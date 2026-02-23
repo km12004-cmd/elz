@@ -1,0 +1,72 @@
+.widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 192, 64, 0.28);
+  background: rgba(13, 18, 31, 0.45);
+  transition: border-color 0.15s, background 0.15s;
+  max-width: 220px;
+}
+
+.widget:hover {
+  border-color: rgba(240, 192, 64, 0.55);
+  background: rgba(26, 31, 50, 0.6);
+}
+
+.levelBadge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f0c040;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.barWrap {
+  width: 72px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f0c040 0%, #e8a020 100%);
+  transition: width 0.4s ease;
+  min-width: 4px;
+}
+
+.xpText {
+  font-size: 11px;
+  color: rgba(240, 192, 64, 0.75);
+  white-space: nowrap;
+}
+
+/* On small screens (≤640px): hide xpText, shrink bar */
+@media (max-width: 640px) {
+  .xpText {
+    display: none;
+  }
+
+  .barWrap {
+    width: 44px;
+  }
+
+  .widget {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+}
+
+/* Very small screens: hide bar text, keep badge + bar */
+@media (max-width: 380px) {
+  .barWrap {
+    display: none;
+  }
+}

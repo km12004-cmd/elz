@@ -19,6 +19,8 @@ import {
   startTrackLearning,
 } from '../../api/songs';
 import { useAuth } from '../../auth/useAuth';
+import { useProgress } from '../../contexts/useProgress';
+import { openSong, completeSong } from '../../api/xp';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Skeleton from '../../components/ui/Skeleton';
@@ -344,8 +346,7 @@ function getOptionUsageState({ ownerPairId, selectedPairId, confirmedAnswers }) 
   const isUsed = Boolean(ownerPairId);
   const isUsedBySelectedPair = Boolean(ownerPairId) && ownerPairId === selectedPairId;
   const isLocked = Boolean(ownerPairId && confirmedAnswers?.[ownerPairId]?.correct);
-  const isLockedByAnotherPair =
-    Boolean(ownerPairId) && ownerPairId !== selectedPairId && isLocked;
+  const isLockedByAnotherPair = Boolean(ownerPairId) && ownerPairId !== selectedPairId && isLocked;
 
   return {
     isUsed,
@@ -408,6 +409,7 @@ async function createSongFolderFromCards({ token, songTitle, cards } = {}) {
 
 function SongLessonPage() {
   const { token } = useAuth();
+  const { applyXpResult } = useProgress();
   const navigate = useNavigate();
   const { songId } = useParams();
   const normalizedSongId = normalizeId(songId);
@@ -513,6 +515,13 @@ function SongLessonPage() {
   useEffect(() => {
     loadSong();
   }, [loadSong]);
+
+  // Register song open for XP timer gate (fire-and-forget)
+  useEffect(() => {
+    if (token && normalizedSongId) {
+      openSong({ token, songId: normalizedSongId }).catch(() => {});
+    }
+  }, [normalizedSongId, token]);
 
   useEffect(() => {
     setTaskCards([]);
@@ -674,7 +683,9 @@ function SongLessonPage() {
   const taskThreeAllCorrect = pairsItems.length > 0 && taskThreeResolvedCount === pairsItems.length;
   const taskThreeAccuracy =
     taskThreeStats.attempts > 0
-      ? Math.round(((taskThreeStats.attempts - taskThreeStats.errors) / taskThreeStats.attempts) * 100)
+      ? Math.round(
+          ((taskThreeStats.attempts - taskThreeStats.errors) / taskThreeStats.attempts) * 100,
+        )
       : 100;
 
   const recomputeTaskTwoConnectors = useCallback(() => {
@@ -1297,13 +1308,27 @@ function SongLessonPage() {
       if (nextResolvedCount === taskTwoItems.length && taskTwoItems.length > 0) {
         setIsFinishingPairs(true);
 
+        let task2FinishResult = null;
         try {
-          await finishPairsGame({
+          task2FinishResult = await finishPairsGame({
             token,
             sessionId: normalizedSessionId,
           });
         } finally {
           setIsFinishingPairs(false);
+        }
+
+        if (task2FinishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: task2FinishResult.xpDelta,
+            newXp: task2FinishResult.newXp,
+            newLevel: task2FinishResult.newLevel,
+            nextLevelThreshold: task2FinishResult.nextLevelThreshold,
+            xpToNextLevel: task2FinishResult.xpToNextLevel,
+          });
+        } else if (task2FinishResult?.passed) {
+          applyXpResult({ applied: false });
         }
 
         setLearningState((previous) => ({
@@ -1470,10 +1495,23 @@ function SongLessonPage() {
           });
         }
 
-        await finishPairsGame({
+        const task4FinishResult = await finishPairsGame({
           token,
           sessionId: taskFourSessionId,
         }).catch(() => null);
+
+        if (task4FinishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: task4FinishResult.xpDelta,
+            newXp: task4FinishResult.newXp,
+            newLevel: task4FinishResult.newLevel,
+            nextLevelThreshold: task4FinishResult.nextLevelThreshold,
+            xpToNextLevel: task4FinishResult.xpToNextLevel,
+          });
+        } else if (task4FinishResult?.passed) {
+          applyXpResult({ applied: false });
+        }
       }
 
       await startTaskFiveExercise();
@@ -1526,8 +1564,43 @@ function SongLessonPage() {
         }).catch(() => null);
       }
 
+      // Award XP: prefer song completion XP (which covers the whole lesson);
+      // fall back to task 5 exercise XP if song completion fails.
+      let songXpShown = false;
+      if (finishResult?.passed && normalizedSongId && token) {
+        try {
+          const songXp = await completeSong({ token, songId: normalizedSongId });
+          applyXpResult({
+            applied: songXp.applied,
+            xpDelta: songXp.xpDelta,
+            newXp: songXp.newXp,
+            newLevel: songXp.newLevel,
+            nextLevelThreshold: songXp.nextLevelThreshold,
+            xpToNextLevel: songXp.xpToNextLevel,
+          });
+          songXpShown = true;
+        } catch {
+          // Silently ignore — timer gate may not have passed
+        }
+      }
+      if (!songXpShown) {
+        if (finishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: finishResult.xpDelta,
+            newXp: finishResult.newXp,
+            newLevel: finishResult.newLevel,
+            nextLevelThreshold: finishResult.nextLevelThreshold,
+            xpToNextLevel: finishResult.xpToNextLevel,
+          });
+        } else if (finishResult?.passed) {
+          applyXpResult({ applied: false });
+        }
+      }
+
       setLearningState((previous) => {
-        const nextStatus = finishResult?.passed === false ? previous?.status ?? 'in_progress' : 'finished';
+        const nextStatus =
+          finishResult?.passed === false ? previous?.status ?? 'in_progress' : 'finished';
 
         if (!previous) {
           return {
@@ -1670,13 +1743,27 @@ function SongLessonPage() {
       if (nextResolvedCount === pairsItems.length && pairsItems.length > 0) {
         setIsFinishingPairs(true);
 
+        let task3FinishResult = null;
         try {
-          await finishPairsGame({
+          task3FinishResult = await finishPairsGame({
             token,
             sessionId: normalizedSessionId,
           });
         } finally {
           setIsFinishingPairs(false);
+        }
+
+        if (task3FinishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: task3FinishResult.xpDelta,
+            newXp: task3FinishResult.newXp,
+            newLevel: task3FinishResult.newLevel,
+            nextLevelThreshold: task3FinishResult.nextLevelThreshold,
+            xpToNextLevel: task3FinishResult.xpToNextLevel,
+          });
+        } else if (task3FinishResult?.passed) {
+          applyXpResult({ applied: false });
         }
 
         setLearningState((previous) => {
@@ -1881,10 +1968,14 @@ function SongLessonPage() {
                           <ul className={styles.pairsList} onScroll={onTaskTwoBoardScroll}>
                             {taskTwoItems.map((item, index) => {
                               const pairId = normalizeId(item?.pairId);
-                              const isSelected = Boolean(pairId && taskTwoSelectedPairId === pairId);
+                              const isSelected = Boolean(
+                                pairId && taskTwoSelectedPairId === pairId,
+                              );
                               const isCorrect = Boolean(pairId && taskTwoAnswers[pairId]?.correct);
                               const isWrong = Boolean(pairId && taskTwoWrongPairs[pairId]);
-                              const isLinked = Boolean(pairId && taskTwoAssignments[pairId] && !isCorrect);
+                              const isLinked = Boolean(
+                                pairId && taskTwoAssignments[pairId] && !isCorrect,
+                              );
 
                               const pairClassName = [
                                 styles.pairsButton,
@@ -1911,7 +2002,9 @@ function SongLessonPage() {
                                       isSubmittingPairsAnswer ||
                                       isFinishingPairs
                                     }>
-                                    <span className={styles.pairsMainText}>{item.leftText || '—'}</span>
+                                    <span className={styles.pairsMainText}>
+                                      {item.leftText || '—'}
+                                    </span>
                                     {isCorrect ? (
                                       <span className={styles.pairsStateText}>Correct</span>
                                     ) : null}
@@ -1936,12 +2029,16 @@ function SongLessonPage() {
                               const ownerPairId = optionId
                                 ? taskTwoOptionOwners.get(optionId) ?? null
                                 : null;
-                              const { isUsed, isUsedBySelectedPair, isLocked, isLockedByAnotherPair } =
-                                getOptionUsageState({
-                                  ownerPairId,
-                                  selectedPairId: taskTwoSelectedPairId,
-                                  confirmedAnswers: taskTwoAnswers,
-                                });
+                              const {
+                                isUsed,
+                                isUsedBySelectedPair,
+                                isLocked,
+                                isLockedByAnotherPair,
+                              } = getOptionUsageState({
+                                ownerPairId,
+                                selectedPairId: taskTwoSelectedPairId,
+                                confirmedAnswers: taskTwoAnswers,
+                              });
 
                               const optionClassName = [
                                 styles.pairsButton,
@@ -1969,10 +2066,16 @@ function SongLessonPage() {
                                       isSubmittingPairsAnswer ||
                                       isFinishingPairs
                                     }>
-                                    <span className={styles.pairsMainText}>{option.text || '—'}</span>
+                                    <span className={styles.pairsMainText}>
+                                      {option.text || '—'}
+                                    </span>
                                     {isUsed ? (
                                       <span className={styles.pairsStateText}>
-                                        {isLocked ? 'Locked' : isUsedBySelectedPair ? 'Linked' : 'Used'}
+                                        {isLocked
+                                          ? 'Locked'
+                                          : isUsedBySelectedPair
+                                          ? 'Linked'
+                                          : 'Used'}
                                       </span>
                                     ) : null}
                                   </button>
@@ -1998,8 +2101,8 @@ function SongLessonPage() {
                 <h3 className={styles.taskTitle}>Match phrases from your database</h3>
 
                 <p className={styles.pairsProgress}>
-                  {taskThreeResolvedCount}/{pairsItems.length || 0} correct · {taskThreeLinkedCount}/
-                  {pairsItems.length || 0} connected
+                  {taskThreeResolvedCount}/{pairsItems.length || 0} correct · {taskThreeLinkedCount}
+                  /{pairsItems.length || 0} connected
                 </p>
 
                 {pairsItems.length > 0 && pairsOptions.length > 0 ? (
@@ -2050,10 +2153,14 @@ function SongLessonPage() {
                           <ul className={styles.pairsList} onScroll={onTaskThreeBoardScroll}>
                             {pairsItems.map((item, index) => {
                               const pairId = normalizeId(item?.pairId);
-                              const isSelected = Boolean(pairId && taskThreeSelectedPairId === pairId);
+                              const isSelected = Boolean(
+                                pairId && taskThreeSelectedPairId === pairId,
+                              );
                               const isCorrect = Boolean(pairId && pairsAnswers[pairId]?.correct);
                               const isWrong = Boolean(pairId && taskThreeWrongPairs[pairId]);
-                              const isLinked = Boolean(pairId && taskThreeAssignments[pairId] && !isCorrect);
+                              const isLinked = Boolean(
+                                pairId && taskThreeAssignments[pairId] && !isCorrect,
+                              );
 
                               const pairClassName = [
                                 styles.pairsButton,
@@ -2080,7 +2187,9 @@ function SongLessonPage() {
                                       isFinishingPairs ||
                                       isPreparingPairs
                                     }>
-                                    <span className={styles.pairsMainText}>{item.leftText || '—'}</span>
+                                    <span className={styles.pairsMainText}>
+                                      {item.leftText || '—'}
+                                    </span>
                                     {isCorrect ? (
                                       <span className={styles.pairsStateText}>Correct</span>
                                     ) : null}
@@ -2105,12 +2214,16 @@ function SongLessonPage() {
                               const ownerPairId = optionId
                                 ? pairsOptionOwners.get(optionId) ?? null
                                 : null;
-                              const { isUsed, isUsedBySelectedPair, isLocked, isLockedByAnotherPair } =
-                                getOptionUsageState({
-                                  ownerPairId,
-                                  selectedPairId: taskThreeSelectedPairId,
-                                  confirmedAnswers: pairsAnswers,
-                                });
+                              const {
+                                isUsed,
+                                isUsedBySelectedPair,
+                                isLocked,
+                                isLockedByAnotherPair,
+                              } = getOptionUsageState({
+                                ownerPairId,
+                                selectedPairId: taskThreeSelectedPairId,
+                                confirmedAnswers: pairsAnswers,
+                              });
 
                               const optionClassName = [
                                 styles.pairsButton,
@@ -2138,10 +2251,16 @@ function SongLessonPage() {
                                       isFinishingPairs ||
                                       isPreparingPairs
                                     }>
-                                    <span className={styles.pairsMainText}>{option.text || '—'}</span>
+                                    <span className={styles.pairsMainText}>
+                                      {option.text || '—'}
+                                    </span>
                                     {isUsed ? (
                                       <span className={styles.pairsStateText}>
-                                        {isLocked ? 'Locked' : isUsedBySelectedPair ? 'Linked' : 'Used'}
+                                        {isLocked
+                                          ? 'Locked'
+                                          : isUsedBySelectedPair
+                                          ? 'Linked'
+                                          : 'Used'}
                                       </span>
                                     ) : null}
                                   </button>
@@ -2155,7 +2274,8 @@ function SongLessonPage() {
                   </>
                 ) : (
                   <p className={styles.taskEmpty}>
-                    No Task 3 pairs were returned for this track. Add phrase templates in DB and restart this task.
+                    No Task 3 pairs were returned for this track. Add phrase templates in DB and
+                    restart this task.
                   </p>
                 )}
               </div>
@@ -2209,7 +2329,9 @@ function SongLessonPage() {
                     })}
                   </ol>
                 ) : (
-                  <p className={styles.taskEmpty}>No Exercise 4 prompts were returned for this track.</p>
+                  <p className={styles.taskEmpty}>
+                    No Exercise 4 prompts were returned for this track.
+                  </p>
                 )}
               </div>
             ) : null}
@@ -2262,7 +2384,9 @@ function SongLessonPage() {
                     })}
                   </ol>
                 ) : (
-                  <p className={styles.taskEmpty}>No Exercise 5 prompts were returned for this track.</p>
+                  <p className={styles.taskEmpty}>
+                    No Exercise 5 prompts were returned for this track.
+                  </p>
                 )}
               </div>
             ) : null}
@@ -2342,7 +2466,9 @@ function SongLessonPage() {
                       <button
                         type="button"
                         className={styles.primaryActionButton}
-                        onClick={taskTwoAllCorrect ? startTaskThreeFromTaskTwo : checkTaskTwoAnswers}
+                        onClick={
+                          taskTwoAllCorrect ? startTaskThreeFromTaskTwo : checkTaskTwoAnswers
+                        }
                         disabled={
                           taskTwoAllCorrect
                             ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
@@ -2385,7 +2511,9 @@ function SongLessonPage() {
                       <button
                         type="button"
                         className={styles.primaryActionButton}
-                        onClick={taskThreeAllCorrect ? startTaskFourFromTaskThree : checkTaskThreeAnswers}
+                        onClick={
+                          taskThreeAllCorrect ? startTaskFourFromTaskThree : checkTaskThreeAnswers
+                        }
                         disabled={
                           taskThreeAllCorrect
                             ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
@@ -2426,7 +2554,9 @@ function SongLessonPage() {
                       type="button"
                       className={styles.primaryActionButton}
                       onClick={completeTaskFour}
-                      disabled={isCompletingTaskFour || isPreparingPairs || taskFourRows.length === 0}>
+                      disabled={
+                        isCompletingTaskFour || isPreparingPairs || taskFourRows.length === 0
+                      }>
                       {isCompletingTaskFour || isPreparingPairs
                         ? 'Preparing...'
                         : 'Check answers & start exercise 5'}
@@ -2447,7 +2577,9 @@ function SongLessonPage() {
                       type="button"
                       className={styles.primaryActionButton}
                       onClick={completeTaskFive}
-                      disabled={isCompletingTaskFive || isPreparingPairs || taskFiveRows.length === 0}>
+                      disabled={
+                        isCompletingTaskFive || isPreparingPairs || taskFiveRows.length === 0
+                      }>
                       {isCompletingTaskFive || isPreparingPairs ? 'Finishing...' : 'Finish lesson'}
                     </button>
                     <button
@@ -2544,7 +2676,7 @@ function SongLessonPage() {
                 </dd>
               </div>
               <div className={styles.completionStatItem}>
-                <dt>Errors</dt>
+                <dt>Mistakes</dt>
                 <dd>{completionModal.errors}</dd>
               </div>
               <div className={styles.completionStatItem}>
@@ -2553,22 +2685,18 @@ function SongLessonPage() {
               </div>
             </dl>
 
-            <p className={styles.completionModalNote}>
-              You can come back and replay any level at any time from this song page.
-            </p>
-
             <div className={styles.completionModalActions}>
               <button
                 type="button"
                 className={styles.secondaryActionButton}
-                onClick={goToMainFromCompletionModal}>
-                Back to main screen
+                onClick={openCardsFromCompletionModal}>
+                {completionModal.nextCta}
               </button>
               <button
                 type="button"
                 className={styles.primaryActionButton}
-                onClick={openCardsFromCompletionModal}>
-                {completionModal.nextCta}
+                onClick={goToMainFromCompletionModal}>
+                Back to main screen
               </button>
             </div>
           </article>

@@ -44,7 +44,23 @@ export async function apiRequest(
   const data = await readResponseBody(response);
 
   if (!response.ok) {
-    throw new ApiError('Request failed', { status: response.status, data });
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = null;
+    }
+
+    const detail = errorData?.detail;
+    const errorCode = typeof detail === 'object' ? detail.error_code : undefined;
+    const message = typeof detail === 'object' ? detail.message : (typeof detail === 'string' ? detail : undefined);
+
+    const error = new Error(message || `Request failed: ${response.status}`);
+    error.status = response.status;
+    error.errorCode = errorCode;
+    error.detail = detail;
+    error.data = errorData;
+    throw error;
   }
 
   return data;

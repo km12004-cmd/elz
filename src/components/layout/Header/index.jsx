@@ -5,6 +5,7 @@ import { useAuth } from '../../../auth/useAuth';
 import AuthModal from '../../auth/AuthModal';
 import SignInForm from '../../auth/SignInForm';
 import SignUpForm from '../../auth/SignUpForm';
+import XpWidget from './XpWidget';
 
 function Header({ isSidebarOpen, onMenuClick }) {
   const { isAuthenticated, user, signOut } = useAuth();
@@ -52,6 +53,7 @@ function Header({ isSidebarOpen, onMenuClick }) {
         </button>
 
         <div className={styles.user}>
+          {isAuthenticated && <XpWidget />}
           {!isAuthenticated ? (
             <div className={styles.authButtons}>
               <button

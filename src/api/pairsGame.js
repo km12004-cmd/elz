@@ -360,6 +360,12 @@ export async function finishPairsGame({ token, sessionId } = {}) {
     correct: normalizeInteger(source.correct ?? source.correct_count ?? source.correctCount) ?? 0,
     total: normalizeInteger(source.total ?? source.total_count ?? source.totalCount) ?? 0,
     passed: normalizeBoolean(source.passed) === true,
+    xpApplied: normalizeBoolean(source.xp_applied ?? source.xpApplied) === true,
+    xpDelta: normalizeInteger(source.xp_delta ?? source.xpDelta) ?? 0,
+    newXp: normalizeInteger(source.new_xp ?? source.newXp) ?? null,
+    newLevel: normalizeInteger(source.new_level ?? source.newLevel) ?? null,
+    nextLevelThreshold: normalizeInteger(source.next_level_threshold ?? source.nextLevelThreshold) ?? null,
+    xpToNextLevel: normalizeInteger(source.xp_to_next_level ?? source.xpToNextLevel) ?? null,
   };
 }
 

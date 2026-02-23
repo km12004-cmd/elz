@@ -6,6 +6,8 @@ import PlaylistPage, { PlaylistDetailPage } from './pages/PlaylistPage';
 import CardsPage, { FolderPage } from './pages/CardsPage';
 import SongsLevelPage from './pages/SongsLevelPage';
 import SongLessonPage from './pages/SongLessonPage';
+import XpToast from './components/ui/XpToast';
+import LevelUpModal from './components/ui/LevelUpModal';
 
 const placeholderRoutes = [
   { path: '/grammar', title: 'Grammar' },
@@ -14,6 +16,9 @@ const placeholderRoutes = [
 
 function App() {
   return (
+    <>
+    <XpToast />
+    <LevelUpModal />
     <MainLayout>
       <Routes>
         <Route
@@ -40,6 +45,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MainLayout>
+    </>
   );
 }
 

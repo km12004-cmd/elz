@@ -22,10 +22,24 @@ export async function registerUser(payload) {
 }
 
 export async function loginUser({ email, password }) {
-  const data = await apiRequest('/api/auth/login', {
-    method: 'POST',
-    body: { email, password },
-  });
+  let data;
+  try {
+    data = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: { email, password },
+    });
+  } catch (err) {
+    // Пробрасываем понятную ошибку с бэкенда
+    const detail = err?.detail ?? err?.response?.detail ?? err?.data?.detail;
+    if (detail) {
+      const message = typeof detail === 'object' ? detail.message : detail;
+      const errorCode = typeof detail === 'object' ? detail.error_code : undefined;
+      const error = new Error(message || 'Ошибка входа');
+      error.errorCode = errorCode || 'UNKNOWN';
+      throw error;
+    }
+    throw err;
+  }
 
   if (typeof data === 'string') return { token: data, user: null, raw: data };
   if (!data || typeof data !== 'object') {

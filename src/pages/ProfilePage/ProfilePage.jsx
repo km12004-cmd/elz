@@ -1,5 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
+import { useProgress } from '../../contexts/useProgress';
+import { xpFillPercent } from '../../utils/xpLevels';
 import styles from './profilePage.module.css';
 
 function normalizeString(value) {
@@ -47,6 +49,7 @@ function getSafeValue(value) {
 
 function ProfilePage() {
   const { isAuthenticated, user, signOut } = useAuth();
+  const { progress } = useProgress();
   const navigate = useNavigate();
 
   if (!isAuthenticated) {
@@ -108,6 +111,58 @@ function ProfilePage() {
         <button type="button" className={styles.logoutButton} onClick={onLogout} title="Sign out">
           Logout
         </button>
+      </div>
+
+      <div className={styles.progressBlock}>
+        {(() => {
+          const { level, xpTotal, nextLevelThreshold, xpToNextLevel } = progress;
+          const fillPercent = xpFillPercent(level, xpTotal);
+          const isMaxLevel = xpToNextLevel === 0;
+          return (
+            <>
+              <div className={styles.progressHeader}>
+                <span className={styles.progressLevel}>Level {level}</span>
+                {!isMaxLevel && (
+                  <span className={styles.progressXpMeta}>
+                    {xpToNextLevel} XP to Lv. {level + 1}
+                  </span>
+                )}
+                {isMaxLevel && (
+                  <span className={styles.progressXpMeta}>Max level</span>
+                )}
+              </div>
+              <div
+                className={styles.progressBarWrap}
+                role="progressbar"
+                aria-valuenow={fillPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`Level ${level}, ${xpToNextLevel} XP to next level`}
+              >
+                <div
+                  className={styles.progressBarFill}
+                  style={{ width: `${fillPercent}%` }}
+                />
+              </div>
+              <div className={styles.progressStats}>
+                <div className={styles.progressStat}>
+                  <span className={styles.progressStatLabel}>Total XP</span>
+                  <span className={styles.progressStatValue}>{xpTotal}</span>
+                </div>
+                <div className={styles.progressStat}>
+                  <span className={styles.progressStatLabel}>Next level at</span>
+                  <span className={styles.progressStatValue}>{nextLevelThreshold} XP</span>
+                </div>
+                {!isMaxLevel && (
+                  <div className={styles.progressStat}>
+                    <span className={styles.progressStatLabel}>Remaining</span>
+                    <span className={styles.progressStatValue}>{xpToNextLevel} XP</span>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       <div className={styles.content}>

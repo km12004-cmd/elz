@@ -320,8 +320,19 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const signIn = useCallback(async ({ email, password, userHint } = {}) => {
+    // loginUser теперь бросает ошибку с errorCode и нормальным message
+    // Не перехватываем её здесь — пусть долетит до компонента формы логина
     const { token: nextToken, user: responseUser } = await loginUser({ email, password });
-    const profileUser = nextToken ? await fetchProfile({ token: nextToken }).catch(() => null) : null;
+    
+    let profileUser = null;
+    if (nextToken) {
+      try {
+        profileUser = await fetchProfile({ token: nextToken });
+      } catch {
+        // Профиль не удалось загрузить — не критично
+      }
+    }
+    
     const tokenPayload = decodeJwtPayload(nextToken);
     const mergedUserHint = mergeUserHints(responseUser, profileUser, userHint);
 
