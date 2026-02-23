@@ -53,14 +53,6 @@
   cursor: not-allowed;
 }
 
-.eyebrow {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: #d2c0ff;
-}
-
 .title {
   font-size: 30px;
   font-weight: 700;
@@ -105,11 +97,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.lyricsStatus {
-  font-size: 13px;
-  color: rgba(218, 206, 245, 0.9);
 }
 
 .lyricsList {
@@ -425,11 +412,52 @@
   color: rgba(214, 197, 249, 0.9);
 }
 
-.pairsBoard {
+.pairsMeta {
+  margin-top: -2px;
+  font-size: 12px;
+  color: rgba(214, 232, 255, 0.78);
+  font-weight: 600;
+}
+
+.pairsBoardWrap {
   margin-top: 6px;
+  position: relative;
+}
+
+.pairsBoard {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.pairsConnectorLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pairsConnector {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    stroke var(--transition-base),
+    stroke-width var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.pairsConnectorConfirmed {
+  stroke: rgba(255, 255, 255, 1);
+  stroke-width: 2;
+}
+
+.pairsConnectorArrow {
+  fill: rgba(255, 255, 255, 0.88);
 }
 
 .pairsColumn {
@@ -463,8 +491,8 @@
   border-radius: 10px;
   border: 1px solid rgba(188, 165, 255, 0.24);
   background:
-    radial-gradient(circle at 100% -18%, rgba(132, 98, 255, 0.22), transparent 46%),
-    rgba(24, 28, 52, 0.84);
+    radial-gradient(circle at 100% -18%, rgba(132, 98, 255, 0.28), transparent 46%),
+    linear-gradient(140deg, rgba(27, 33, 58, 0.92) 0%, rgba(18, 24, 43, 0.9) 100%);
   color: #edf3ff;
   padding: 10px 11px;
   text-align: left;
@@ -474,26 +502,52 @@
   gap: 8px;
   cursor: pointer;
   transition:
+    background var(--transition-base),
     border-color var(--transition-base),
+    box-shadow var(--transition-base),
     transform var(--transition-base),
     opacity var(--transition-base);
 }
 
 .pairsButton:hover:not(:disabled) {
-  border-color: rgba(188, 165, 255, 0.5);
-  transform: translateY(-1px);
+  border-color: rgba(188, 165, 255, 0.62);
+  background:
+    radial-gradient(circle at 100% -18%, rgba(144, 114, 255, 0.38), transparent 46%),
+    linear-gradient(140deg, rgba(30, 37, 67, 0.96) 0%, rgba(21, 29, 52, 0.94) 100%);
+  box-shadow:
+    0 7px 18px rgba(7, 11, 23, 0.36),
+    0 0 0 1px rgba(188, 165, 255, 0.18) inset;
+  transform: translateY(-1px) scale(1.01);
+}
+
+.pairsButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.995);
+  box-shadow:
+    0 3px 10px rgba(7, 11, 23, 0.3),
+    0 0 0 1px rgba(188, 165, 255, 0.12) inset;
+}
+
+.pairsButton:focus-visible {
+  outline: none;
+  border-color: rgba(174, 222, 255, 0.85);
+  box-shadow:
+    0 0 0 2px rgba(174, 222, 255, 0.24),
+    0 0 0 1px rgba(174, 222, 255, 0.48) inset;
 }
 
 .pairsButton:disabled {
   cursor: not-allowed;
+  opacity: 0.78;
 }
 
 .pairsLeftButton {
 }
 
 .pairsLeftButtonSelected {
-  border-color: rgba(97, 179, 255, 0.72);
-  box-shadow: 0 0 0 1px rgba(97, 179, 255, 0.28) inset;
+  border-color: rgba(97, 179, 255, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(97, 179, 255, 0.45) inset,
+    0 0 22px rgba(97, 179, 255, 0.2);
 }
 
 .pairsLeftButtonCorrect {
@@ -510,6 +564,11 @@
     rgba(52, 24, 34, 0.88);
 }
 
+.pairsLeftButtonLinked {
+  border-color: rgba(124, 209, 255, 0.68);
+  box-shadow: 0 0 0 1px rgba(124, 209, 255, 0.2) inset;
+}
+
 .pairsOptionButton {
 }
 
@@ -518,7 +577,22 @@
 }
 
 .pairsOptionButtonUsed {
-  opacity: 0.48;
+  opacity: 0.84;
+}
+
+.pairsOptionButtonSelected {
+  border-color: rgba(162, 214, 255, 0.86);
+  box-shadow:
+    0 0 0 1px rgba(162, 214, 255, 0.4) inset,
+    0 0 20px rgba(162, 214, 255, 0.16);
+}
+
+.pairsOptionButtonLocked {
+  opacity: 0.82;
+  border-color: rgba(104, 211, 145, 0.52);
+  background:
+    radial-gradient(circle at 100% -18%, rgba(104, 211, 145, 0.18), transparent 46%),
+    rgba(20, 34, 30, 0.88);
 }
 
 .pairsMainText {
@@ -533,8 +607,172 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(234, 238, 255, 0.88);
+  color: rgba(236, 241, 255, 0.94);
   white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid rgba(171, 192, 236, 0.35);
+  background: rgba(16, 25, 48, 0.56);
+  padding: 2px 7px;
+}
+
+.typingList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.typingRow {
+  list-style: decimal;
+  list-style-position: inside;
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.26);
+  background: rgba(14, 19, 34, 0.72);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.typingPrompt {
+  color: #e7efff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.typingInput {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(188, 165, 255, 0.36);
+  background: rgba(9, 14, 29, 0.82);
+  color: #f6f8ff;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
+}
+
+.typingInput:focus {
+  outline: none;
+  border-color: rgba(162, 214, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(162, 214, 255, 0.26) inset;
+}
+
+.typingInput:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.typingInputCorrect {
+  border-color: rgba(104, 211, 145, 0.7);
+  background: rgba(20, 42, 34, 0.82);
+}
+
+.typingInputWrong {
+  border-color: rgba(255, 111, 132, 0.72);
+  background: rgba(52, 24, 34, 0.82);
+}
+
+.typingRowState {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(234, 238, 255, 0.88);
+}
+
+.completionModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(5, 8, 17, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.completionModal {
+  width: min(540px, 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(188, 165, 255, 0.34);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(155, 134, 255, 0.2), transparent 52%),
+    rgba(16, 21, 38, 0.96);
+  padding: 18px;
+  box-shadow: 0 30px 70px rgba(4, 7, 17, 0.52);
+}
+
+.completionModalEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cbb7ff;
+}
+
+.completionModalTitle {
+  margin-top: 6px;
+  font-size: 27px;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: #f4f7ff;
+}
+
+.completionModalSubtitle {
+  margin-top: 7px;
+  font-size: 14px;
+  color: rgba(221, 230, 255, 0.9);
+}
+
+.completionStats {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.completionStatItem {
+  border-radius: 12px;
+  border: 1px solid rgba(188, 165, 255, 0.28);
+  background: rgba(11, 16, 30, 0.84);
+  padding: 10px;
+}
+
+.completionStatItem dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #93a7cb;
+}
+
+.completionStatItem dd {
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #f5f8ff;
+}
+
+.completionModalNote {
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgba(224, 233, 255, 0.84);
+}
+
+.completionModalActions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .sidebarTitle {
@@ -681,5 +919,18 @@
 
   .taskFaceText {
     font-size: 16px;
+  }
+
+  .completionModal {
+    padding: 14px;
+  }
+
+  .completionModalTitle {
+    font-size: 23px;
+  }
+
+  .completionStats,
+  .completionModalActions {
+    grid-template-columns: 1fr;
   }
 }

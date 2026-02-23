@@ -37,8 +37,6 @@ function MainLayout({ children }) {
       if (!event.matches) setIsMobileSidebarOpen(false);
     };
 
-    setIsMobile(mediaQuery.matches);
-
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', onMediaQueryChange);
     } else {
@@ -88,7 +86,13 @@ function MainLayout({ children }) {
 
   useEffect(() => {
     if (!isMobile) return;
-    setIsMobileSidebarOpen(false);
+    const timerId = window.setTimeout(() => {
+      setIsMobileSidebarOpen(false);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
   }, [location.pathname, isMobile]);
 
   const handleDesktopToggle = () => {

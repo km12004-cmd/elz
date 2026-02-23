@@ -214,22 +214,15 @@ export function AuthProvider({ children }) {
     if (!token) return undefined;
 
     const startedAt = Number(sessionStartedAt);
-    if (!Number.isFinite(startedAt) || startedAt <= 0) {
-      setAuth(EMPTY_AUTH);
-      return undefined;
-    }
-
-    const elapsed = Date.now() - startedAt;
-    const remainingMs = AUTH_SESSION_TTL_MS - elapsed;
-
-    if (remainingMs <= 0) {
-      setAuth(EMPTY_AUTH);
-      return undefined;
-    }
+    const remainingMs =
+      Number.isFinite(startedAt) && startedAt > 0
+        ? AUTH_SESSION_TTL_MS - (Date.now() - startedAt)
+        : 0;
+    const timeoutMs = Math.max(0, remainingMs);
 
     const timerId = window.setTimeout(() => {
-      setAuth(EMPTY_AUTH);
-    }, remainingMs);
+      setAuth((prev) => (prev.token === token ? EMPTY_AUTH : prev));
+    }, timeoutMs);
 
     return () => {
       window.clearTimeout(timerId);
