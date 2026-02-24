@@ -3,6 +3,7 @@ import { ApiError, apiRequest } from './client';
 const FLASHCARDS_BASE_PATH = '/api/flashcards';
 const FLASHCARD_FOLDERS_BASE_PATH = `${FLASHCARDS_BASE_PATH}/folders`;
 const CARD_TEXT_MAX_LENGTH = 500;
+const FLASHCARDS_SUFFIX_PATTERN = /\s*-\s*flashcards$/i;
 
 function asObject(value) {
   return value && typeof value === 'object' ? value : null;
@@ -21,6 +22,14 @@ function normalizeId(value) {
 function normalizeText(value) {
   if (typeof value !== 'string') return '';
   return value.trim();
+}
+
+function normalizeFolderName(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return '';
+
+  const withoutSuffix = normalized.replace(FLASHCARDS_SUFFIX_PATTERN, '').trim();
+  return withoutSuffix || normalized;
 }
 
 function normalizeInteger(value) {
@@ -134,10 +143,12 @@ function normalizeFolderCard(value) {
 function normalizeFolder(value) {
   const folder = asObject(value) ?? {};
   const cards = readCollection(folder.cards ?? folder.items).map(normalizeFolderCard);
+  const rawName = pickFirstString(folder, ['name', 'title']);
+  const normalizedName = normalizeFolderName(rawName);
 
   return {
     id: pickFirstId(folder, ['folder_id', 'folderId', 'id']),
-    name: pickFirstString(folder, ['name', 'title']) ?? 'Untitled folder',
+    name: normalizedName || 'Untitled folder',
     cards,
     cardsCount:
       normalizeInteger(folder.cards_count ?? folder.cardsCount ?? folder.items_count ?? folder.itemsCount) ??
@@ -220,7 +231,7 @@ export async function createFlashcardFolder({ token, name } = {}) {
   return {
     ...normalized,
     id: normalized.id ?? pickFirstId(data, ['folder_id', 'folderId', 'id']),
-    name: normalized.name || normalizedName,
+    name: normalized.name || normalizeFolderName(normalizedName) || normalizedName,
     cards: [],
     cardsCount: typeof normalized.cardsCount === 'number' ? normalized.cardsCount : 0,
   };

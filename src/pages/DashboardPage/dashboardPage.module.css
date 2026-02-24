@@ -1,101 +1,159 @@
 .dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  --compact-border: #1f2430;
+  --compact-border-soft: rgba(31, 36, 48, 0.44);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
 }
 
-/* Block card */
+.levelsSection,
+.artistsSection {
+  grid-column: 1 / -1;
+}
+
+.playlistsSection {
+  grid-column: 1 / 7;
+}
+
+.foldersSection {
+  grid-column: 7 / -1;
+}
+
+.artistsSection {
+  grid-column: 1 / 7;
+  align-self: end;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.artistsSection .blockHeader {
+  margin-bottom: 8px;
+}
+
 .block {
-  background: #ffffff;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-soft);
-  box-shadow: var(--shadow-card);
-  padding: 24px;
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 0%, #f7f8fc 100%);
+  border-radius: 24px 16px 22px 14px;
+  border: 1.5px solid var(--compact-border);
+  box-shadow: 0 8px 20px rgba(15, 18, 29, 0.08);
+  padding: 16px;
+  overflow: hidden;
+}
+
+.block::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-top: 1.5px solid rgba(31, 36, 48, 0.32);
+  border-right: 1.5px solid rgba(31, 36, 48, 0.32);
+  border-radius: 0 12px 0 16px;
+  pointer-events: none;
 }
 
 .blockHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .blockTitle {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-text-main);
 }
 
 .blockSubtitle {
-  margin-top: 4px;
+  margin-top: 3px;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
-/* Levels grid */
 .levelsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .levelCard {
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-lg);
-  padding: 18px;
+  position: relative;
+  border: 1.5px solid var(--compact-border);
+  border-radius: 18px 12px 20px 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-height: 134px;
   cursor: pointer;
   text-align: left;
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.levelCard::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 26px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(31, 36, 48, 0.24);
 }
 
 .levelCard:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lifted);
+  box-shadow: 0 10px 18px rgba(21, 24, 37, 0.18);
 }
 
 .levelBadge {
   align-self: flex-start;
   border-radius: 999px;
-  background: rgba(127, 116, 255, 0.12);
-  color: #7f74ff;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  background: rgba(31, 36, 48, 0.1);
+  color: #1f2430;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .levelName {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--color-text-main);
+  line-height: 1.25;
 }
 
 .levelDescription {
   color: var(--color-text-secondary);
-  font-size: 13px;
-  line-height: 1.4;
-  min-height: 40px;
+  font-size: 12px;
+  line-height: 1.35;
+  min-height: 32px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .levelMeta {
   margin-top: auto;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-weight: 700;
+  color: rgba(31, 36, 48, 0.88);
+  font-size: 11px;
+  font-weight: 800;
 }
 
-/* Artists */
 .artistsRow {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
   scrollbar-width: thin;
   scroll-snap-type: x proximity;
 }
@@ -103,17 +161,17 @@
 .artistCard {
   flex: 0 0 auto;
   scroll-snap-align: start;
-  width: 120px;
+  width: 80px;
 }
 
 .artistAvatar {
-  width: 120px;
-  height: 120px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--color-border-soft);
+  border: 1.5px solid var(--compact-border-soft);
   background: var(--color-bg-content);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 5px 12px rgba(14, 16, 24, 0.08);
 }
 
 .artistAvatarImage {
@@ -128,48 +186,92 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--color-primary);
 }
 
 .artistName {
-  margin-top: 8px;
-  font-size: 14px;
+  margin-top: 6px;
+  font-size: 11px;
   text-align: center;
-  line-height: 1.15;
+  line-height: 1.2;
   color: var(--color-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Items grid (playlists, folders) */
 .itemGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(145px, 220px);
+  grid-template-rows: 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.collectionGrid {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.collectionGrid > .itemCard {
+  scroll-snap-align: start;
+}
+
+.foldersSection .itemGrid {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(145px, 220px);
+  grid-template-rows: 1fr;
+  align-items: stretch;
+}
+
+.foldersSection .collectionGrid {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+}
+
+.foldersSection .collectionGrid > .itemCard {
+  scroll-snap-align: start;
 }
 
 .itemCard {
   position: relative;
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-content);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  border: 1.5px solid var(--compact-border);
+  border-radius: 16px 12px 18px 10px;
+  background: linear-gradient(160deg, #fdfdff 0%, #edf0f7 100%);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.itemCard::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(31, 36, 48, 0.45);
 }
 
 .itemCard:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lifted);
+  box-shadow: 0 10px 18px rgba(21, 24, 37, 0.14);
 }
 
 .itemMainButton {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 16px;
+  gap: 4px;
+  padding: 11px 12px 10px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -177,32 +279,37 @@
 }
 
 .itemIcon {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .itemTitle {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-text-main);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .itemMeta {
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-weight: 600;
+  color: rgba(31, 36, 48, 0.82);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .deleteButton {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
-  font-size: 16px;
+  color: rgba(31, 36, 48, 0.75);
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -220,26 +327,24 @@
   color: var(--color-danger);
 }
 
-/* Buttons */
 .primaryButton {
   flex-shrink: 0;
   border-radius: 999px;
-  border: none;
-  background: var(--color-primary);
+  border: 1.5px solid #1f2430;
+  background: linear-gradient(120deg, #ff6f3c 0%, #ff4f45 100%);
   color: #ffffff;
-  padding: 10px 18px;
-  font-size: 13px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform var(--transition-base), background var(--transition-base);
+  transition: transform var(--transition-base), filter var(--transition-base);
 }
 
 .primaryButton:hover {
   transform: translateY(-1px);
-  background: #6b60e6;
+  filter: saturate(1.12);
 }
 
-/* Status */
 .loadingText {
   color: var(--color-text-muted);
   font-size: 13px;
@@ -269,29 +374,59 @@
   font-size: 13px;
 }
 
-/* Responsive */
+@media (max-width: 1180px) {
+  .playlistsSection,
+  .foldersSection,
+  .artistsSection {
+    grid-column: 1 / -1;
+  }
+
+  .collectionGrid {
+    padding-bottom: 4px;
+  }
+}
+
 @media (max-width: 900px) {
-  .levelsGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .dashboard {
+    gap: 10px;
   }
 
   .block {
-    padding: 18px;
+    padding: 14px;
+    border-radius: 20px 14px 19px 12px;
   }
 
   .blockTitle {
-    font-size: 19px;
+    font-size: 18px;
+  }
+
+  .levelsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .artistCard {
+    width: 74px;
+  }
+
+  .artistAvatar {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+  }
+
+  .artistAvatarFallback {
+    font-size: 17px;
   }
 }
 
 @media (max-width: 640px) {
   .dashboard {
-    gap: 14px;
+    gap: 9px;
   }
 
   .block {
-    padding: 14px;
-    border-radius: var(--radius-lg);
+    padding: 12px;
+    border-radius: 16px;
   }
 
   .levelsGrid {
@@ -304,32 +439,29 @@
 
   .blockHeader {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .itemGrid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
+    grid-auto-columns: minmax(132px, 176px);
+    gap: 9px;
   }
 
   .artistCard {
-    width: 96px;
+    width: 68px;
   }
 
   .artistAvatar {
-    width: 96px;
-    height: 96px;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
   }
 
   .artistAvatarFallback {
-    font-size: 22px;
+    font-size: 17px;
   }
 
   .artistName {
-    font-size: 13px;
-  }
-
-  .artistsRow {
-    gap: 14px;
+    font-size: 11px;
   }
 }

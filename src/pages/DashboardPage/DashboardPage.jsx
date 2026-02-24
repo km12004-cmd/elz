@@ -299,7 +299,7 @@ function DashboardPage() {
   return (
     <div className={styles.dashboard}>
       {/* Song Levels */}
-      <section className={styles.block}>
+      <section className={`${styles.block} ${styles.levelsSection}`}>
         <div className={styles.blockHeader}>
           <h2 className={styles.blockTitle}>Choose your level</h2>
           <p className={styles.blockSubtitle}>Open the song library for a specific difficulty.</p>
@@ -324,8 +324,136 @@ function DashboardPage() {
         </div>
       </section>
 
+      {/* Playlists */}
+      {isAuthenticated && (
+        <section className={`${styles.block} ${styles.playlistsSection}`}>
+          <div className={styles.blockHeader}>
+            <div>
+              <h2 className={styles.blockTitle}>My Playlists</h2>
+              <p className={styles.blockSubtitle}>Organize songs for focused learning sessions.</p>
+            </div>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
+            >
+              + Create Playlist
+            </button>
+          </div>
+          {playlistsError && <p className={styles.errorText}>{playlistsError}</p>}
+          {isLoadingPlaylists && (
+            <div className={styles.loadingRow}>
+              <LoadingSpinner size="sm" />
+              <span>Loading playlists...</span>
+            </div>
+          )}
+          {!isLoadingPlaylists && playlists.length === 0 && (
+            <EmptyState
+              kind="playlist"
+              title="No playlists yet"
+              description="Create your first playlist to collect songs."
+              actionLabel="Create playlist"
+              onAction={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
+            />
+          )}
+          {!isLoadingPlaylists && playlists.length > 0 && (
+            <div className={`${styles.itemGrid} ${styles.collectionGrid}`}>
+              {playlists.map((playlist, index) => {
+                const id = normalizeId(playlist.id);
+                return (
+                  <article key={id ?? `pl-${index}`} className={styles.itemCard}>
+                    <button
+                      type="button"
+                      className={styles.itemMainButton}
+                      onClick={() => id && navigate(`/playlists/${id}`)}
+                      disabled={!id}
+                    >
+                      <span className={styles.itemIcon}>&#9835;</span>
+                      <p className={styles.itemTitle}>{playlist.title}</p>
+                      <p className={styles.itemMeta}>{playlist.songsCount ?? 0} songs</p>
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => setPlaylistToDelete(playlist)}
+                      title="Delete playlist"
+                    >
+                      &times;
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Flashcard Folders */}
+      {isAuthenticated && (
+        <section className={`${styles.block} ${styles.foldersSection}`}>
+          <div className={styles.blockHeader}>
+            <div>
+              <h2 className={styles.blockTitle}>My Flashcards</h2>
+              <p className={styles.blockSubtitle}>Build compact decks and review vocabulary.</p>
+            </div>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
+            >
+              + Create Folder
+            </button>
+          </div>
+          {foldersError && <p className={styles.errorText}>{foldersError}</p>}
+          {isLoadingFolders && (
+            <div className={styles.loadingRow}>
+              <LoadingSpinner size="sm" />
+              <span>Loading folders...</span>
+            </div>
+          )}
+          {!isLoadingFolders && folders.length === 0 && (
+            <EmptyState
+              kind="folder"
+              title="No folders created"
+              description="Create your first folder to organize cards."
+              actionLabel="Create folder"
+              onAction={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
+            />
+          )}
+          {!isLoadingFolders && folders.length > 0 && (
+            <div className={`${styles.itemGrid} ${styles.collectionGrid}`}>
+              {folders.map((folder, index) => {
+                const id = normalizeId(folder.id);
+                return (
+                  <article key={id ?? `fl-${index}`} className={styles.itemCard}>
+                    <button
+                      type="button"
+                      className={styles.itemMainButton}
+                      onClick={() => id && navigate(`/cards/${id}`)}
+                      disabled={!id}
+                    >
+                      <span className={styles.itemIcon}>&#128193;</span>
+                      <p className={styles.itemTitle}>{folder.name}</p>
+                      <p className={styles.itemMeta}>{countCards(folder)} cards</p>
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => setFolderToDelete(folder)}
+                      title="Delete folder"
+                    >
+                      &times;
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Artists */}
-      <section className={styles.block}>
+      <section className={`${styles.block} ${styles.artistsSection}`}>
         <div className={styles.blockHeader}>
           <h2 className={styles.blockTitle}>Artists who collaborate with us</h2>
         </div>
@@ -363,134 +491,6 @@ function DashboardPage() {
           </div>
         )}
       </section>
-
-      {/* Playlists */}
-      {isAuthenticated && (
-        <section className={styles.block}>
-          <div className={styles.blockHeader}>
-            <div>
-              <h2 className={styles.blockTitle}>My Playlists</h2>
-              <p className={styles.blockSubtitle}>Organize songs for focused learning sessions.</p>
-            </div>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
-            >
-              + Create Playlist
-            </button>
-          </div>
-          {playlistsError && <p className={styles.errorText}>{playlistsError}</p>}
-          {isLoadingPlaylists && (
-            <div className={styles.loadingRow}>
-              <LoadingSpinner size="sm" />
-              <span>Loading playlists...</span>
-            </div>
-          )}
-          {!isLoadingPlaylists && playlists.length === 0 && (
-            <EmptyState
-              kind="playlist"
-              title="No playlists yet"
-              description="Create your first playlist to collect songs."
-              actionLabel="Create playlist"
-              onAction={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
-            />
-          )}
-          {!isLoadingPlaylists && playlists.length > 0 && (
-            <div className={styles.itemGrid}>
-              {playlists.map((playlist, index) => {
-                const id = normalizeId(playlist.id);
-                return (
-                  <article key={id ?? `pl-${index}`} className={styles.itemCard}>
-                    <button
-                      type="button"
-                      className={styles.itemMainButton}
-                      onClick={() => id && navigate(`/playlists/${id}`)}
-                      disabled={!id}
-                    >
-                      <span className={styles.itemIcon}>&#9835;</span>
-                      <p className={styles.itemTitle}>{playlist.title}</p>
-                      <p className={styles.itemMeta}>{playlist.songsCount ?? 0} songs</p>
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => setPlaylistToDelete(playlist)}
-                      title="Delete playlist"
-                    >
-                      &times;
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Flashcard Folders */}
-      {isAuthenticated && (
-        <section className={styles.block}>
-          <div className={styles.blockHeader}>
-            <div>
-              <h2 className={styles.blockTitle}>My Flashcards</h2>
-              <p className={styles.blockSubtitle}>Build compact decks and review vocabulary.</p>
-            </div>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
-            >
-              + Create Folder
-            </button>
-          </div>
-          {foldersError && <p className={styles.errorText}>{foldersError}</p>}
-          {isLoadingFolders && (
-            <div className={styles.loadingRow}>
-              <LoadingSpinner size="sm" />
-              <span>Loading folders...</span>
-            </div>
-          )}
-          {!isLoadingFolders && folders.length === 0 && (
-            <EmptyState
-              kind="folder"
-              title="No folders created"
-              description="Create your first folder to organize cards."
-              actionLabel="Create folder"
-              onAction={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
-            />
-          )}
-          {!isLoadingFolders && folders.length > 0 && (
-            <div className={styles.itemGrid}>
-              {folders.map((folder, index) => {
-                const id = normalizeId(folder.id);
-                return (
-                  <article key={id ?? `fl-${index}`} className={styles.itemCard}>
-                    <button
-                      type="button"
-                      className={styles.itemMainButton}
-                      onClick={() => id && navigate(`/cards/${id}`)}
-                      disabled={!id}
-                    >
-                      <span className={styles.itemIcon}>&#128193;</span>
-                      <p className={styles.itemTitle}>{folder.name}</p>
-                      <p className={styles.itemMeta}>{countCards(folder)} cards</p>
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => setFolderToDelete(folder)}
-                      title="Delete folder"
-                    >
-                      &times;
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
 
       {/* Modals */}
       {isCreatePlaylistOpen && (
