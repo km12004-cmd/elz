@@ -6,7 +6,6 @@ export function extractErrorMessage(error) {
       ? error.status
       : null;
 
-  if (status === 401) return 'Your session has expired. Please sign in again.';
   if (status === 403) return 'You do not have access to this resource.';
   if (status === 404) return 'Requested data was not found.';
 
@@ -25,6 +24,8 @@ export function extractErrorMessage(error) {
 
   if (typeof data?.message === 'string' && data.message.trim()) return data.message;
   if (typeof error?.message === 'string' && error.message.trim()) return error.message;
+
+  if (status === 401) return 'Your session has expired. Please sign in again.';
 
   return 'Something went wrong. Please try again.';
 }

@@ -10,17 +10,6 @@
   padding: 28px 24px;
 }
 
-.icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.36);
-  background: rgba(139, 92, 246, 0.14);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 19px;
-}
 
 .title {
   margin-top: 14px;
@@ -31,6 +20,7 @@
 
 .subtitle {
   margin-top: 8px;
+  margin-bottom: 40px;
   max-width: 620px;
   color: var(--color-text-secondary);
   font-size: 15px;
@@ -149,6 +139,93 @@
   letter-spacing: 0.01em;
 }
 
+.artistsSection {
+  margin-top: 30px;
+}
+
+.artistsTitle {
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.artistsLoading {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.artistsError {
+  margin-top: 10px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 111, 132, 0.42);
+  background: rgba(65, 16, 28, 0.42);
+  padding: 9px 11px;
+  color: #ffd2dc;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.artistsEmpty {
+  margin-top: 10px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.artistsRow {
+  margin-top: 16px;
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.artistCard {
+  flex: 0 0 auto;
+  width: 156px;
+}
+
+.artistAvatar {
+  width: 156px;
+  height: 156px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+  background:
+    radial-gradient(circle at 24% 20%, rgba(139, 92, 246, 0.3), transparent 50%),
+    rgba(12, 16, 26, 0.9);
+  box-shadow: 0 10px 28px rgba(3, 8, 20, 0.35);
+}
+
+.artistAvatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artistAvatarFallback {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 800;
+  color: #f3ebff;
+}
+
+.artistName {
+  margin-top: 10px;
+  font-size: 16px;
+  text-align: center;
+  line-height: 1.15;
+  color: #f7f4ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 760px) {
   .page {
     border-radius: var(--radius-lg);
@@ -169,5 +246,30 @@
 
   .levelDescription {
     min-height: 0;
+  }
+
+  .artistsTitle {
+    font-size: 24px;
+  }
+
+  .artistsRow {
+    gap: 14px;
+  }
+
+  .artistCard {
+    width: 120px;
+  }
+
+  .artistAvatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .artistAvatarFallback {
+    font-size: 28px;
+  }
+
+  .artistName {
+    font-size: 20px;
   }
 }

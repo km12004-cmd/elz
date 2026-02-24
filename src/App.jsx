@@ -17,34 +17,28 @@ const placeholderRoutes = [
 function App() {
   return (
     <>
-    <XpToast />
-    <LevelUpModal />
-    <MainLayout>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <PlaceholderPage
-              title="Home"
-              subtitle="Preserve the Kyrgyz language through songs and games."
-              showLevels
-            />
-          }
-        />
-        {placeholderRoutes.map(({ path, title }) => (
-          <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
-        ))}
-        <Route path="/cards" element={<CardsPage />} />
-        <Route path="/cards/:folderId" element={<FolderPage />} />
-        <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
-        <Route path="/songs/:songId" element={<SongLessonPage />} />
-        <Route path="/playlists" element={<PlaylistPage />} />
-        <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
-        <Route path="/playlist" element={<PlaylistPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </MainLayout>
+      <XpToast />
+      <LevelUpModal />
+      <MainLayout>
+        <Routes>
+          <Route
+            path="/"
+            element={<PlaceholderPage />}
+          />
+          {placeholderRoutes.map(({ path, title }) => (
+            <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
+          ))}
+          <Route path="/cards" element={<CardsPage />} />
+          <Route path="/cards/:folderId" element={<FolderPage />} />
+          <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
+          <Route path="/songs/:songId" element={<SongLessonPage />} />
+          <Route path="/playlists" element={<PlaylistPage />} />
+          <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
+          <Route path="/playlist" element={<PlaylistPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </MainLayout>
     </>
   );
 }
