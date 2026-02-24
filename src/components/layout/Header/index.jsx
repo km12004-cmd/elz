@@ -18,7 +18,7 @@ function formatStreakDays(value) {
   return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
 }
 
-function Header({ isSidebarOpen, onMenuClick }) {
+function Header() {
   const { isAuthenticated, user, signOut } = useAuth();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
@@ -54,17 +54,6 @@ function Header({ isSidebarOpen, onMenuClick }) {
   return (
     <header className={styles.header}>
       <div className={styles.topBar}>
-        <button
-          type="button"
-          className={`${styles.menuButton} ${isSidebarOpen ? styles.menuButtonActive : ''}`}
-          onClick={onMenuClick}
-          aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isSidebarOpen}>
-          <span />
-          <span />
-          <span />
-        </button>
-
         <div className={styles.user}>
           {isAuthenticated && <XpWidget />}
           {isAuthenticated && (

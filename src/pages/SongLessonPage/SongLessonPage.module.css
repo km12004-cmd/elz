@@ -1,11 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background:
-    radial-gradient(circle at 10% -28%, rgba(139, 92, 246, 0.18), transparent 54%),
-    radial-gradient(circle at 92% -10%, rgba(96, 165, 250, 0.12), transparent 46%),
-    var(--color-surface-glass);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
   box-shadow: var(--shadow-card);
   padding: 20px;
   display: flex;
@@ -28,9 +24,9 @@
 
 .ghostButton {
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.26);
-  background: rgba(13, 18, 30, 0.58);
-  color: #ece5ff;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 700;
@@ -44,8 +40,8 @@
 
 .ghostButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(188, 165, 255, 0.44);
-  background: rgba(22, 29, 46, 0.76);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
 }
 
 .ghostButton:disabled {
@@ -62,10 +58,10 @@
 
 .errorText {
   border-radius: 11px;
-  border: 1px solid rgba(255, 111, 132, 0.4);
-  background: rgba(65, 16, 28, 0.42);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
   padding: 10px 12px;
-  color: #ffd2dc;
+  color: var(--color-danger);
   font-size: 13px;
   font-weight: 700;
 }
@@ -88,10 +84,8 @@
 
 .lyricsPane {
   border-radius: 18px;
-  border: 1px solid rgba(188, 165, 255, 0.22);
-  background:
-    radial-gradient(circle at 84% 0%, rgba(96, 165, 250, 0.12), transparent 42%),
-    linear-gradient(156deg, rgba(22, 26, 52, 0.88) 0%, rgba(17, 22, 39, 0.92) 100%);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: clamp(16px, 2.2vw, 24px);
   min-height: 100%;
   display: flex;
@@ -107,11 +101,11 @@
   overflow: auto;
   padding-right: 8px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(182, 163, 229, 0.5) rgba(18, 20, 43, 0.35);
+  scrollbar-color: rgba(127, 116, 255, 0.3) rgba(0, 0, 0, 0.05);
 }
 
 .lyricsLine {
-  color: #cbd3f3;
+  color: var(--color-text-main);
   font-family: 'Sora', sans-serif;
   font-size: clamp(24px, 3.1vw, 42px);
   line-height: 1.12;
@@ -121,7 +115,7 @@
 
 .lyricsEmpty {
   margin-top: 12px;
-  color: #cfc4ea;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -137,8 +131,9 @@
 .trackCard,
 .infoPanel {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(16, 21, 36, 0.82);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
   padding: 14px;
 }
 
@@ -146,11 +141,8 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.28);
-  background:
-    radial-gradient(circle at 76% 14%, rgba(132, 98, 255, 0.45), transparent 40%),
-    radial-gradient(circle at 18% 84%, rgba(96, 165, 250, 0.36), transparent 56%),
-    linear-gradient(148deg, #161737 0%, #111a32 57%, #111526 100%);
+  border: 1px solid var(--color-border-soft);
+  background: linear-gradient(148deg, #7f74ff 0%, #a78bfa 57%, #60a5fa 100%);
   overflow: hidden;
 }
 
@@ -165,9 +157,9 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
-  border: 1px dashed rgba(188, 165, 255, 0.32);
-  background: rgba(19, 24, 42, 0.72);
-  color: #d4c6f0;
+  border: 1px dashed var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 600;
   display: grid;
@@ -191,17 +183,17 @@
 
 .playerLink {
   margin-top: 8px;
-  color: #b7cfff;
+  color: var(--color-primary);
   font-size: 13px;
   font-weight: 600;
   text-decoration: underline;
-  text-decoration-color: rgba(183, 207, 255, 0.55);
+  text-decoration-color: rgba(127, 116, 255, 0.4);
   text-underline-offset: 2px;
   transition: color var(--transition-base);
 }
 
 .playerLink:hover {
-  color: #d6e4ff;
+  color: #5b4fd4;
 }
 
 .trackBadge {
@@ -209,9 +201,9 @@
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(188, 165, 255, 0.5);
-  background: rgba(139, 92, 246, 0.18);
-  color: #e8dbff;
+  border: 1px solid rgba(127, 116, 255, 0.3);
+  background: rgba(127, 116, 255, 0.08);
+  color: var(--color-primary);
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
@@ -240,15 +232,15 @@
 }
 
 .primaryActionButton {
-  background: linear-gradient(160deg, rgba(136, 94, 255, 0.9) 0%, rgba(96, 165, 250, 0.88) 100%);
-  border-color: rgba(188, 165, 255, 0.46);
-  color: #f8f5ff;
+  background: var(--color-primary);
+  border-color: var(--color-border-accent);
+  color: #ffffff;
 }
 
 .secondaryActionButton {
-  background: rgba(14, 19, 31, 0.7);
-  border-color: rgba(188, 165, 255, 0.3);
-  color: #e9dcff;
+  background: var(--color-bg-content);
+  border-color: var(--color-border-soft);
+  color: var(--color-text-main);
 }
 
 .primaryActionButton:hover:not(:disabled),
@@ -274,7 +266,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-primary);
 }
 
 .taskTitle {
@@ -284,7 +276,7 @@
 }
 
 .taskSubtitle {
-  color: rgba(216, 205, 243, 0.95);
+  color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.4;
 }
@@ -300,8 +292,9 @@
 
 .taskCard {
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(18, 23, 40, 0.76);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -314,8 +307,8 @@
 
 .taskCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(188, 165, 255, 0.36);
-  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-lifted);
 }
 
 .taskCardHint {
@@ -323,7 +316,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #bcaedd;
+  color: var(--color-primary);
 }
 
 .taskFlipArea {
@@ -334,7 +327,7 @@
 }
 
 .taskFlipArea:focus-visible {
-  outline: 2px solid rgba(188, 165, 255, 0.7);
+  outline: 2px solid rgba(127, 116, 255, 0.5);
   outline-offset: 2px;
 }
 
@@ -354,10 +347,10 @@
   position: absolute;
   inset: 0;
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.32);
+  border: 1px solid var(--color-border-soft);
   background:
-    radial-gradient(circle at 86% -8%, rgba(177, 148, 255, 0.14), transparent 50%),
-    rgba(18, 23, 39, 0.88);
+    radial-gradient(circle at 86% -8%, rgba(127, 116, 255, 0.06), transparent 50%),
+    var(--color-bg-content);
   padding: 14px;
   backface-visibility: hidden;
   display: flex;
@@ -377,7 +370,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-primary);
 }
 
 .taskFaceText {
@@ -385,15 +378,15 @@
   font-size: 21px;
   font-weight: 700;
   line-height: 1.15;
-  color: #f5f2ff;
+  color: var(--color-text-main);
   overflow-wrap: anywhere;
 }
 
 .taskEmpty {
   border-radius: 12px;
-  border: 1px dashed rgba(191, 168, 255, 0.42);
-  background: rgba(30, 27, 62, 0.44);
-  color: #dacdf8;
+  border: 1px dashed var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 600;
   padding: 14px;
@@ -402,20 +395,20 @@
 .pairsProgress {
   margin-top: 6px;
   font-size: 13px;
-  color: rgba(205, 232, 255, 0.86);
+  color: var(--color-primary);
   font-weight: 700;
 }
 
 .pairsHint {
   margin-top: 2px;
   font-size: 13px;
-  color: rgba(214, 197, 249, 0.9);
+  color: var(--color-text-secondary);
 }
 
 .pairsMeta {
   margin-top: -2px;
   font-size: 12px;
-  color: rgba(214, 232, 255, 0.78);
+  color: var(--color-text-secondary);
   font-weight: 600;
 }
 
@@ -441,7 +434,7 @@
 
 .pairsConnector {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.82);
+  stroke: rgba(127, 116, 255, 0.6);
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -452,18 +445,18 @@
 }
 
 .pairsConnectorConfirmed {
-  stroke: rgba(255, 255, 255, 1);
+  stroke: var(--color-primary);
   stroke-width: 2;
 }
 
 .pairsConnectorArrow {
-  fill: rgba(255, 255, 255, 0.88);
+  fill: rgba(127, 116, 255, 0.7);
 }
 
 .pairsColumn {
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.22);
-  background: rgba(13, 19, 33, 0.68);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 10px;
   min-height: 160px;
 }
@@ -473,7 +466,7 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #c9d8ff;
+  color: var(--color-text-secondary);
 }
 
 .pairsList {
@@ -489,11 +482,9 @@
 .pairsButton {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.24);
-  background:
-    radial-gradient(circle at 100% -18%, rgba(132, 98, 255, 0.28), transparent 46%),
-    linear-gradient(140deg, rgba(27, 33, 58, 0.92) 0%, rgba(18, 24, 43, 0.9) 100%);
-  color: #edf3ff;
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  color: var(--color-text-main);
   padding: 10px 11px;
   text-align: left;
   display: flex;
@@ -510,29 +501,21 @@
 }
 
 .pairsButton:hover:not(:disabled) {
-  border-color: rgba(188, 165, 255, 0.62);
-  background:
-    radial-gradient(circle at 100% -18%, rgba(144, 114, 255, 0.38), transparent 46%),
-    linear-gradient(140deg, rgba(30, 37, 67, 0.96) 0%, rgba(21, 29, 52, 0.94) 100%);
-  box-shadow:
-    0 7px 18px rgba(7, 11, 23, 0.36),
-    0 0 0 1px rgba(188, 165, 255, 0.18) inset;
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+  box-shadow: var(--shadow-lifted);
   transform: translateY(-1px) scale(1.01);
 }
 
 .pairsButton:active:not(:disabled) {
   transform: translateY(0) scale(0.995);
-  box-shadow:
-    0 3px 10px rgba(7, 11, 23, 0.3),
-    0 0 0 1px rgba(188, 165, 255, 0.12) inset;
+  box-shadow: var(--shadow-card);
 }
 
 .pairsButton:focus-visible {
   outline: none;
-  border-color: rgba(174, 222, 255, 0.85);
-  box-shadow:
-    0 0 0 2px rgba(174, 222, 255, 0.24),
-    0 0 0 1px rgba(174, 222, 255, 0.48) inset;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(127, 116, 255, 0.2);
 }
 
 .pairsButton:disabled {
@@ -544,36 +527,32 @@
 }
 
 .pairsLeftButtonSelected {
-  border-color: rgba(97, 179, 255, 0.9);
+  border-color: var(--color-primary);
   box-shadow:
-    0 0 0 1px rgba(97, 179, 255, 0.45) inset,
-    0 0 22px rgba(97, 179, 255, 0.2);
+    0 0 0 1px rgba(127, 116, 255, 0.3) inset,
+    0 0 16px rgba(127, 116, 255, 0.1);
 }
 
 .pairsLeftButtonCorrect {
-  border-color: rgba(104, 211, 145, 0.7);
-  background:
-    radial-gradient(circle at 100% -18%, rgba(104, 211, 145, 0.28), transparent 46%),
-    rgba(20, 42, 34, 0.88);
+  border-color: rgba(76, 175, 80, 0.6);
+  background: rgba(76, 175, 80, 0.08);
 }
 
 .pairsLeftButtonWrong {
-  border-color: rgba(255, 111, 132, 0.64);
-  background:
-    radial-gradient(circle at 100% -18%, rgba(255, 111, 132, 0.26), transparent 46%),
-    rgba(52, 24, 34, 0.88);
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.06);
 }
 
 .pairsLeftButtonLinked {
-  border-color: rgba(124, 209, 255, 0.68);
-  box-shadow: 0 0 0 1px rgba(124, 209, 255, 0.2) inset;
+  border-color: rgba(96, 165, 250, 0.6);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.15) inset;
 }
 
 .pairsOptionButton {
 }
 
 .pairsOptionButtonReady {
-  border-color: rgba(162, 214, 255, 0.55);
+  border-color: rgba(96, 165, 250, 0.5);
 }
 
 .pairsOptionButtonUsed {
@@ -581,18 +560,16 @@
 }
 
 .pairsOptionButtonSelected {
-  border-color: rgba(162, 214, 255, 0.86);
+  border-color: rgba(96, 165, 250, 0.7);
   box-shadow:
-    0 0 0 1px rgba(162, 214, 255, 0.4) inset,
-    0 0 20px rgba(162, 214, 255, 0.16);
+    0 0 0 1px rgba(96, 165, 250, 0.25) inset,
+    0 0 14px rgba(96, 165, 250, 0.08);
 }
 
 .pairsOptionButtonLocked {
   opacity: 0.82;
-  border-color: rgba(104, 211, 145, 0.52);
-  background:
-    radial-gradient(circle at 100% -18%, rgba(104, 211, 145, 0.18), transparent 46%),
-    rgba(20, 34, 30, 0.88);
+  border-color: rgba(76, 175, 80, 0.5);
+  background: rgba(76, 175, 80, 0.06);
 }
 
 .pairsMainText {
@@ -607,11 +584,11 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(236, 241, 255, 0.94);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   border-radius: 999px;
-  border: 1px solid rgba(171, 192, 236, 0.35);
-  background: rgba(16, 25, 48, 0.56);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 2px 7px;
 }
 
@@ -629,15 +606,15 @@
   list-style: decimal;
   list-style-position: inside;
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.26);
-  background: rgba(14, 19, 34, 0.72);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 10px;
   display: grid;
   gap: 8px;
 }
 
 .typingPrompt {
-  color: #e7efff;
+  color: var(--color-text-main);
   font-size: 15px;
   font-weight: 700;
   line-height: 1.35;
@@ -647,9 +624,9 @@
 .typingInput {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.36);
-  background: rgba(9, 14, 29, 0.82);
-  color: #f6f8ff;
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  color: var(--color-text-main);
   padding: 10px 12px;
   font-size: 14px;
   font-weight: 600;
@@ -661,8 +638,8 @@
 
 .typingInput:focus {
   outline: none;
-  border-color: rgba(162, 214, 255, 0.72);
-  box-shadow: 0 0 0 1px rgba(162, 214, 255, 0.26) inset;
+  border-color: var(--color-border-accent);
+  box-shadow: 0 0 0 1px rgba(127, 116, 255, 0.15) inset;
 }
 
 .typingInput:disabled {
@@ -671,13 +648,13 @@
 }
 
 .typingInputCorrect {
-  border-color: rgba(104, 211, 145, 0.7);
-  background: rgba(20, 42, 34, 0.82);
+  border-color: rgba(76, 175, 80, 0.6);
+  background: rgba(76, 175, 80, 0.06);
 }
 
 .typingInputWrong {
-  border-color: rgba(255, 111, 132, 0.72);
-  background: rgba(52, 24, 34, 0.82);
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.04);
 }
 
 .typingRowState {
@@ -685,14 +662,14 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(234, 238, 255, 0.88);
+  color: var(--color-text-secondary);
 }
 
 .completionModalBackdrop {
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(5, 8, 17, 0.72);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -703,12 +680,10 @@
 .completionModal {
   width: min(540px, 100%);
   border-radius: 16px;
-  border: 1px solid rgba(188, 165, 255, 0.34);
-  background:
-    radial-gradient(circle at 16% 0%, rgba(155, 134, 255, 0.2), transparent 52%),
-    rgba(16, 21, 38, 0.96);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
   padding: 18px;
-  box-shadow: 0 30px 70px rgba(4, 7, 17, 0.52);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
 }
 
 .completionModalEyebrow {
@@ -716,7 +691,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #cbb7ff;
+  color: var(--color-primary);
 }
 
 .completionModalTitle {
@@ -724,13 +699,13 @@
   font-size: 27px;
   line-height: 1.14;
   letter-spacing: -0.02em;
-  color: #f4f7ff;
+  color: var(--color-text-main);
 }
 
 .completionModalSubtitle {
   margin-top: 7px;
   font-size: 14px;
-  color: rgba(221, 230, 255, 0.9);
+  color: var(--color-text-secondary);
 }
 
 .completionStats {
@@ -742,8 +717,8 @@
 
 .completionStatItem {
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.28);
-  background: rgba(11, 16, 30, 0.84);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 10px;
 }
 
@@ -752,14 +727,14 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #93a7cb;
+  color: var(--color-text-muted);
 }
 
 .completionStatItem dd {
   margin-top: 4px;
   font-size: 20px;
   font-weight: 800;
-  color: #f5f8ff;
+  color: var(--color-text-main);
 }
 
 .completionModalActions {
@@ -790,7 +765,7 @@
 
 .metaRow dt {
   font-size: 12px;
-  color: #8ca5be;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
@@ -798,7 +773,7 @@
 
 .metaRow dd {
   font-size: 13px;
-  color: #e4edf7;
+  color: var(--color-text-main);
   overflow-wrap: anywhere;
 }
 

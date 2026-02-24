@@ -1,8 +1,8 @@
 .card {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(19, 24, 39, 0.78);
-  backdrop-filter: blur(4px);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -11,9 +11,9 @@
 }
 
 .card:hover {
-  border-color: rgba(188, 165, 255, 0.36);
+  border-color: var(--color-border-strong);
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+  box-shadow: var(--shadow-lifted);
 }
 
 .headerRow {
@@ -28,7 +28,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #bcaedd;
+  color: var(--color-primary);
   margin-top: 7px;
 }
 
@@ -40,9 +40,9 @@
   width: 32px;
   height: 28px;
   border-radius: 11px;
-  border-color: rgba(188, 165, 255, 0.52);
-  background: rgba(139, 92, 246, 0.16);
-  color: #f1e9ff;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
   padding: 0;
   font-size: 20px;
   line-height: 1;
@@ -51,12 +51,13 @@
   align-items: center;
   justify-content: center;
   text-indent: 0.08em;
+  cursor: pointer;
 }
 
 .menuTrigger:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(139, 92, 246, 0.22);
-  border-color: rgba(188, 165, 255, 0.56);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 .menuTrigger:disabled {
@@ -71,17 +72,17 @@
   min-width: 120px;
   padding: 6px;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.34);
-  background: rgba(12, 17, 30, 0.96);
-  box-shadow: 0 12px 28px rgba(5, 8, 19, 0.44);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   z-index: 6;
 }
 
 .menuDangerItem {
   width: 100%;
-  border: 1px solid rgba(255, 111, 132, 0.44);
-  background: rgba(255, 111, 132, 0.1);
-  color: #ffd1dc;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--color-danger);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
@@ -91,7 +92,7 @@
 }
 
 .menuDangerItem:hover:not(:disabled) {
-  background: rgba(255, 111, 132, 0.24);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .menuDangerItem:disabled {
@@ -122,10 +123,10 @@
   position: absolute;
   inset: 0;
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.32);
+  border: 1px solid var(--color-border-soft);
   background:
-    radial-gradient(circle at 86% -8%, rgba(177, 148, 255, 0.14), transparent 50%),
-    rgba(18, 23, 39, 0.88);
+    radial-gradient(circle at 86% -8%, rgba(127, 116, 255, 0.06), transparent 50%),
+    var(--color-bg-content);
   padding: 14px;
   backface-visibility: hidden;
   display: flex;
@@ -142,7 +143,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-primary);
 }
 
 .faceText {
@@ -150,7 +151,7 @@
   font-size: 21px;
   font-weight: 700;
   line-height: 1.15;
-  color: #f5f2ff;
+  color: var(--color-text-main);
   overflow-wrap: anywhere;
 }
 

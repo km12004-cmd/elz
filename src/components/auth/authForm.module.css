@@ -19,15 +19,15 @@
 .label {
   font-size: 12px;
   font-weight: 700;
-  color: #d8d0f5;
+  color: var(--color-text-secondary);
 }
 
 .input,
 .select {
   width: 100%;
-  background: rgba(16, 21, 36, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f3f0ff;
+  background: var(--color-bg-content);
+  border: 1px solid var(--color-border-soft);
+  color: var(--color-text-main);
   padding: 11px 13px;
   border-radius: 11px;
   outline: none;
@@ -36,8 +36,8 @@
 
 .input:focus,
 .select:focus {
-  background: rgba(20, 26, 43, 0.92);
-  border-color: rgba(188, 165, 255, 0.46);
+  background: #ffffff;
+  border-color: var(--color-border-accent);
 }
 
 .select {
@@ -45,30 +45,28 @@
 }
 
 .error {
-  background: rgba(65, 16, 28, 0.42);
-  border: 1px solid rgba(255, 111, 132, 0.4);
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 13px;
-  color: #ffd2dc;
+  color: var(--color-danger);
 }
 
 .submitButton {
   width: 100%;
   padding: 11px 13px;
-  border: 1px solid rgba(188, 165, 255, 0.42);
+  border: none;
   border-radius: 11px;
   font-weight: 800;
   cursor: pointer;
-  color: #f4f2ff;
-  background: var(--gradient-accent-soft);
-  box-shadow: 0 8px 18px rgba(20, 14, 42, 0.32);
-  transition: transform var(--transition-base), opacity var(--transition-base), box-shadow var(--transition-base);
+  color: #ffffff;
+  background: var(--color-primary);
+  transition: transform var(--transition-base), opacity var(--transition-base);
 }
 
 .submitButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(20, 14, 42, 0.38);
 }
 
 .submitButton:disabled {
@@ -89,13 +87,13 @@
   border: none;
   padding: 0;
   margin-left: 6px;
-  color: #f4f1ff;
+  color: var(--color-primary);
   font-weight: 800;
   cursor: pointer;
 }
 
 .linkButton:hover {
-  color: #ceb7ff;
+  color: #6b60e6;
 }
 
 @media (max-width: 640px) {

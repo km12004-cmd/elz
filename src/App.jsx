@@ -1,18 +1,13 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
-import PlaceholderPage from './pages/PlaceholderPage';
+import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
-import PlaylistPage, { PlaylistDetailPage } from './pages/PlaylistPage';
-import CardsPage, { FolderPage } from './pages/CardsPage';
+import { PlaylistDetailPage } from './pages/PlaylistPage';
+import { FolderPage } from './pages/CardsPage';
 import SongsLevelPage from './pages/SongsLevelPage';
 import SongLessonPage from './pages/SongLessonPage';
 import XpToast from './components/ui/XpToast';
 import LevelUpModal from './components/ui/LevelUpModal';
-
-const placeholderRoutes = [
-  { path: '/grammar', title: 'Grammar' },
-  { path: '/achievements', title: 'Achievements' },
-];
 
 function App() {
   return (
@@ -21,20 +16,11 @@ function App() {
       <LevelUpModal />
       <MainLayout>
         <Routes>
-          <Route
-            path="/"
-            element={<PlaceholderPage />}
-          />
-          {placeholderRoutes.map(({ path, title }) => (
-            <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
-          ))}
-          <Route path="/cards" element={<CardsPage />} />
+          <Route path="/" element={<DashboardPage />} />
           <Route path="/cards/:folderId" element={<FolderPage />} />
           <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
           <Route path="/songs/:songId" element={<SongLessonPage />} />
-          <Route path="/playlists" element={<PlaylistPage />} />
           <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
-          <Route path="/playlist" element={<PlaylistPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

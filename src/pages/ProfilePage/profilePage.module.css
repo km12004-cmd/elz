@@ -1,7 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background: var(--color-surface-glass);
+  background: #ffffff;
   overflow: hidden;
   box-shadow: var(--shadow-card);
 }
@@ -12,9 +12,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  background:
-    radial-gradient(circle at 86% -15%, rgba(139, 92, 246, 0.16), transparent 52%),
-    linear-gradient(132deg, rgba(56, 43, 93, 0.82) 0%, rgba(33, 37, 56, 0.78) 58%, rgba(76, 54, 130, 0.76) 100%);
+  background: linear-gradient(135deg, #7f74ff 0%, #a78bfa 100%);
+  color: #ffffff;
 }
 
 .identity {
@@ -29,9 +28,8 @@
   height: 112px;
   border-radius: 50%;
   padding: 3px;
-  border: 1px solid rgba(216, 199, 255, 0.42);
-  background: linear-gradient(145deg, rgba(188, 169, 255, 0.52) 0%, rgba(131, 110, 205, 0.42) 100%);
-  box-shadow: 0 10px 24px rgba(20, 14, 42, 0.32);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
 }
 
@@ -44,7 +42,6 @@
 
 .avatar {
   object-fit: cover;
-  background: rgba(18, 24, 40, 0.24);
 }
 
 .avatarFallback {
@@ -53,8 +50,8 @@
   justify-content: center;
   font-size: 46px;
   font-weight: 800;
-  color: #f6f2ff;
-  background: linear-gradient(145deg, rgba(141, 103, 242, 0.76) 0%, rgba(114, 82, 203, 0.68) 100%);
+  color: #7f74ff;
+  background: #ffffff;
 }
 
 .userInfo {
@@ -66,7 +63,7 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(239, 230, 255, 0.92);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .nickname {
@@ -78,12 +75,13 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  color: #ffffff;
 }
 
 .email {
   margin-top: 8px;
   font-size: 14px;
-  color: rgba(238, 233, 255, 0.92);
+  color: rgba(255, 255, 255, 0.85);
   word-break: break-word;
 }
 
@@ -92,12 +90,12 @@
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(198, 177, 255, 0.4);
-  background: rgba(14, 19, 31, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 700;
-  color: #f0e8ff;
+  color: #ffffff;
 }
 
 .streakRow {
@@ -113,14 +111,14 @@
   align-items: center;
   gap: 6px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 179, 96, 0.42);
-  background: rgba(48, 29, 13, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
   padding: 6px 11px;
 }
 
 .streakPillMuted {
-  border-color: rgba(205, 187, 255, 0.36);
-  background: rgba(23, 30, 48, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .streakIcon::before {
@@ -133,38 +131,37 @@
 .streakLabel {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(242, 231, 255, 0.72);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .streakValue {
   font-size: 12px;
   font-weight: 800;
-  color: #fff2e0;
+  color: #ffffff;
   white-space: nowrap;
 }
 
 .logoutButton {
   border-radius: 999px;
-  border: 1px solid rgba(200, 180, 255, 0.34);
-  background: rgba(14, 19, 31, 0.42);
-  color: #f3ecff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   padding: 9px 16px;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform var(--transition-base), background var(--transition-base), border-color var(--transition-base);
+  transition: transform var(--transition-base), background var(--transition-base);
 }
 
 .logoutButton:hover {
   transform: translateY(-1px);
-  border-color: rgba(206, 187, 255, 0.44);
-  background: rgba(24, 30, 48, 0.62);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .progressBlock {
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(12, 17, 30, 0.4);
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -179,27 +176,27 @@
 .progressLevel {
   font-size: 22px;
   font-weight: 800;
-  color: #f0c040;
+  color: #4caf50;
   letter-spacing: -0.01em;
 }
 
 .progressXpMeta {
   font-size: 12px;
-  color: rgba(240, 192, 64, 0.65);
+  color: var(--color-text-muted);
 }
 
 .progressBarWrap {
   width: 100%;
   height: 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
 .progressBarFill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #f0c040 0%, #e8a020 100%);
+  background: #98e145;
   transition: width 0.5s ease;
   min-width: 4px;
 }
@@ -221,13 +218,13 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(239, 230, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .progressStatValue {
   font-size: 14px;
   font-weight: 700;
-  color: #efe8ff;
+  color: var(--color-text-main);
 }
 
 .content {
@@ -260,31 +257,25 @@
 
 .infoCard {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(18, 23, 39, 0.78);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 14px 15px;
   min-height: 116px;
   display: flex;
   flex-direction: column;
   gap: 9px;
-  transition:
-    transform var(--transition-base),
-    border-color var(--transition-base),
-    background var(--transition-base),
-    box-shadow var(--transition-base);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .infoCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(188, 165, 255, 0.38);
-  background: rgba(23, 29, 47, 0.88);
-  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+  box-shadow: var(--shadow-lifted);
 }
 
 .infoLabel {
   font-size: 11px;
   font-weight: 800;
-  color: #d7c7ff;
+  color: var(--color-text-muted);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -292,14 +283,14 @@
 .separator {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, rgba(188, 165, 255, 0) 0%, rgba(188, 165, 255, 0.42) 50%, rgba(188, 165, 255, 0) 100%);
+  background: var(--color-border-soft);
 }
 
 .infoValue {
   font-size: 18px;
   font-weight: 700;
   line-height: 1.25;
-  color: #efebff;
+  color: var(--color-text-main);
   word-break: break-word;
 }
 

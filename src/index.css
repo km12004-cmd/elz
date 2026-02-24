@@ -1,36 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
 
 :root {
-  --color-bg-main: #0b0f1a;
-  --color-bg-content: #0e1222;
-  --color-bg-card: #141a2a;
-  --color-surface-glass: rgba(17, 22, 37, 0.78);
-  --color-surface-solid: rgba(16, 20, 34, 0.92);
-  --color-surface-elevated: rgba(255, 255, 255, 0.06);
-  --color-surface-hover: rgba(255, 255, 255, 0.09);
+  --color-bg-main: #ffffff;
+  --color-bg-content: #f5f6fa;
+  --color-bg-card: #ffffff;
+  --color-surface-glass: rgba(255, 255, 255, 0.95);
+  --color-surface-solid: rgba(255, 255, 255, 0.98);
+  --color-surface-elevated: rgba(0, 0, 0, 0.03);
+  --color-surface-hover: rgba(0, 0, 0, 0.06);
 
-  --color-primary: #8b5cf6;
-  --color-primary-soft: #bda2ff;
-  --color-secondary: #717aa4;
+  --color-primary: #7f74ff;
+  --color-primary-soft: #c0abff;
+  --color-secondary: #5a5f7a;
 
-  --color-text-main: #f3f0ff;
-  --color-text-secondary: #b0b5cb;
-  --color-text-muted: #8a90ab;
+  --color-text-main: #1a1a2e;
+  --color-text-secondary: #5a5f7a;
+  --color-text-muted: #8d95b0;
 
-  --color-border-soft: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(181, 156, 255, 0.34);
-  --color-border-accent: rgba(188, 165, 255, 0.46);
+  --color-border-soft: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+  --color-border-accent: rgba(127, 116, 255, 0.35);
 
-  --gradient-surface-soft: radial-gradient(circle at 90% -14%, rgba(139, 92, 246, 0.12), transparent 52%);
-  --gradient-accent-soft: linear-gradient(126deg, rgba(139, 92, 246, 0.62) 0%, rgba(121, 91, 217, 0.5) 100%);
+  --gradient-surface-soft: linear-gradient(0deg, transparent, transparent);
+  --gradient-accent-soft: linear-gradient(0deg, #7d76d4, #7d76d4);
 
-  --color-success: #53d88a;
-  --color-danger: #ff6f84;
+  --color-success: #4caf50;
+  --color-danger: #ef4444;
 
-  --shadow-soft: 0 18px 42px rgba(4, 8, 20, 0.42);
-  --shadow-glow: 0 0 0 rgba(139, 92, 246, 0.16);
-  --shadow-card: 0 12px 30px rgba(4, 8, 20, 0.36);
-  --shadow-lifted: 0 14px 28px rgba(4, 8, 20, 0.4);
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 0 rgba(127, 116, 255, 0.08);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lifted: 0 8px 24px rgba(0, 0, 0, 0.1);
 
   --radius-xl: 24px;
   --radius-lg: 18px;
@@ -91,10 +91,7 @@ html {
 
 body {
   font-family: 'Manrope', sans-serif;
-  background:
-    radial-gradient(circle at 14% -6%, rgba(139, 92, 246, 0.16), transparent 36%),
-    radial-gradient(circle at 88% 4%, rgba(120, 112, 165, 0.1), transparent 34%),
-    linear-gradient(150deg, #0b0f1a 0%, #0e1222 52%, #111827 100%);
+  background: #f5f6fa;
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -103,8 +100,8 @@ body {
 }
 
 ::selection {
-  background: rgba(139, 92, 246, 0.26);
-  color: #f9f7ff;
+  background: rgba(127, 116, 255, 0.2);
+  color: #1a1a2e;
 }
 
 button,
@@ -116,7 +113,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(177, 148, 255, 0.7);
+  outline: 2px solid rgba(127, 116, 255, 0.6);
   outline-offset: 2px;
 }
 
@@ -159,10 +156,10 @@ a {
 @keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+    box-shadow: 0 0 0 rgba(127, 116, 255, 0);
   }
 
   50% {
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.22);
+    box-shadow: 0 0 10px rgba(127, 116, 255, 0.2);
   }
 }

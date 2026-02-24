@@ -1,11 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background:
-    radial-gradient(circle at 10% -28%, rgba(139, 92, 246, 0.18), transparent 54%),
-    radial-gradient(circle at 92% -10%, rgba(96, 165, 250, 0.12), transparent 46%),
-    var(--color-surface-glass);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
   box-shadow: var(--shadow-card);
   padding: 22px;
 }
@@ -28,7 +24,7 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-primary);
 }
 
 .title {
@@ -61,17 +57,17 @@
 
 .ghostButton {
   padding: 8px 12px;
-  border-color: rgba(188, 165, 255, 0.26);
-  background: rgba(13, 18, 30, 0.58);
-  color: #ece5ff;
+  border-color: var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
   font-size: 13px;
   font-weight: 700;
 }
 
 .ghostButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(188, 165, 255, 0.44);
-  background: rgba(22, 29, 46, 0.76);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
 }
 
 .ghostButton:disabled {
@@ -83,9 +79,9 @@
   margin-top: 8px;
   width: fit-content;
   padding: 10px 14px;
-  border-color: rgba(188, 165, 255, 0.42);
-  background: var(--gradient-accent-soft);
-  color: #f4f2ff;
+  border-color: var(--color-border-accent);
+  background: var(--color-primary);
+  color: #ffffff;
   font-size: 13px;
   font-weight: 800;
 }
@@ -97,10 +93,10 @@
 .errorText {
   margin-top: 14px;
   border-radius: 11px;
-  border: 1px solid rgba(255, 111, 132, 0.4);
-  background: rgba(65, 16, 28, 0.42);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
   padding: 10px 12px;
-  color: #ffd2dc;
+  color: var(--color-danger);
   font-size: 13px;
   font-weight: 700;
 }
@@ -123,8 +119,8 @@
 
 .songCard {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(16, 21, 36, 0.82);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -132,22 +128,20 @@
   transition:
     transform var(--transition-base),
     border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    background var(--transition-base);
+    box-shadow var(--transition-base);
 }
 
 .songCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(188, 165, 255, 0.4);
-  background: rgba(20, 27, 44, 0.9);
-  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+  border-color: var(--color-border-accent);
+  box-shadow: var(--shadow-lifted);
 }
 
 .songTitle {
   font-size: 19px;
   font-weight: 700;
   line-height: 1.2;
-  color: #f5f1ff;
+  color: var(--color-text-main);
 }
 
 .songAuthor {
@@ -161,7 +155,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: #c9bddf;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
@@ -169,16 +163,16 @@
   margin-top: 4px;
   width: 100%;
   padding: 9px 11px;
-  border-color: rgba(188, 165, 255, 0.35);
-  background: rgba(139, 92, 246, 0.12);
-  color: #f0e9ff;
+  border-color: var(--color-border-accent);
+  background: rgba(127, 116, 255, 0.08);
+  color: var(--color-primary);
   font-size: 13px;
   font-weight: 700;
 }
 
 .outlineButton:hover:not(:disabled) {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: rgba(188, 165, 255, 0.48);
+  background: rgba(127, 116, 255, 0.15);
+  border-color: var(--color-primary);
 }
 
 .outlineButton:disabled {

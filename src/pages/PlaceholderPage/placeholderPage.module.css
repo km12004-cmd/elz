@@ -1,10 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-soft);
-  background:
-    radial-gradient(circle at 8% -22%, rgba(139, 92, 246, 0.16), transparent 48%),
-    radial-gradient(circle at 88% -8%, rgba(96, 165, 250, 0.1), transparent 44%),
-    var(--color-surface-glass);
+  border: 1px solid rgba(132, 145, 189, 0.28);
+  background: var(--color-surface-glass);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(10px);
   padding: 24px 22px;
@@ -12,8 +9,8 @@
 
 
 .title {
-  margin-top: 10px;
-  font-size: 32px;
+  margin-top: 6px;
+  font-size: 42px;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -21,9 +18,9 @@
 .subtitle {
   margin-top: 8px;
   margin-bottom: 30px;
-  max-width: 620px;
-  color: var(--color-text-secondary);
-  font-size: 15px;
+  max-width: 720px;
+  color: rgba(238, 241, 255, 0.82);
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -74,10 +71,8 @@
 }
 
 .levelCard {
-  border: 1px solid rgba(188, 165, 255, 0.2);
-  background:
-    radial-gradient(circle at 110% -20%, rgba(139, 92, 246, 0.26), transparent 55%),
-    rgba(14, 18, 30, 0.84);
+  border: 1px solid rgba(130, 144, 190, 0.3);
+  background: rgba(16, 20, 31, 0.9);
   border-radius: 14px;
   padding: 14px;
   display: flex;
@@ -90,21 +85,21 @@
 
 .levelCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(188, 165, 255, 0.5);
-  box-shadow: 0 14px 30px rgba(4, 8, 20, 0.38);
+  border-color: rgba(188, 201, 238, 0.46);
+  box-shadow: 0 8px 16px rgba(4, 8, 18, 0.24);
 }
 
 .levelCard:focus-visible {
-  outline: 2px solid rgba(188, 165, 255, 0.55);
+  outline: 2px solid rgba(190, 202, 236, 0.6);
   outline-offset: 2px;
 }
 
 .levelBadge {
   align-self: flex-start;
   border-radius: 999px;
-  border: 1px solid rgba(188, 165, 255, 0.3);
-  background: rgba(139, 92, 246, 0.2);
-  color: #ece4ff;
+  border: 1px solid rgba(141, 157, 206, 0.42);
+  background: rgba(106, 117, 154, 0.32);
+  color: #f1f4ff;
   padding: 4px 9px;
   font-size: 11px;
   font-weight: 700;
@@ -115,7 +110,7 @@
 .levelName {
   font-size: 16px;
   font-weight: 700;
-  color: #f5f1ff;
+  color: #f8f9ff;
 }
 
 .levelDescription {
@@ -127,13 +122,13 @@
 
 .levelMeta {
   margin-top: auto;
-  color: #c7b8ea;
+  color: #c9cfeb;
   font-size: 12px;
   font-weight: 700;
 }
 
 .levelAction {
-  color: #bca2ff;
+  color: #c0caef;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -194,10 +189,8 @@
   border-radius: 50%;
   overflow: hidden;
   border: 1px solid var(--color-border-soft);
-  background:
-    radial-gradient(circle at 24% 20%, rgba(139, 92, 246, 0.3), transparent 50%),
-    rgba(12, 16, 26, 0.9);
-  box-shadow: 0 10px 28px rgba(3, 8, 20, 0.35);
+  background: rgba(14, 18, 30, 0.94);
+  box-shadow: 0 8px 16px rgba(3, 8, 20, 0.22);
 }
 
 .artistAvatarImage {
@@ -222,7 +215,7 @@
   font-size: 16px;
   text-align: center;
   line-height: 1.15;
-  color: #f7f4ff;
+  color: #f6f8ff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -241,7 +234,7 @@
   }
 
   .title {
-    font-size: 28px;
+    font-size: 34px;
   }
 
   .subtitle {
@@ -288,7 +281,7 @@
   }
 
   .title {
-    font-size: 26px;
+    font-size: 30px;
   }
 
   .subtitle {

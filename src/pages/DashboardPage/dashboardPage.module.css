@@ -1,0 +1,335 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Block card */
+.block {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-soft);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+.blockHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.blockTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+}
+
+.blockSubtitle {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* Levels grid */
+.levelsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.levelCard {
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.levelCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lifted);
+}
+
+.levelBadge {
+  align-self: flex-start;
+  border-radius: 999px;
+  background: rgba(127, 116, 255, 0.12);
+  color: #7f74ff;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.levelName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.levelDescription {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  min-height: 40px;
+}
+
+.levelMeta {
+  margin-top: auto;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Artists */
+.artistsRow {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.artistCard {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 120px;
+}
+
+.artistAvatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  box-shadow: var(--shadow-soft);
+}
+
+.artistAvatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artistAvatarFallback {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.artistName {
+  margin-top: 8px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.15;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Items grid (playlists, folders) */
+.itemGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.itemCard {
+  position: relative;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-content);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.itemCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lifted);
+}
+
+.itemMainButton {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.itemIcon {
+  font-size: 24px;
+}
+
+.itemTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.itemMeta {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.deleteButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+
+.itemCard:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+/* Buttons */
+.primaryButton {
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-primary);
+  color: #ffffff;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--transition-base), background var(--transition-base);
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  background: #6b60e6;
+}
+
+/* Status */
+.loadingText {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.errorText {
+  border-radius: 11px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+  padding: 9px 12px;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .levelsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .block {
+    padding: 18px;
+  }
+
+  .blockTitle {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard {
+    gap: 14px;
+  }
+
+  .block {
+    padding: 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .levelsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .levelDescription {
+    min-height: 0;
+  }
+
+  .blockHeader {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .itemGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .artistCard {
+    width: 96px;
+  }
+
+  .artistAvatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .artistAvatarFallback {
+    font-size: 22px;
+  }
+
+  .artistName {
+    font-size: 13px;
+  }
+
+  .artistsRow {
+    gap: 14px;
+  }
+}

@@ -6,21 +6,20 @@
   color: inherit;
   padding: 5px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(240, 192, 64, 0.28);
-  background: rgba(13, 18, 31, 0.45);
-  transition: border-color 0.15s, background 0.15s;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.15s;
   max-width: 210px;
 }
 
 .widget:hover {
-  border-color: rgba(240, 192, 64, 0.55);
-  background: rgba(26, 31, 50, 0.6);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .levelBadge {
   font-size: 12px;
   font-weight: 800;
-  color: #f0c040;
+  color: #ffffff;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -29,7 +28,7 @@
   width: 72px;
   height: 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -38,14 +37,14 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #f0c040 0%, #e8a020 100%);
+  background: #98e145;
   transition: width 0.4s ease;
   min-width: 4px;
 }
 
 .xpText {
   font-size: 11px;
-  color: rgba(240, 192, 64, 0.75);
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
 }
 

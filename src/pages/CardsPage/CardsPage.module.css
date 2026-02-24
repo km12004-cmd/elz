@@ -1,10 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background:
-    var(--gradient-surface-soft),
-    var(--color-surface-glass);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
   box-shadow: var(--shadow-card);
   padding: 22px;
 }
@@ -21,7 +18,7 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-primary);
 }
 
 .title {
@@ -58,15 +55,14 @@
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 800;
-  color: #f4f2ff;
-  background: var(--gradient-accent-soft);
-  border-color: rgba(188, 165, 255, 0.42);
-  box-shadow: 0 8px 18px rgba(20, 14, 42, 0.32);
+  color: #ffffff;
+  background: var(--color-primary);
+  border-color: var(--color-border-accent);
 }
 
 .primaryButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(20, 14, 42, 0.38);
+  box-shadow: var(--shadow-lifted);
 }
 
 .statusRow {
@@ -78,9 +74,9 @@
 
 .badge {
   border-radius: 999px;
-  border: 1px solid rgba(188, 165, 255, 0.36);
-  background: rgba(139, 92, 246, 0.12);
-  color: #eae3ff;
+  border: 1px solid var(--color-border-accent);
+  background: rgba(127, 116, 255, 0.08);
+  color: var(--color-primary);
   padding: 5px 11px;
   font-size: 12px;
   font-weight: 700;
@@ -98,10 +94,10 @@
 .errorText {
   margin-top: 14px;
   border-radius: 11px;
-  border: 1px solid rgba(255, 111, 132, 0.4);
-  background: rgba(65, 16, 28, 0.42);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
   padding: 10px 12px;
-  color: #ffd2dc;
+  color: var(--color-danger);
   font-size: 13px;
   font-weight: 700;
 }
@@ -115,9 +111,8 @@
 
 .folderCard {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(19, 24, 39, 0.78);
-  backdrop-filter: blur(4px);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -127,9 +122,8 @@
 
 .folderCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(188, 165, 255, 0.38);
-  background: rgba(22, 28, 46, 0.88);
-  box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
+  border-color: var(--color-border-accent);
+  box-shadow: var(--shadow-lifted);
 }
 
 .folderMainButton {
@@ -158,8 +152,8 @@
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  border: 1px solid rgba(188, 165, 255, 0.38);
-  background: rgba(139, 92, 246, 0.16);
+  border: 1px solid var(--color-border-accent);
+  background: rgba(127, 116, 255, 0.08);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -168,7 +162,7 @@
 
 .folderArrow {
   font-size: 16px;
-  color: rgba(221, 212, 248, 0.64);
+  color: var(--color-text-muted);
 }
 
 .folderMenu {
@@ -179,9 +173,9 @@
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.38);
-  background: rgba(139, 92, 246, 0.12);
-  color: #f3eeff;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -197,8 +191,8 @@
 
 .folderMenuTrigger:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(139, 92, 246, 0.22);
-  border-color: rgba(188, 165, 255, 0.56);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 .folderMenuTrigger:disabled {
@@ -213,17 +207,17 @@
   min-width: 120px;
   padding: 6px;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.34);
-  background: rgba(12, 17, 30, 0.96);
-  box-shadow: 0 12px 28px rgba(5, 8, 19, 0.44);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   z-index: 6;
 }
 
 .folderMenuItemDanger {
   width: 100%;
-  border: 1px solid rgba(255, 111, 132, 0.44);
-  background: rgba(255, 111, 132, 0.1);
-  color: #ffd1dc;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--color-danger);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
@@ -233,7 +227,7 @@
 }
 
 .folderMenuItemDanger:hover:not(:disabled) {
-  background: rgba(255, 111, 132, 0.24);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .folderMenuItemDanger:disabled {
@@ -246,7 +240,7 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1.15;
-  color: #f3f0ff;
+  color: var(--color-text-main);
   overflow-wrap: anywhere;
 }
 
@@ -255,7 +249,7 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #bcaedd;
+  color: var(--color-text-muted);
 }
 
 .folderActions {

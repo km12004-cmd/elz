@@ -1,8 +1,8 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(6, 9, 18, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,11 +14,9 @@
   width: 100%;
   max-width: 520px;
   border-radius: 18px;
-  border: 1px solid rgba(188, 165, 255, 0.34);
-  background:
-    radial-gradient(circle at 88% -10%, rgba(177, 148, 255, 0.1), transparent 50%),
-    rgba(13, 17, 30, 0.94);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
@@ -27,7 +25,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 18px 12px;
-  border-bottom: 1px solid rgba(167, 180, 219, 0.22);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .title {
@@ -40,16 +38,16 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(19, 25, 41, 0.78);
-  color: #e0d8ff;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: background var(--transition-base), border-color var(--transition-base);
 }
 
 .close:hover {
-  background: rgba(24, 31, 50, 0.9);
-  border-color: rgba(188, 165, 255, 0.34);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 .content {

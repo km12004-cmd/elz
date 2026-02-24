@@ -3,8 +3,8 @@
   inset: 0;
   z-index: 80;
   padding: 16px;
-  background: rgba(6, 9, 18, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,11 +13,9 @@
 .modal {
   width: min(460px, 100%);
   border-radius: 18px;
-  border: 1px solid rgba(188, 165, 255, 0.34);
-  background:
-    radial-gradient(circle at 88% -12%, rgba(177, 148, 255, 0.1), transparent 50%),
-    rgba(13, 17, 30, 0.94);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   padding: 16px;
 }
 
@@ -39,13 +37,13 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-text-secondary);
 }
 
 .input {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border-soft);
   border-radius: 11px;
-  background: rgba(16, 21, 36, 0.8);
+  background: var(--color-bg-content);
   color: var(--color-text-main);
   padding: 10px 12px;
   font-size: 14px;
@@ -53,7 +51,7 @@
 
 .input:focus {
   outline: none;
-  border-color: rgba(188, 165, 255, 0.46);
+  border-color: var(--color-border-accent);
 }
 
 .counter {
@@ -63,9 +61,9 @@
 }
 
 .errorText {
-  color: #ffd2dc;
-  background: rgba(65, 16, 28, 0.42);
-  border: 1px solid rgba(255, 111, 132, 0.4);
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 13px;
@@ -90,9 +88,8 @@
 }
 
 .primaryButton {
-  color: #f4f2ff;
-  background: var(--gradient-accent-soft);
-  border-color: rgba(188, 165, 255, 0.42);
+  color: #ffffff;
+  background: var(--color-primary);
 }
 
 .primaryButton:hover:not(:disabled) {
@@ -100,14 +97,14 @@
 }
 
 .ghostButton {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(19, 25, 41, 0.78);
-  color: #ece8ff;
+  border-color: var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
 }
 
 .ghostButton:hover:not(:disabled) {
-  border-color: rgba(188, 165, 255, 0.3);
-  background: rgba(24, 31, 50, 0.9);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
 }
 
 .primaryButton:disabled,

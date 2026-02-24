@@ -1,11 +1,8 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background: radial-gradient(circle at 6% -28%, rgba(139, 92, 246, 0.2), transparent 52%),
-    radial-gradient(circle at 100% -14%, rgba(96, 165, 250, 0.12), transparent 46%),
-    var(--color-surface-glass);
+  background: #ffffff;
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(10px);
   padding: 22px;
 }
 
@@ -26,7 +23,7 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-primary);
 }
 
 .title {
@@ -48,7 +45,7 @@
 .metaText {
   margin-top: 8px;
   font-size: 13px;
-  color: #cbc0e7;
+  color: var(--color-text-muted);
 }
 
 .statsGrid {
@@ -60,8 +57,8 @@
 
 .statCard {
   border-radius: 12px;
-  border: 1px solid rgba(188, 165, 255, 0.2);
-  background: rgba(15, 20, 35, 0.66);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 10px 12px;
 }
 
@@ -70,14 +67,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #bcaedd;
+  color: var(--color-text-muted);
 }
 
 .statValue {
   margin-top: 5px;
   font-size: 17px;
   font-weight: 700;
-  color: #f4f0ff;
+  color: var(--color-text-main);
 }
 
 .ghostButton,
@@ -94,31 +91,31 @@
 
 .ghostButton {
   padding: 9px 13px;
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(19, 25, 41, 0.78);
-  color: #ece8ff;
+  border-color: var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
 }
 
 .ghostButton:hover:not(:disabled) {
-  border-color: rgba(188, 165, 255, 0.3);
-  background: rgba(24, 31, 50, 0.9);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
 }
 
 .plusButton {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border-color: rgba(188, 165, 255, 0.45);
-  background: rgba(139, 92, 246, 0.16);
-  color: #f5f1ff;
+  border-color: var(--color-border-accent);
+  background: rgba(127, 116, 255, 0.08);
+  color: var(--color-primary);
   font-size: 18px;
   line-height: 1;
 }
 
 .plusButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(139, 92, 246, 0.24);
-  border-color: rgba(188, 165, 255, 0.6);
+  background: rgba(127, 116, 255, 0.15);
+  border-color: var(--color-primary);
 }
 
 .ghostButton:disabled,
@@ -130,10 +127,10 @@
 .errorText {
   margin-top: 12px;
   border-radius: 11px;
-  border: 1px solid rgba(255, 111, 132, 0.4);
-  background: rgba(65, 16, 28, 0.42);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
   padding: 10px 12px;
-  color: #ffd2dc;
+  color: var(--color-danger);
   font-size: 13px;
   font-weight: 700;
 }
@@ -149,7 +146,7 @@
 
 .section {
   margin-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--color-border-soft);
   padding-top: 14px;
 }
 
@@ -171,13 +168,13 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #d2c0ff;
+  color: var(--color-text-secondary);
 }
 
 .input {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border-soft);
   border-radius: 11px;
-  background: rgba(16, 21, 36, 0.8);
+  background: var(--color-bg-content);
   color: var(--color-text-main);
   padding: 10px 12px;
   font-size: 14px;
@@ -186,15 +183,15 @@
 
 .input:focus {
   outline: none;
-  border-color: rgba(188, 165, 255, 0.46);
-  background: rgba(20, 26, 43, 0.92);
+  border-color: var(--color-border-accent);
+  background: #ffffff;
 }
 
 .discoveryPanel {
   margin-top: 12px;
   border-radius: 12px;
-  border: 1px dashed rgba(188, 165, 255, 0.28);
-  background: rgba(15, 20, 35, 0.58);
+  border: 1px dashed var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 12px;
 }
 
@@ -209,7 +206,7 @@
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #bcaedd;
+  color: var(--color-text-muted);
 }
 
 .artistChips {
@@ -224,9 +221,9 @@
   align-items: center;
   gap: 7px;
   border-radius: 999px;
-  border: 1px solid rgba(188, 165, 255, 0.32);
-  background: rgba(139, 92, 246, 0.12);
-  color: #efeaff;
+  border: 1px solid var(--color-border-accent);
+  background: rgba(127, 116, 255, 0.08);
+  color: var(--color-text-main);
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 700;
@@ -234,13 +231,13 @@
 }
 
 .artistChip:hover {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: rgba(188, 165, 255, 0.48);
+  background: rgba(127, 116, 255, 0.15);
+  border-color: var(--color-primary);
 }
 
 .artistChipCount {
   border-radius: 999px;
-  background: rgba(8, 12, 23, 0.62);
+  background: var(--color-bg-content);
   padding: 1px 6px;
   font-size: 11px;
 }
@@ -255,8 +252,8 @@
 .songItem,
 .songSkeleton {
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(18, 23, 39, 0.78);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
   padding: 11px;
 }
 
@@ -294,7 +291,7 @@
 .songTitle {
   font-size: 15px;
   font-weight: 700;
-  color: #f3f0ff;
+  color: var(--color-text-main);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -311,7 +308,7 @@
 .songSecondaryMeta {
   margin-top: 4px;
   font-size: 12px;
-  color: #bcaedd;
+  color: var(--color-text-muted);
 }
 
 .songMedia {
@@ -319,9 +316,9 @@
   aspect-ratio: 16 / 10;
   min-height: 170px;
   border-radius: 11px;
-  border: 1px solid rgba(188, 165, 255, 0.2);
+  border: 1px solid var(--color-border-soft);
   overflow: hidden;
-  background: rgba(10, 14, 25, 0.85);
+  background: var(--color-bg-content);
 }
 
 .songPlayerFrame {
@@ -339,7 +336,7 @@
   padding: 8px;
   text-align: center;
   font-size: 12px;
-  color: #ab9ecc;
+  color: var(--color-text-muted);
 }
 
 .songMenu {
@@ -351,9 +348,9 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.38);
-  background: rgba(139, 92, 246, 0.12);
-  color: #f3eeff;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -366,8 +363,8 @@
 
 .songMenuTrigger:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(139, 92, 246, 0.22);
-  border-color: rgba(188, 165, 255, 0.56);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 .songMenuTrigger:disabled {
@@ -382,17 +379,17 @@
   min-width: 120px;
   padding: 6px;
   border-radius: 10px;
-  border: 1px solid rgba(188, 165, 255, 0.34);
-  background: rgba(12, 17, 30, 0.96);
-  box-shadow: 0 12px 28px rgba(5, 8, 19, 0.44);
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   z-index: 6;
 }
 
 .songMenuItemDanger {
   width: 100%;
-  border: 1px solid rgba(255, 111, 132, 0.44);
-  background: rgba(255, 111, 132, 0.1);
-  color: #ffd1dc;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--color-danger);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
@@ -402,7 +399,7 @@
 }
 
 .songMenuItemDanger:hover:not(:disabled) {
-  background: rgba(255, 111, 132, 0.24);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .songMenuItemDanger:disabled {
