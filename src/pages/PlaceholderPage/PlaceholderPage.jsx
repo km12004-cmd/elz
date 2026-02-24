@@ -44,6 +44,7 @@ function PlaceholderPage({ title, subtitle, showLevels, showArtists }) {
   const [artistsError, setArtistsError] = useState('');
   const [failedAvatarByKey, setFailedAvatarByKey] = useState({});
   const isHomeRoute = location.pathname === '/';
+  const errorContext = isHomeRoute ? 'home' : 'placeholder';
   const resolvedTitle = title ?? (isHomeRoute ? HOME_TITLE : 'Coming soon');
   const resolvedSubtitle = subtitle ?? (isHomeRoute ? HOME_SUBTITLE : '');
   const resolvedShowLevels = typeof showLevels === 'boolean' ? showLevels : isHomeRoute;
@@ -65,7 +66,7 @@ function PlaceholderPage({ title, subtitle, showLevels, showArtists }) {
       } catch (error) {
         if (isCancelled) return;
         setLevels(FALLBACK_LEVELS);
-        setLevelsError(extractErrorMessage(error));
+        setLevelsError(extractErrorMessage(error, { context: errorContext }));
       } finally {
         if (!isCancelled) setIsLoadingLevels(false);
       }
@@ -76,7 +77,7 @@ function PlaceholderPage({ title, subtitle, showLevels, showArtists }) {
     return () => {
       isCancelled = true;
     };
-  }, [resolvedShowLevels, token]);
+  }, [errorContext, resolvedShowLevels, token]);
 
   useEffect(() => {
     if (!resolvedShowArtists) return undefined;
@@ -94,7 +95,7 @@ function PlaceholderPage({ title, subtitle, showLevels, showArtists }) {
       } catch (error) {
         if (isCancelled) return;
         setArtists([]);
-        setArtistsError(extractErrorMessage(error));
+        setArtistsError(extractErrorMessage(error, { context: errorContext }));
       } finally {
         if (!isCancelled) setIsLoadingArtists(false);
       }
@@ -105,7 +106,7 @@ function PlaceholderPage({ title, subtitle, showLevels, showArtists }) {
     return () => {
       isCancelled = true;
     };
-  }, [resolvedShowArtists, token]);
+  }, [errorContext, resolvedShowArtists, token]);
 
   useEffect(() => {
     setFailedAvatarByKey({});

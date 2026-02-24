@@ -16,6 +16,9 @@ export default function XpWidget() {
       aria-label={`Level ${level}, ${xpToNextLevel} XP to next level`}
     >
       <span className={styles.levelBadge}>Lv. {level}</span>
+      <span className={styles.barWrap} aria-hidden="true">
+        <span className={styles.barFill} style={{ width: `${fillPercent}%` }} />
+      </span>
       <span className={styles.xpText}>{xpTotal} XP</span>
     </Link>
   );

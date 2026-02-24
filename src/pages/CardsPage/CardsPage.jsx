@@ -53,6 +53,7 @@ function CardsPage() {
 
   const [deletingFolderId, setDeletingFolderId] = useState(null);
   const [folderToDelete, setFolderToDelete] = useState(null);
+  const [openFolderMenuId, setOpenFolderMenuId] = useState(null);
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
@@ -66,7 +67,7 @@ function CardsPage() {
       setFolders(items);
     } catch (error) {
       setFolders([]);
-      setLoadError(extractErrorMessage(error));
+      setLoadError(extractErrorMessage(error, { context: 'cards' }));
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +87,33 @@ function CardsPage() {
 
     return () => clearTimeout(timer);
   }, [actionError, actionSuccess]);
+
+  useEffect(() => {
+    if (!openFolderMenuId) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!(event.target instanceof Element)) {
+        setOpenFolderMenuId(null);
+        return;
+      }
+
+      if (event.target.closest('[data-folder-menu-root="true"]')) return;
+      setOpenFolderMenuId(null);
+    };
+
+    const handleEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      setOpenFolderMenuId(null);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [openFolderMenuId]);
 
   const clearMessages = () => {
     setActionError('');
@@ -129,7 +157,7 @@ function CardsPage() {
       setIsCreateModalOpen(false);
       return true;
     } catch (error) {
-      setCreateError(extractErrorMessage(error));
+      setCreateError(extractErrorMessage(error, { context: 'cards' }));
       return false;
     } finally {
       setIsCreatingFolder(false);
@@ -157,9 +185,10 @@ function CardsPage() {
         previousFolders.filter((item) => normalizeId(item.id) !== folderId),
       );
       setActionSuccess('Folder deleted');
+      setOpenFolderMenuId(null);
       setFolderToDelete(null);
     } catch (error) {
-      setActionError(extractErrorMessage(error));
+      setActionError(extractErrorMessage(error, { context: 'cards' }));
     } finally {
       setDeletingFolderId(null);
     }
@@ -237,6 +266,15 @@ function CardsPage() {
             return (
               <li key={folderId ?? `folder-${index}`}>
                 <article className={styles.folderCard}>
+                  <div className={styles.folderTopRow}>
+                    <span className={styles.folderIcon} aria-hidden="true">
+                      📁
+                    </span>
+                    <span className={styles.folderArrow} aria-hidden="true">
+                      ↗
+                    </span>
+                  </div>
+
                   <button
                     type="button"
                     className={styles.folderMainButton}
@@ -247,27 +285,45 @@ function CardsPage() {
                     disabled={!folderId}
                     title="Open folder"
                   >
-                    <div className={styles.folderTopRow}>
-                      <span className={styles.folderIcon} aria-hidden="true">
-                        📁
-                      </span>
-                      <span className={styles.folderArrow} aria-hidden="true">
-                        ↗
-                      </span>
-                    </div>
                     <p className={styles.folderName}>{folder.name}</p>
                     <p className={styles.folderMeta}>{countCards(folder)} cards</p>
                   </button>
 
-                  <button
-                    type="button"
-                    className={styles.deleteButton}
-                    onClick={() => openDeleteDialog(folder)}
-                    disabled={isDeleting || !folderId}
-                    title="Delete folder"
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </button>
+                  <div className={styles.folderActions}>
+                    <div className={styles.folderMenu} data-folder-menu-root="true">
+                      <button
+                        type="button"
+                        className={styles.folderMenuTrigger}
+                        onClick={() =>
+                          setOpenFolderMenuId((previous) => (previous === folderId ? null : folderId))
+                        }
+                        disabled={isDeleting || !folderId}
+                        aria-expanded={Boolean(folderId && openFolderMenuId === folderId)}
+                        aria-haspopup="menu"
+                        aria-label={`Open actions for ${folder.name}`}
+                        title="Folder actions"
+                      >
+                        ⋯
+                      </button>
+
+                      {folderId && openFolderMenuId === folderId ? (
+                        <div className={styles.folderMenuDropdown} role="menu">
+                          <button
+                            type="button"
+                            className={styles.folderMenuItemDanger}
+                            onClick={() => {
+                              setOpenFolderMenuId(null);
+                              openDeleteDialog(folder);
+                            }}
+                            disabled={isDeleting}
+                            role="menuitem"
+                          >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
                 </article>
               </li>
             );

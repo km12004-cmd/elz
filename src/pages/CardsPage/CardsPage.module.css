@@ -41,7 +41,6 @@
 }
 
 .primaryButton,
-.deleteButton,
 .folderMainButton {
   border-radius: 12px;
   border: 1px solid transparent;
@@ -110,25 +109,21 @@
 .folderGrid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 280px));
+  justify-content: flex-start;
   gap: 14px;
 }
 
 .folderCard {
-  height: 100%;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(18, 23, 39, 0.78);
+  background: rgba(19, 24, 39, 0.78);
   backdrop-filter: blur(4px);
-  padding: 14px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  transition:
-    transform var(--transition-base),
-    border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    background var(--transition-base);
+  gap: 10px;
+  transition: border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .folderCard:hover {
@@ -139,12 +134,14 @@
 }
 
 .folderMainButton {
-  flex: 1;
   width: 100%;
+  display: flex;
+  flex-direction: column;
   text-align: left;
   background: transparent;
   color: inherit;
   padding: 0;
+  border-radius: 10px;
 }
 
 .folderMainButton:disabled {
@@ -175,6 +172,76 @@
   color: rgba(221, 212, 248, 0.64);
 }
 
+.folderMenu {
+  position: relative;
+}
+
+.folderMenuTrigger {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(188, 165, 255, 0.38);
+  background: rgba(139, 92, 246, 0.12);
+  color: #f3eeff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.folderMenuTrigger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(139, 92, 246, 0.22);
+  border-color: rgba(188, 165, 255, 0.56);
+}
+
+.folderMenuTrigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.folderMenuDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 120px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(188, 165, 255, 0.34);
+  background: rgba(12, 17, 30, 0.96);
+  box-shadow: 0 12px 28px rgba(5, 8, 19, 0.44);
+  z-index: 6;
+}
+
+.folderMenuItemDanger {
+  width: 100%;
+  border: 1px solid rgba(255, 111, 132, 0.44);
+  background: rgba(255, 111, 132, 0.1);
+  color: #ffd1dc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folderMenuItemDanger:hover:not(:disabled) {
+  background: rgba(255, 111, 132, 0.24);
+}
+
+.folderMenuItemDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .folderName {
   margin-top: 12px;
   font-size: 20px;
@@ -192,24 +259,10 @@
   color: #bcaedd;
 }
 
-.deleteButton {
-  width: 100%;
-  border-color: rgba(255, 111, 132, 0.44);
-  background: rgba(255, 111, 132, 0.08);
-  color: #ffc0cb;
-  padding: 9px 12px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.deleteButton:hover:not(:disabled) {
-  background: rgba(255, 111, 132, 0.24);
-  color: #ffe0e6;
-}
-
-.deleteButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.folderActions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .skeletonIcon {
@@ -251,7 +304,8 @@
   }
 
   .folderGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 250px));
+    justify-content: center;
     gap: 12px;
   }
 }

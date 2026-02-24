@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './Flashcard.module.css';
 
 function normalizeText(value) {
@@ -8,13 +8,74 @@ function normalizeText(value) {
 
 function Flashcard({ card, onDelete, isDeleting }) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const frontText = normalizeText(card?.frontText) || 'No text';
   const backText = normalizeText(card?.backText) || 'No translation';
 
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!(event.target instanceof Element)) {
+        setIsMenuOpen(false);
+        return;
+      }
+
+      if (event.target.closest('[data-card-menu-root="true"]')) return;
+      setIsMenuOpen(false);
+    };
+
+    const handleEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      setIsMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMenuOpen]);
+
   return (
     <article className={styles.card}>
-      <p className={styles.hint}>Tap card to flip</p>
+      <div className={styles.headerRow}>
+        <p className={styles.hint}>Tap card to flip</p>
+        <div className={styles.cardMenu} data-card-menu-root="true">
+          <button
+            type="button"
+            className={styles.menuTrigger}
+            onClick={() => setIsMenuOpen((previous) => !previous)}
+            disabled={isDeleting}
+            aria-expanded={isMenuOpen}
+            aria-haspopup="menu"
+            title="Card actions"
+            aria-label="Open card actions"
+          >
+            ⋯
+          </button>
+
+          {isMenuOpen ? (
+            <div className={styles.menuDropdown} role="menu">
+              <button
+                type="button"
+                className={styles.menuDangerItem}
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onDelete?.();
+                }}
+                disabled={isDeleting}
+                role="menuitem"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
 
       <div
         className={styles.flipArea}
@@ -39,16 +100,6 @@ function Flashcard({ card, onDelete, isDeleting }) {
           </div>
         </div>
       </div>
-
-      <button
-        type="button"
-        className={styles.deleteButton}
-        onClick={onDelete}
-        disabled={isDeleting}
-        title="Delete this card"
-      >
-        {isDeleting ? 'Deleting...' : 'Delete'}
-      </button>
     </article>
   );
 }

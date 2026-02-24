@@ -506,7 +506,7 @@ function SongLessonPage() {
       setLyrics(null);
       setLearningState(null);
       setExerciseOneFolderId(null);
-      setLoadError(extractErrorMessage(error));
+      setLoadError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsLoading(false);
     }
@@ -857,7 +857,7 @@ function SongLessonPage() {
       setTaskCards(cards);
       setActiveStage(LESSON_STAGE.TASK_1);
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsPreparingTask(false);
     }
@@ -1202,7 +1202,7 @@ function SongLessonPage() {
 
       await startTaskTwoExercise({ seedCards: preparedTaskCards });
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsCompletingTask(false);
     }
@@ -1344,7 +1344,7 @@ function SongLessonPage() {
         }));
       }
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsSubmittingPairsAnswer(false);
       setIsFinishingPairs(false);
@@ -1415,7 +1415,7 @@ function SongLessonPage() {
     try {
       await startTaskThreeExercise();
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     }
   };
 
@@ -1425,7 +1425,7 @@ function SongLessonPage() {
     try {
       await startTaskFourExercise();
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     }
   };
 
@@ -1516,7 +1516,7 @@ function SongLessonPage() {
 
       await startTaskFiveExercise();
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsCompletingTaskFour(false);
     }
@@ -1637,7 +1637,7 @@ function SongLessonPage() {
         nextCta: 'Open flashcards',
       });
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsCompletingTaskFive(false);
     }
@@ -1790,7 +1790,7 @@ function SongLessonPage() {
         });
       }
     } catch (error) {
-      setTaskError(extractErrorMessage(error));
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsSubmittingPairsAnswer(false);
       setIsFinishingPairs(false);

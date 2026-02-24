@@ -16,12 +16,87 @@
   box-shadow: 0 12px 24px rgba(6, 10, 24, 0.34);
 }
 
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .hint {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #bcaedd;
+  margin-top: 7px;
+}
+
+.cardMenu {
+  position: relative;
+}
+
+.menuTrigger {
+  width: 32px;
+  height: 28px;
+  border-radius: 11px;
+  border-color: rgba(188, 165, 255, 0.52);
+  background: rgba(139, 92, 246, 0.16);
+  color: #f1e9ff;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-indent: 0.08em;
+}
+
+.menuTrigger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(139, 92, 246, 0.22);
+  border-color: rgba(188, 165, 255, 0.56);
+}
+
+.menuTrigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.menuDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 120px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(188, 165, 255, 0.34);
+  background: rgba(12, 17, 30, 0.96);
+  box-shadow: 0 12px 28px rgba(5, 8, 19, 0.44);
+  z-index: 6;
+}
+
+.menuDangerItem {
+  width: 100%;
+  border: 1px solid rgba(255, 111, 132, 0.44);
+  background: rgba(255, 111, 132, 0.1);
+  color: #ffd1dc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuDangerItem:hover:not(:disabled) {
+  background: rgba(255, 111, 132, 0.24);
+}
+
+.menuDangerItem:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .flipArea {
@@ -77,26 +152,4 @@
   line-height: 1.15;
   color: #f5f2ff;
   overflow-wrap: anywhere;
-}
-
-.deleteButton {
-  border: 1px solid rgba(255, 111, 132, 0.44);
-  background: rgba(255, 111, 132, 0.08);
-  color: #ffc0cb;
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background var(--transition-base), opacity var(--transition-base);
-}
-
-.deleteButton:hover:not(:disabled) {
-  background: rgba(255, 111, 132, 0.24);
-  color: #ffe0e6;
-}
-
-.deleteButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }

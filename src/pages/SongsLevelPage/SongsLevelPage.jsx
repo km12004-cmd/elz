@@ -60,7 +60,7 @@ function SongsLevelPage() {
       setSongs(items);
     } catch (error) {
       setSongs([]);
-      setLoadError(extractErrorMessage(error));
+      setLoadError(extractErrorMessage(error, { context: 'songsLevel' }));
     } finally {
       setIsLoading(false);
     }

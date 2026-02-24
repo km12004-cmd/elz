@@ -762,12 +762,6 @@
   color: #f5f8ff;
 }
 
-.completionModalNote {
-  margin-top: 12px;
-  font-size: 13px;
-  color: rgba(224, 233, 255, 0.84);
-}
-
 .completionModalActions {
   margin-top: 14px;
   display: grid;

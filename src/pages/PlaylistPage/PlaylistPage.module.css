@@ -41,7 +41,8 @@
 }
 
 .primaryButton,
-.deleteButton,
+.menuTrigger,
+.menuDangerItem,
 .playlistMainButton {
   border-radius: 12px;
   border: 1px solid transparent;
@@ -115,12 +116,14 @@
 }
 
 .playlistCard {
+  position: relative;
   height: 100%;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(18, 23, 39, 0.78);
   backdrop-filter: blur(4px);
   padding: 14px;
+  padding-bottom: 62px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -206,22 +209,69 @@
   color: #bcaedd;
 }
 
-.deleteButton {
+.playlistMenu {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+}
+
+.menuTrigger {
+  width: 32px;
+  height: 28px;
+  border-radius: 11px;
+  border-color: rgba(188, 165, 255, 0.52);
+  background: rgba(139, 92, 246, 0.16);
+  color: #f1e9ff;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-indent: 0.08em;
+}
+
+.menuTrigger:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.28);
+  border-color: rgba(188, 165, 255, 0.68);
+}
+
+.menuTrigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.menuDropdown {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  min-width: 118px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(188, 165, 255, 0.34);
+  background: rgba(12, 17, 30, 0.96);
+  box-shadow: 0 12px 28px rgba(5, 8, 19, 0.44);
+  z-index: 6;
+}
+
+.menuDangerItem {
   width: 100%;
-  border-color: rgba(255, 111, 132, 0.44);
-  background: rgba(255, 111, 132, 0.08);
-  color: #ffc0cb;
-  padding: 9px 12px;
+  border: 1px solid rgba(255, 111, 132, 0.44);
+  background: rgba(255, 111, 132, 0.1);
+  color: #ffd1dc;
+  border-radius: 8px;
+  padding: 8px 10px;
   font-size: 13px;
   font-weight: 700;
+  text-align: left;
 }
 
-.deleteButton:hover:not(:disabled) {
+.menuDangerItem:hover:not(:disabled) {
   background: rgba(255, 111, 132, 0.24);
-  color: #ffe0e6;
 }
 
-.deleteButton:disabled {
+.menuDangerItem:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

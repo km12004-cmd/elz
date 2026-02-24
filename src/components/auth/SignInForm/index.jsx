@@ -19,7 +19,7 @@ function SignInForm({ onSuccess, onSwitchToSignUp }) {
       await signIn({ email, password });
       onSuccess?.();
     } catch (error) {
-      setError(extractErrorMessage(error));
+      setError(extractErrorMessage(error, { context: 'signIn' }));
     } finally {
       setIsLoading(false);
     }

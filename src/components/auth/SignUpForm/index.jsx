@@ -32,7 +32,7 @@ function SignUpForm({ onSuccess, onSwitchToSignIn }) {
       });
       onSuccess?.();
     } catch (error) {
-      setError(extractErrorMessage(error));
+      setError(extractErrorMessage(error, { context: 'signUp' }));
     } finally {
       setIsLoading(false);
     }

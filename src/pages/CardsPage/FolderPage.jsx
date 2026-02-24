@@ -63,7 +63,7 @@ function FolderPage() {
       setFolder(detail);
     } catch (error) {
       setFolder(null);
-      setLoadError(extractErrorMessage(error));
+      setLoadError(extractErrorMessage(error, { context: 'folder' }));
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +123,7 @@ function FolderPage() {
       setActionSuccess('Card created');
       return true;
     } catch (error) {
-      setCreateCardError(extractErrorMessage(error));
+      setCreateCardError(extractErrorMessage(error, { context: 'folder' }));
       return false;
     } finally {
       setIsCreatingCard(false);
@@ -164,7 +164,7 @@ function FolderPage() {
       setActionSuccess('Card deleted');
       setCardToDeleteId(null);
     } catch (error) {
-      setActionError(extractErrorMessage(error));
+      setActionError(extractErrorMessage(error, { context: 'folder' }));
     } finally {
       setDeletingCardId(null);
     }

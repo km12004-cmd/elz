@@ -299,6 +299,10 @@ async function fetchAllSongs({ token } = {}) {
   return normalizeSongsCollection(data);
 }
 
+export async function fetchSongsCatalog({ token } = {}) {
+  return fetchAllSongs({ token });
+}
+
 function normalizeLevelItem(value, index) {
   const level = asObject(value) ?? {};
 

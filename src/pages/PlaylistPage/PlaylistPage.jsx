@@ -49,6 +49,7 @@ function PlaylistPage() {
 
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
   const [playlistToDelete, setPlaylistToDelete] = useState(null);
+  const [openMenuPlaylistId, setOpenMenuPlaylistId] = useState(null);
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
@@ -85,7 +86,7 @@ function PlaylistPage() {
       setPlaylists(withCounts);
     } catch (error) {
       setPlaylists([]);
-      setLoadError(extractErrorMessage(error));
+      setLoadError(extractErrorMessage(error, { context: 'playlists' }));
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +106,33 @@ function PlaylistPage() {
 
     return () => clearTimeout(timer);
   }, [actionError, actionSuccess]);
+
+  useEffect(() => {
+    if (!openMenuPlaylistId) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!(event.target instanceof Element)) {
+        setOpenMenuPlaylistId(null);
+        return;
+      }
+
+      if (event.target.closest('[data-playlist-menu-root="true"]')) return;
+      setOpenMenuPlaylistId(null);
+    };
+
+    const handleEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      setOpenMenuPlaylistId(null);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [openMenuPlaylistId]);
 
   const clearMessages = () => {
     setActionError('');
@@ -155,7 +183,7 @@ function PlaylistPage() {
       setIsCreateModalOpen(false);
       return true;
     } catch (error) {
-      setCreateError(extractErrorMessage(error));
+      setCreateError(extractErrorMessage(error, { context: 'playlists' }));
       return false;
     } finally {
       setIsCreatingPlaylist(false);
@@ -164,6 +192,7 @@ function PlaylistPage() {
 
   const openDeleteDialog = (playlist) => {
     if (!normalizeId(playlist?.id)) return;
+    setOpenMenuPlaylistId(null);
     setPlaylistToDelete(playlist);
   };
 
@@ -183,7 +212,7 @@ function PlaylistPage() {
       setActionSuccess('Playlist deleted');
       setPlaylistToDelete(null);
     } catch (error) {
-      setActionError(extractErrorMessage(error));
+      setActionError(extractErrorMessage(error, { context: 'playlists' }));
     } finally {
       setDeletingPlaylistId(null);
     }
@@ -258,6 +287,7 @@ function PlaylistPage() {
           {playlists.map((playlist, index) => {
             const playlistId = normalizeId(playlist.id);
             const isDeleting = deletingPlaylistId === playlistId;
+            const isMenuOpen = Boolean(playlistId) && openMenuPlaylistId === playlistId;
 
             return (
               <li key={playlistId ?? `playlist-${index}`}>
@@ -289,15 +319,39 @@ function PlaylistPage() {
                     <p className={styles.playlistMeta}>{playlist.songsCount ?? 0} songs</p>
                   </button>
 
-                  <button
-                    type="button"
-                    className={styles.deleteButton}
-                    onClick={() => openDeleteDialog(playlist)}
-                    disabled={isDeleting || !playlistId}
-                    title="Delete playlist"
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </button>
+                  <div className={styles.playlistMenu} data-playlist-menu-root="true">
+                    <button
+                      type="button"
+                      className={styles.menuTrigger}
+                      onClick={() =>
+                        setOpenMenuPlaylistId((previous) => (previous === playlistId ? null : playlistId))
+                      }
+                      disabled={isDeleting || !playlistId}
+                      aria-expanded={isMenuOpen}
+                      aria-haspopup="menu"
+                      title="Playlist actions"
+                      aria-label="Open playlist actions"
+                    >
+                      ...
+                    </button>
+
+                    {isMenuOpen ? (
+                      <div className={styles.menuDropdown} role="menu">
+                        <button
+                          type="button"
+                          className={styles.menuDangerItem}
+                          onClick={() => {
+                            setOpenMenuPlaylistId(null);
+                            openDeleteDialog(playlist);
+                          }}
+                          disabled={isDeleting}
+                          role="menuitem"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </article>
               </li>
             );

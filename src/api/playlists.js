@@ -68,11 +68,19 @@ function normalizeSong(value) {
   return {
     id: pickFirstId(song, ['id', 'song_id', 'songId']),
     title: pickFirstString(song, ['title', 'name']) ?? 'Untitled song',
+    author: pickFirstString(song, ['author', 'artist', 'performer']),
     audioUrl: pickFirstString(song, ['audio_url', 'audioUrl']),
+    youtubeUrl: pickFirstString(song, ['youtube_url', 'youtubeUrl', 'youtube', 'youtube_link']),
+    durationSeconds: normalizeInteger(song.duration_seconds ?? song.durationSeconds ?? song.duration),
     position:
       typeof song.position === 'number' && Number.isFinite(song.position)
         ? song.position
         : null,
+    addedAt: pickFirstString(song, ['added_at', 'addedAt', 'created_at', 'createdAt']),
+    difficultyLevel: normalizeInteger(
+      song.difficulty_level ?? song.difficultyLevel ?? song.level ?? song.level_id ?? song.levelId,
+    ),
+    difficulty: pickFirstString(song, ['difficulty', 'difficulty_name', 'difficultyName']),
   };
 }
 
