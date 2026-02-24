@@ -1,8 +1,8 @@
 .header {
   position: relative;
   width: 100%;
-  min-height: 178px;
-  padding: 18px 28px;
+  min-height: 128px;
+  padding: 14px 24px;
   overflow: hidden;
   border-bottom: 1px solid rgba(185, 163, 255, 0.18);
   background:
@@ -89,6 +89,44 @@
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.streakPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 177, 92, 0.42);
+  background: rgba(49, 28, 10, 0.45);
+  color: #ffe8cf;
+  padding: 7px 11px;
+  text-decoration: none;
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.streakPill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 188, 111, 0.56);
+  background: rgba(65, 35, 12, 0.58);
+  box-shadow: 0 8px 18px rgba(22, 13, 6, 0.34);
+}
+
+.streakFlame::before {
+  content: '\1F525';
+  display: block;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.streakText {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .authButtons {
@@ -212,15 +250,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
   color: var(--color-text-main);
   padding: 8px 10px;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
   cursor: pointer;
-  transition: background var(--transition-base), color var(--transition-base);
+  transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
 }
 
 .userDropdownItem:hover {
@@ -229,18 +269,21 @@
 
 .userDropdownDanger {
   color: #ffc1cb;
+  border-color: rgba(255, 111, 132, 0.28);
+  background: rgba(255, 111, 132, 0.08);
 }
 
 .userDropdownDanger:hover {
   background: rgba(255, 111, 132, 0.2);
+  border-color: rgba(255, 111, 132, 0.44);
 }
 
 .welcomeContent {
-  margin-top: 24px;
+  margin-top: 12px;
   max-width: 560px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .badge {
@@ -257,36 +300,36 @@
 }
 
 .welcomeContent h1 {
-  font-size: 42px;
+  font-size: 34px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
 }
 
 .welcomeContent p {
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.35;
   color: rgba(233, 227, 252, 0.82);
 }
 
 @media (max-width: 1200px) {
   .header {
-    padding: 16px 22px;
+    padding: 12px 20px;
   }
 
   .welcomeContent {
-    margin-top: 18px;
+    margin-top: 10px;
   }
 
   .welcomeContent h1 {
-    font-size: 38px;
+    font-size: 30px;
   }
 }
 
 @media (max-width: 900px) {
   .header {
-    min-height: 160px;
-    padding: 14px 14px 15px;
+    min-height: 112px;
+    padding: 10px 12px;
   }
 
   .menuButton {
@@ -294,15 +337,36 @@
   }
 
   .welcomeContent {
-    margin-top: 14px;
+    margin-top: 8px;
   }
 
   .welcomeContent h1 {
-    font-size: 34px;
+    font-size: 24px;
   }
 }
 
 @media (max-width: 640px) {
+  .topBar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .user {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .streakPill {
+    padding: 7px 9px;
+  }
+
+  .streakText {
+    font-size: 11px;
+  }
+
   .authButtons {
     gap: 7px;
   }
@@ -322,22 +386,41 @@
   }
 
   .welcomeContent {
+    margin-top: 6px;
     gap: 4px;
+    max-width: 100%;
   }
 
   .welcomeContent h1 {
-    font-size: 30px;
+    font-size: 22px;
   }
 
   .welcomeContent p {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 430px) {
+  .streakText {
+    display: none;
+  }
+
+  .streakPill {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .user {
+    gap: 6px;
+  }
+
   .authButtons {
     flex-wrap: wrap;
     justify-content: flex-end;
+  }
+
+  .welcomeContent p {
+    display: none;
   }
 
   .badge {

@@ -54,3 +54,23 @@
   transform: translateY(-1px);
   box-shadow: 0 10px 20px rgba(20, 14, 42, 0.34);
 }
+
+@media (max-width: 520px) {
+  .emptyState {
+    padding: 18px 12px;
+    gap: 7px;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+
+  .actionButton {
+    width: 100%;
+    max-width: 280px;
+  }
+}

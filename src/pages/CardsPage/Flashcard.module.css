@@ -153,3 +153,28 @@
   color: #f5f2ff;
   overflow-wrap: anywhere;
 }
+
+@media (max-width: 640px) {
+  .flipArea,
+  .flipInner {
+    min-height: 156px;
+  }
+
+  .face {
+    padding: 12px;
+  }
+
+  .faceText {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hint {
+    font-size: 10px;
+  }
+
+  .faceText {
+    font-size: 16px;
+  }
+}

@@ -9,7 +9,7 @@
   border: 1px solid rgba(240, 192, 64, 0.28);
   background: rgba(13, 18, 31, 0.45);
   transition: border-color 0.15s, background 0.15s;
-  max-width: 220px;
+  max-width: 210px;
 }
 
 .widget:hover {
@@ -35,6 +35,7 @@
 }
 
 .barFill {
+  display: block;
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, #f0c040 0%, #e8a020 100%);
@@ -48,25 +49,38 @@
   white-space: nowrap;
 }
 
-/* On small screens (≤640px): hide xpText, shrink bar */
 @media (max-width: 640px) {
+  .barWrap {
+    width: 56px;
+  }
+
+  .widget {
+    padding: 4px 9px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 520px) {
   .xpText {
     display: none;
   }
 
   .barWrap {
-    width: 44px;
+    width: 38px;
   }
 
   .widget {
-    padding: 4px 8px;
+    padding: 4px 7px;
     gap: 6px;
   }
 }
 
-/* Very small screens: hide bar text, keep badge + bar */
-@media (max-width: 380px) {
+@media (max-width: 430px) {
   .barWrap {
     display: none;
+  }
+
+  .widget {
+    max-width: none;
   }
 }

@@ -1,5 +1,30 @@
 import { apiRequest } from './client';
 
+function asObject(value) {
+  return value && typeof value === 'object' ? value : null;
+}
+
+function isUserLike(value) {
+  const user = asObject(value);
+  if (!user) return false;
+
+  return Boolean(
+    user.email ??
+      user.nickname ??
+      user.first_name ??
+      user.firstName ??
+      user.last_name ??
+      user.lastName ??
+      user.birth_date ??
+      user.birthDate ??
+      user.gender ??
+      user.avatar_url ??
+      user.avatarUrl ??
+      user.streak_current ??
+      user.streakCurrent,
+  );
+}
+
 function readToken(data) {
   return (
     data.token ??
@@ -14,7 +39,26 @@ function readToken(data) {
 }
 
 function readUser(data) {
-  return data.user ?? data.profile ?? data.account ?? data.data?.user ?? data.data?.profile ?? null;
+  const candidates = [
+    data?.user,
+    data?.profile,
+    data?.account,
+    data?.data?.user,
+    data?.data?.profile,
+    data?.data?.account,
+    data?.data,
+    data,
+  ];
+
+  for (const candidate of candidates) {
+    if (isUserLike(candidate)) return candidate;
+  }
+
+  return null;
+}
+
+function isRetriableProfileStatus(status) {
+  return status === 400 || status === 404 || status === 405 || status === 422;
 }
 
 export async function registerUser(payload) {
@@ -57,13 +101,32 @@ export async function loginUser({ email, password }) {
 }
 
 export async function fetchProfile({ token } = {}) {
-  const data = await apiRequest('/api/auth/me', { token });
+  const profilePaths = ['/api/profile', '/api/auth/me'];
+  let lastError = null;
 
-  if (!data || typeof data !== 'object') {
-    throw new Error('Unexpected profile response');
+  for (const path of profilePaths) {
+    try {
+      const data = await apiRequest(path, { token });
+      if (!data || typeof data !== 'object') {
+        lastError = new Error('Unexpected profile response');
+        continue;
+      }
+
+      const user = readUser(data);
+      if (user) return user;
+
+      lastError = new Error('Unexpected profile response');
+    } catch (err) {
+      lastError = err;
+
+      const status = Number(err?.status);
+      if (!Number.isInteger(status) || !isRetriableProfileStatus(status)) {
+        throw err;
+      }
+    }
   }
 
-  return readUser(data);
+  throw lastError ?? new Error('Unexpected profile response');
 }
 
 export async function logoutUser({ token } = {}) {

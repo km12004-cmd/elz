@@ -44,8 +44,8 @@
 }
 
 .pageFrame {
-  width: min(1220px, calc(100% - 48px));
-  margin: 22px auto 30px;
+  width: min(1220px, calc(100% - 40px));
+  margin: 18px auto 24px;
   flex: 1;
 }
 
@@ -59,20 +59,36 @@
 
 @media (max-width: 1200px) {
   .pageFrame {
-    width: min(1120px, calc(100% - 36px));
-    margin-top: 18px;
+    width: min(1120px, calc(100% - 30px));
+    margin: 14px auto 20px;
   }
 }
 
 @media (max-width: 900px) {
+  .appShell::before,
+  .appShell::after {
+    width: 320px;
+    height: 320px;
+  }
+
+  .appShell::before {
+    top: -160px;
+    right: -120px;
+  }
+
+  .appShell::after {
+    bottom: -180px;
+    left: -140px;
+  }
+
   .content {
     height: auto;
     min-height: 100dvh;
   }
 
   .pageFrame {
-    width: calc(100% - 22px);
-    margin: 14px auto 18px;
+    width: calc(100% - 18px);
+    margin: 10px auto 14px;
   }
 
   .overlay {
@@ -93,10 +109,16 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .pageFrame {
-    width: calc(100% - 14px);
-    margin-top: 10px;
-    margin-bottom: 14px;
+    width: calc(100% - 12px);
+    margin: 8px auto 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .appShell::before,
+  .appShell::after {
+    display: none;
   }
 }

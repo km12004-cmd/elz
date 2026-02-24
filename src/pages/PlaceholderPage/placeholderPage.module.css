@@ -7,20 +7,20 @@
     var(--color-surface-glass);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(10px);
-  padding: 28px 24px;
+  padding: 24px 22px;
 }
 
 
 .title {
-  margin-top: 14px;
-  font-size: 34px;
+  margin-top: 10px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
 .subtitle {
   margin-top: 8px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   max-width: 620px;
   color: var(--color-text-secondary);
   font-size: 15px;
@@ -140,7 +140,7 @@
 }
 
 .artistsSection {
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 .artistsTitle {
@@ -179,10 +179,12 @@
   overflow-x: auto;
   padding-bottom: 6px;
   scrollbar-width: thin;
+  scroll-snap-type: x proximity;
 }
 
 .artistCard {
   flex: 0 0 auto;
+  scroll-snap-align: start;
   width: 156px;
 }
 
@@ -224,6 +226,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 1100px) {
+  .levelsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
@@ -270,6 +278,42 @@
   }
 
   .artistName {
-    font-size: 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 14px 12px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+
+  .levelsTitle {
+    font-size: 19px;
+  }
+
+  .artistsTitle {
+    font-size: 21px;
+  }
+
+  .artistCard {
+    width: 104px;
+  }
+
+  .artistAvatar {
+    width: 104px;
+    height: 104px;
+  }
+
+  .artistAvatarFallback {
+    font-size: 24px;
   }
 }

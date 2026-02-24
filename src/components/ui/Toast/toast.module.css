@@ -67,6 +67,7 @@
   }
 
   .toast {
+    min-width: 0;
     max-width: none;
   }
 }

@@ -332,7 +332,7 @@ function PlaylistPage() {
                       title="Playlist actions"
                       aria-label="Open playlist actions"
                     >
-                      ...
+                      ⋯
                     </button>
 
                     {isMenuOpen ? (

@@ -8,6 +8,14 @@ const AUTH_SESSION_DAYS = 15;
 const AUTH_SESSION_TTL_MS = AUTH_SESSION_DAYS * 24 * 60 * 60 * 1000;
 const AUTH_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
 const EMPTY_AUTH = { token: null, user: null, sessionStartedAt: null };
+const PLACEHOLDER_STRINGS = new Set([
+  'not provided',
+  'not-provided',
+  'not_provided',
+  'n/a',
+  'null',
+  'undefined',
+]);
 
 function safeParseJson(value) {
   try {
@@ -66,11 +74,42 @@ function nicknameFromEmail(email) {
 function pickFirstString(...values) {
   for (const value of values) {
     if (typeof value !== 'string') continue;
+
     const trimmed = value.trim();
-    if (trimmed) return trimmed;
+    if (!trimmed) continue;
+    if (PLACEHOLDER_STRINGS.has(trimmed.toLowerCase())) continue;
+
+    return trimmed;
   }
 
   return null;
+}
+
+function toFiniteNumber(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value !== 'string') return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function pickFirstNumber(...values) {
+  for (const value of values) {
+    const parsed = toFiniteNumber(value);
+    if (parsed !== null) return parsed;
+  }
+
+  return null;
+}
+
+function toNonNegativeInteger(value) {
+  if (!Number.isFinite(value)) return null;
+
+  const normalized = Math.trunc(value);
+  return normalized >= 0 ? normalized : null;
 }
 
 function asObject(value) {
@@ -88,26 +127,36 @@ function mergeUserHints(...hints) {
   return Object.keys(merged).length ? merged : null;
 }
 
-function hasRequiredProfileFields(value) {
-  const user = asObject(value);
-  if (!user) return false;
-
-  return Boolean(
-    user.email &&
-      user.nickname &&
-      user.firstName &&
-      user.lastName &&
-      user.gender &&
-      user.birthDate &&
-      user.registeredAt,
-  );
-}
-
 function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
   const normalizedHint = asObject(userHint);
   const normalizedPreviousUser = asObject(previousUser);
   const normalizedPayload = asObject(tokenPayload);
   const tokenUser = asObject(normalizedPayload?.user);
+  const streakCurrent = toNonNegativeInteger(
+    pickFirstNumber(
+      normalizedHint?.streakCurrent,
+      normalizedHint?.streak_current,
+      normalizedPayload?.streakCurrent,
+      normalizedPayload?.streak_current,
+      tokenUser?.streakCurrent,
+      tokenUser?.streak_current,
+      normalizedPreviousUser?.streakCurrent,
+      normalizedPreviousUser?.streak_current,
+    ),
+  );
+  const streakBest = toNonNegativeInteger(
+    pickFirstNumber(
+      normalizedHint?.streakBest,
+      normalizedHint?.streak_best,
+      normalizedPayload?.streakBest,
+      normalizedPayload?.streak_best,
+      tokenUser?.streakBest,
+      tokenUser?.streak_best,
+      normalizedPreviousUser?.streakBest,
+      normalizedPreviousUser?.streak_best,
+      streakCurrent,
+    ),
+  );
 
   const resolvedEmail = pickFirstString(
     normalizedHint?.email,
@@ -198,13 +247,24 @@ function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
       normalizedPreviousUser?.created_at,
       normalizedPreviousUser?.registeredAt,
     ),
+    streakCurrent,
+    streakBest,
+    streakLastLocalDate: pickFirstString(
+      normalizedHint?.streakLastLocalDate,
+      normalizedHint?.streak_last_local_date,
+      normalizedPayload?.streakLastLocalDate,
+      normalizedPayload?.streak_last_local_date,
+      tokenUser?.streakLastLocalDate,
+      tokenUser?.streak_last_local_date,
+      normalizedPreviousUser?.streakLastLocalDate,
+      normalizedPreviousUser?.streak_last_local_date,
+    ),
   };
 }
 
 export function AuthProvider({ children }) {
   const [{ token, user, sessionStartedAt }, setAuth] = useState(() => loadStoredAuth());
   const isAuthenticated = Boolean(token || user);
-  const needsProfileHydration = Boolean(token && !hasRequiredProfileFields(user));
 
   useEffect(() => {
     persistAuth({ token, user, sessionStartedAt });
@@ -230,7 +290,7 @@ export function AuthProvider({ children }) {
   }, [token, sessionStartedAt]);
 
   useEffect(() => {
-    if (!needsProfileHydration || !token) return undefined;
+    if (!token) return undefined;
 
     let isCancelled = false;
 
@@ -264,7 +324,7 @@ export function AuthProvider({ children }) {
     return () => {
       isCancelled = true;
     };
-  }, [needsProfileHydration, token]);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return undefined;

@@ -7,6 +7,17 @@ import SignInForm from '../../auth/SignInForm';
 import SignUpForm from '../../auth/SignUpForm';
 import XpWidget from './XpWidget';
 
+function normalizeStreak(value) {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.trunc(parsed));
+}
+
+function formatStreakDays(value) {
+  const safeValue = normalizeStreak(value);
+  return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
+}
+
 function Header({ isSidebarOpen, onMenuClick }) {
   const { isAuthenticated, user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -16,6 +27,8 @@ function Header({ isSidebarOpen, onMenuClick }) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const nickname = user?.nickname ?? 'User';
+  const currentStreak = normalizeStreak(user?.streakCurrent ?? user?.streak_current);
+  const streakLabel = formatStreakDays(currentStreak);
 
   const closeAuth = () => setAuthView(null);
 
@@ -54,6 +67,16 @@ function Header({ isSidebarOpen, onMenuClick }) {
 
         <div className={styles.user}>
           {isAuthenticated && <XpWidget />}
+          {isAuthenticated && (
+            <Link
+              to="/profile"
+              className={styles.streakPill}
+              aria-label={`Current streak: ${streakLabel}`}
+              title={`Current streak: ${streakLabel}`}>
+              <span className={styles.streakFlame} aria-hidden="true" />
+              <span className={styles.streakText}>{streakLabel}</span>
+            </Link>
+          )}
           {!isAuthenticated ? (
             <div className={styles.authButtons}>
               <button

@@ -7,7 +7,7 @@
     var(--color-surface-glass);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-card);
-  padding: 24px;
+  padding: 22px;
 }
 
 .header {
@@ -32,7 +32,7 @@
 }
 
 .title {
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.03em;
@@ -117,7 +117,7 @@
 .songGrid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 14px;
 }
 
@@ -203,6 +203,20 @@
   border-radius: 12px;
 }
 
+@media (max-width: 980px) {
+  .page {
+    padding: 18px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .headerTop {
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 760px) {
   .page {
     border-radius: var(--radius-lg);
@@ -225,5 +239,24 @@
   .ghostButton {
     flex: 1;
     text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 14px 12px;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .ghostButton {
+    width: 100%;
+    flex: 0 0 100%;
   }
 }

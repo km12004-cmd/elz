@@ -4,10 +4,21 @@ import { useProgress } from '../../contexts/useProgress';
 import { xpFillPercent } from '../../utils/xpLevels';
 import styles from './profilePage.module.css';
 
+const PLACEHOLDER_STRINGS = new Set([
+  'not provided',
+  'not-provided',
+  'not_provided',
+  'n/a',
+  'null',
+  'undefined',
+]);
+
 function normalizeString(value) {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
-  return trimmed || null;
+  if (!trimmed) return null;
+  if (PLACEHOLDER_STRINGS.has(trimmed.toLowerCase())) return null;
+  return trimmed;
 }
 
 function parseDate(value) {
@@ -47,6 +58,17 @@ function getSafeValue(value) {
   return normalizeString(value) ?? 'Not provided';
 }
 
+function normalizeStreak(value, fallback = 0) {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.trunc(parsed));
+}
+
+function formatStreakDays(value) {
+  const safeValue = normalizeStreak(value);
+  return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
+}
+
 function ProfilePage() {
   const { isAuthenticated, user, signOut } = useAuth();
   const { progress } = useProgress();
@@ -70,6 +92,8 @@ function ProfilePage() {
     month: 'long',
     year: 'numeric',
   });
+  const currentStreak = normalizeStreak(user?.streakCurrent ?? user?.streak_current);
+  const bestStreak = normalizeStreak(user?.streakBest ?? user?.streak_best, currentStreak);
 
   const avatarLetter = (normalizeString(user?.nickname) ?? normalizeString(user?.firstName) ?? 'U')
     .slice(0, 1)
@@ -105,6 +129,17 @@ function ProfilePage() {
             <h2 className={styles.nickname}>{nickname}</h2>
             <p className={styles.email}>{email}</p>
             <span className={styles.memberPill}>Member since {memberSince}</span>
+            <div className={styles.streakRow}>
+              <span className={styles.streakPill}>
+                <span className={styles.streakIcon} aria-hidden="true" />
+                <span className={styles.streakLabel}>Current streak</span>
+                <span className={styles.streakValue}>{formatStreakDays(currentStreak)}</span>
+              </span>
+              <span className={`${styles.streakPill} ${styles.streakPillMuted}`}>
+                <span className={styles.streakLabel}>Best</span>
+                <span className={styles.streakValue}>{formatStreakDays(bestStreak)}</span>
+              </span>
+            </div>
           </div>
         </div>
 

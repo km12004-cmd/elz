@@ -116,8 +116,24 @@
   cursor: not-allowed;
 }
 
+@media (max-width: 700px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
 @media (max-width: 520px) {
   .actions {
     flex-direction: column;
+  }
+
+  .primaryButton,
+  .ghostButton {
+    width: 100%;
   }
 }
