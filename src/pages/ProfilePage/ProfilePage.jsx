@@ -116,6 +116,10 @@ function ProfilePage() {
     navigate('/');
   };
 
+  const onOpenAdminConsole = () => {
+    navigate('/admin');
+  };
+
   return (
     <section className={styles.page}>
       <div className={styles.hero}>
@@ -148,6 +152,9 @@ function ProfilePage() {
         </div>
 
         <div className={styles.actions}>
+          <button type="button" className={styles.adminButton} onClick={onOpenAdminConsole}>
+            Admin console
+          </button>
           <button type="button" className={styles.homeButton} onClick={onBackToHome}>
             Back to Home
           </button>

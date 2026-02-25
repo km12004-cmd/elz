@@ -49,7 +49,7 @@ function PremiumPage() {
         <article className={`${styles.planCard} ${styles.planCardPremium}`}>
           <p className={styles.planLabel}>Premium Plan</p>
           <h3 className={styles.planTitle}>Premium</h3>
-          <p className={styles.planPrice}>249 KGS / month</p>
+          <p className={styles.planPrice}>149 KGS / month</p>
           <p className={styles.planDescription}>
             Designed for consistent learners who want maximum content access and faster results.
           </p>
@@ -60,7 +60,9 @@ function PremiumPage() {
               </li>
             ))}
           </ul>
-          <p className={styles.planNote}>Best for focused learners who want full access and depth.</p>
+          <p className={styles.planNote}>
+            Best for focused learners who want full access and depth.
+          </p>
         </article>
       </div>
     </section>

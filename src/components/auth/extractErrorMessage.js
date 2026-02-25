@@ -65,6 +65,12 @@ const ERROR_MESSAGES_BY_CONTEXT = {
     403: 'You do not have access to this playlist.',
     404: 'This playlist was not found.',
   },
+  admin: {
+    fallback: 'We could not complete the admin request. Please try again.',
+    401: 'Your session has expired. Please sign in again.',
+    403: 'Admin access is required for this action.',
+    404: 'Requested user was not found.',
+  },
 };
 
 function resolveContextMessages(context) {

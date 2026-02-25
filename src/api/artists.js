@@ -1,4 +1,4 @@
-import { apiRequest } from './client';
+import { ApiError, apiRequest } from './client';
 
 const ARTISTS_BASE_PATH = '/api/artists';
 const DEFAULT_LIMIT = 20;
@@ -108,6 +108,64 @@ function normalizeOffset(value) {
   return parsed;
 }
 
+function shouldRetryWithFallbackBody(error) {
+  const status =
+    typeof error?.status === 'number' && Number.isFinite(error.status)
+      ? error.status
+      : null;
+
+  return error instanceof ApiError || status === 400 || status === 422;
+}
+
+async function requestWithFallbackBodies(path, { method = 'POST', token, bodies } = {}) {
+  if (!Array.isArray(bodies) || bodies.length === 0) {
+    return apiRequest(path, { method, token });
+  }
+
+  let lastError = null;
+
+  for (const body of bodies) {
+    try {
+      return await apiRequest(path, { method, token, body });
+    } catch (error) {
+      if (!shouldRetryWithFallbackBody(error)) throw error;
+      lastError = error;
+    }
+  }
+
+  if (lastError) throw lastError;
+  throw new ApiError('Request failed');
+}
+
+function readArtistFromResponse(data, fallbackArtistId = null) {
+  const candidates = [
+    data?.artist,
+    data?.item,
+    data?.data?.artist,
+    data?.data?.item,
+    data?.data,
+    data,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeArtist(candidate);
+    if (normalized.id || normalized.name !== 'Unknown artist') {
+      return {
+        ...normalized,
+        id: normalized.id ?? fallbackArtistId,
+      };
+    }
+  }
+
+  return {
+    id: fallbackArtistId,
+    name: 'Unknown artist',
+    bio: null,
+    avatarUrl: null,
+    createdAt: null,
+  };
+}
+
 export async function fetchArtists({ token, limit = DEFAULT_LIMIT, offset = 0, query } = {}) {
   const normalizedLimit = normalizeLimit(limit);
   const normalizedOffset = normalizeOffset(offset);
@@ -129,4 +187,78 @@ export async function fetchArtists({ token, limit = DEFAULT_LIMIT, offset = 0, q
     limit: normalizeInteger(data?.limit) ?? normalizedLimit,
     offset: normalizeInteger(data?.offset) ?? normalizedOffset,
   };
+}
+
+export async function createArtist({ token, name, bio, avatarUrl } = {}) {
+  const normalizedName = normalizeText(name);
+  if (!normalizedName) throw new Error('Artist name is required');
+
+  const normalizedBio = normalizeText(bio);
+  const normalizedAvatarUrl = normalizeText(avatarUrl);
+
+  const data = await requestWithFallbackBodies(ARTISTS_BASE_PATH, {
+    method: 'POST',
+    token,
+    bodies: [
+      {
+        name: normalizedName,
+        bio: normalizedBio ?? null,
+        avatar_url: normalizedAvatarUrl ?? null,
+      },
+      {
+        name: normalizedName,
+        bio: normalizedBio ?? null,
+        image_url: normalizedAvatarUrl ?? null,
+      },
+      {
+        name: normalizedName,
+        bio: normalizedBio ?? null,
+        avatarUrl: normalizedAvatarUrl ?? null,
+      },
+    ],
+  });
+
+  return readArtistFromResponse(data);
+}
+
+export async function updateArtist({ token, artistId, name, bio, avatarUrl } = {}) {
+  const normalizedArtistId = normalizeId(artistId);
+  if (!normalizedArtistId) throw new Error('Artist id is required');
+
+  const normalizedName = normalizeText(name);
+  const normalizedBio = normalizeText(bio);
+  const normalizedAvatarUrl = normalizeText(avatarUrl);
+
+  const hasPayload =
+    normalizedName !== null || normalizedBio !== null || normalizedAvatarUrl !== null;
+  if (!hasPayload) {
+    throw new Error('At least one artist field is required');
+  }
+
+  const data = await requestWithFallbackBodies(
+    `${ARTISTS_BASE_PATH}/${encodeURIComponent(normalizedArtistId)}`,
+    {
+      method: 'PATCH',
+      token,
+      bodies: [
+        {
+          ...(normalizedName !== null ? { name: normalizedName } : {}),
+          ...(normalizedBio !== null ? { bio: normalizedBio } : {}),
+          ...(normalizedAvatarUrl !== null ? { avatar_url: normalizedAvatarUrl } : {}),
+        },
+        {
+          ...(normalizedName !== null ? { name: normalizedName } : {}),
+          ...(normalizedBio !== null ? { bio: normalizedBio } : {}),
+          ...(normalizedAvatarUrl !== null ? { image_url: normalizedAvatarUrl } : {}),
+        },
+        {
+          ...(normalizedName !== null ? { name: normalizedName } : {}),
+          ...(normalizedBio !== null ? { bio: normalizedBio } : {}),
+          ...(normalizedAvatarUrl !== null ? { avatarUrl: normalizedAvatarUrl } : {}),
+        },
+      ],
+    },
+  );
+
+  return readArtistFromResponse(data, normalizedArtistId);
 }

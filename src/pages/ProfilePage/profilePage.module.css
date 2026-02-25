@@ -148,7 +148,8 @@
 }
 
 .homeButton,
-.logoutButton {
+.logoutButton,
+.adminButton {
   border-radius: 999px;
   border: 1px solid var(--header-action-border);
   background: var(--header-action-bg);
@@ -161,9 +162,20 @@
 }
 
 .homeButton:hover,
-.logoutButton:hover {
+.logoutButton:hover,
+.adminButton:hover {
   transform: translateY(-1px);
   background: var(--header-action-bg-hover);
+}
+
+.adminButton {
+  border-color: var(--header-primary-border);
+  background: var(--header-primary-bg);
+  color: var(--header-primary-text);
+}
+
+.adminButton:hover {
+  background: var(--header-primary-bg-hover);
 }
 
 .progressBlock {

@@ -141,6 +141,27 @@ function toNonNegativeInteger(value) {
   return normalized >= 0 ? normalized : null;
 }
 
+function toIdString(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const normalized = Math.trunc(value);
+    return normalized >= 0 ? String(normalized) : null;
+  }
+
+  if (typeof value !== 'string') return null;
+
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function pickFirstId(...values) {
+  for (const value of values) {
+    const normalized = toIdString(value);
+    if (normalized) return normalized;
+  }
+
+  return null;
+}
+
 function asObject(value) {
   return value && typeof value === 'object' ? value : null;
 }
@@ -220,8 +241,42 @@ function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
     normalizedPayload?.avatarUrl ??
     tokenUser?.avatar_url ??
     tokenUser?.avatarUrl;
+  const explicitRole = pickFirstString(
+    normalizedHint?.role,
+    normalizedHint?.user_role,
+    normalizedPayload?.role,
+    normalizedPayload?.user_role,
+    tokenUser?.role,
+    tokenUser?.user_role,
+    normalizedPreviousUser?.role,
+  );
+  const roleFromFlags = pickFirstBoolean(
+    normalizedHint?.isAdmin,
+    normalizedHint?.is_admin,
+    normalizedPayload?.isAdmin,
+    normalizedPayload?.is_admin,
+    tokenUser?.isAdmin,
+    tokenUser?.is_admin,
+    normalizedPreviousUser?.isAdmin,
+    normalizedPreviousUser?.is_admin,
+  );
+  const role = explicitRole ? explicitRole.toLowerCase() : roleFromFlags ? 'admin' : 'user';
 
   return {
+    id: pickFirstId(
+      normalizedHint?.id,
+      normalizedHint?.userId,
+      normalizedHint?.user_id,
+      normalizedPayload?.id,
+      normalizedPayload?.userId,
+      normalizedPayload?.user_id,
+      tokenUser?.id,
+      tokenUser?.userId,
+      tokenUser?.user_id,
+      normalizedPreviousUser?.id,
+      normalizedPreviousUser?.userId,
+      normalizedPreviousUser?.user_id,
+    ),
     email: resolvedEmail,
     nickname: pickFirstString(
       normalizedHint?.nickname,
@@ -298,6 +353,54 @@ function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
       tokenUser?.streak_last_local_date,
       normalizedPreviousUser?.streakLastLocalDate,
       normalizedPreviousUser?.streak_last_local_date,
+    ),
+    role,
+    isAdmin: role === 'admin',
+    experience: toNonNegativeInteger(
+      pickFirstNumber(
+        normalizedHint?.experience,
+        normalizedHint?.xp_total,
+        normalizedHint?.xpTotal,
+        normalizedHint?.xp,
+        normalizedPayload?.experience,
+        normalizedPayload?.xp_total,
+        normalizedPayload?.xpTotal,
+        normalizedPayload?.xp,
+        tokenUser?.experience,
+        tokenUser?.xp_total,
+        tokenUser?.xpTotal,
+        tokenUser?.xp,
+        normalizedPreviousUser?.experience,
+        normalizedPreviousUser?.xp_total,
+        normalizedPreviousUser?.xpTotal,
+        normalizedPreviousUser?.xp,
+      ),
+    ),
+    level: toNonNegativeInteger(
+      pickFirstNumber(
+        normalizedHint?.level,
+        normalizedPayload?.level,
+        tokenUser?.level,
+        normalizedPreviousUser?.level,
+      ),
+    ),
+    premiumUntil: pickFirstString(
+      normalizedHint?.premiumUntil,
+      normalizedHint?.premium_until,
+      normalizedHint?.premium_expires_at,
+      normalizedHint?.premiumExpiresAt,
+      normalizedPayload?.premiumUntil,
+      normalizedPayload?.premium_until,
+      normalizedPayload?.premium_expires_at,
+      normalizedPayload?.premiumExpiresAt,
+      tokenUser?.premiumUntil,
+      tokenUser?.premium_until,
+      tokenUser?.premium_expires_at,
+      tokenUser?.premiumExpiresAt,
+      normalizedPreviousUser?.premiumUntil,
+      normalizedPreviousUser?.premium_until,
+      normalizedPreviousUser?.premium_expires_at,
+      normalizedPreviousUser?.premiumExpiresAt,
     ),
     isPremium,
   };

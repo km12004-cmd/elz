@@ -92,7 +92,12 @@ function toBodyId(value) {
 }
 
 function shouldRetryWithFallbackBody(error) {
-  return error instanceof ApiError && (error.status === 400 || error.status === 422);
+  const status =
+    typeof error?.status === 'number' && Number.isFinite(error.status)
+      ? error.status
+      : null;
+
+  return error instanceof ApiError || status === 400 || status === 422;
 }
 
 async function requestWithFallbackBodies(requestFactory, bodies) {
@@ -231,6 +236,22 @@ function normalizeCreateTemplatesResult(data, fallbackTrackId, fallbackExerciseI
   };
 }
 
+function normalizeCreateTemplatesGenericResult(data, fallbackTrackId, fallbackExerciseIdx = null) {
+  const source = asObject(data?.data) ?? asObject(data) ?? {};
+
+  return {
+    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? fallbackTrackId,
+    exercise:
+      normalizeExerciseIdx(source.exercise ?? source.exercise_idx ?? source.exerciseIdx) ??
+      fallbackExerciseIdx,
+    createdIds: readCollection(source, ['created_ids', 'createdIds', 'ids'])
+      .map(normalizeId)
+      .filter(Boolean),
+    createdCount:
+      normalizeInteger(source.created_count ?? source.createdCount ?? source.count) ?? 0,
+  };
+}
+
 export async function fetchTrackPairsTemplates({ token, trackId, exerciseIdx } = {}) {
   const normalizedTrackId = normalizeId(trackId);
   if (!normalizedTrackId) throw new Error('Track id is required');
@@ -278,6 +299,65 @@ export async function createTrackPairsTemplates({ token, trackId, exerciseIdx, i
   );
 
   return normalizeCreateTemplatesResult(data, normalizedTrackId, normalizedExerciseIdx);
+}
+
+export async function createTrackPairsTemplatesForTrack({
+  token,
+  trackId,
+  exerciseIdx,
+  items,
+} = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const normalizedExerciseIdx =
+    exerciseIdx === undefined || exerciseIdx === null || String(exerciseIdx).trim() === ''
+      ? null
+      : normalizeExerciseIdx(exerciseIdx);
+  if (exerciseIdx !== undefined && exerciseIdx !== null && normalizedExerciseIdx === null) {
+    throw new Error('Exercise index is invalid');
+  }
+
+  const normalizedItems = Array.isArray(items)
+    ? items.map(normalizeTemplateInputItem).filter(Boolean)
+    : [];
+  if (normalizedItems.length === 0) {
+    throw new Error('Template items are required');
+  }
+
+  const camelItems = normalizedItems.map((item) => ({
+    kgText: item.kg_text,
+    ruText: item.ru_text,
+    order: item.order,
+  }));
+
+  const data = await requestWithFallbackBodies(
+    (body) =>
+      apiRequest(
+        `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/games/pairs/templates`,
+        {
+          method: 'POST',
+          token,
+          body,
+        },
+      ),
+    [
+      {
+        ...(normalizedExerciseIdx !== null ? { exercise: normalizedExerciseIdx } : {}),
+        items: normalizedItems,
+      },
+      {
+        ...(normalizedExerciseIdx !== null ? { exercise_idx: normalizedExerciseIdx } : {}),
+        items: normalizedItems,
+      },
+      {
+        ...(normalizedExerciseIdx !== null ? { exercise: normalizedExerciseIdx } : {}),
+        items: camelItems,
+      },
+    ],
+  );
+
+  return normalizeCreateTemplatesGenericResult(data, normalizedTrackId, normalizedExerciseIdx);
 }
 
 export async function startTrackPairsGame({ token, trackId, exerciseIdx } = {}) {

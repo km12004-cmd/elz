@@ -97,7 +97,12 @@ async function requestFirstAvailable(paths, options) {
 }
 
 function shouldRetryWithFallbackBody(error) {
-  return error instanceof ApiError && (error.status === 400 || error.status === 422);
+  const status =
+    typeof error?.status === 'number' && Number.isFinite(error.status)
+      ? error.status
+      : null;
+
+  return error instanceof ApiError || status === 400 || status === 422;
 }
 
 async function requestWithFallbackBodies(path, { method = 'POST', token, bodies } = {}) {
@@ -259,6 +264,126 @@ function normalizeTrackCards(data, { fallbackLevel } = {}) {
     .map((item, index) => normalizeTrackCard(item, index, fallbackLevel))
     .filter((card) => card.kgText || card.ruText)
     .sort((left, right) => left.order - right.order);
+}
+
+function normalizeOptionalBoolean(value) {
+  if (typeof value === 'boolean') return value;
+  const parsed = normalizeBoolean(value);
+  return parsed !== null ? parsed : null;
+}
+
+function normalizeTrackTemplateInputItem(value, index) {
+  const item = asObject(value) ?? {};
+
+  const kgText = normalizeText(item.kg_text ?? item.kgText ?? item.left ?? item.text);
+  const ruText = normalizeText(item.ru_text ?? item.ruText ?? item.right ?? item.translation);
+  if (!kgText || !ruText) return null;
+
+  return {
+    kg_text: kgText,
+    ru_text: ruText,
+    order: normalizeInteger(item.order ?? item.order_idx ?? item.orderIdx) ?? index + 1,
+  };
+}
+
+function readSongFromResponse(data, fallbackSongId = null) {
+  const candidates = [
+    data?.song,
+    data?.item,
+    data?.data?.song,
+    data?.data?.item,
+    data?.data,
+    data,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeSong(candidate);
+    if (normalized.id || normalized.title !== 'Untitled song') {
+      return {
+        ...normalized,
+        id: normalized.id ?? fallbackSongId,
+      };
+    }
+  }
+
+  return {
+    id: fallbackSongId,
+    title: 'Untitled song',
+    author: null,
+    difficultyLevel: null,
+    releaseYear: null,
+    durationSeconds: null,
+    originalLanguage: null,
+    isPublished: null,
+    youtubeUrl: null,
+    audioUrl: null,
+  };
+}
+
+function normalizeCreatedTemplatesResult(data, fallbackTrackId, fallbackLevel) {
+  const source = asObject(data?.data) ?? asObject(data) ?? {};
+
+  return {
+    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? fallbackTrackId,
+    level:
+      normalizeTrackLevel(source.level ?? source.level_idx ?? source.levelIdx) ?? fallbackLevel,
+    createdIds: readCollection(source, ['created_ids', 'createdIds', 'ids'])
+      .map(normalizeId)
+      .filter(Boolean),
+    createdCount:
+      normalizeInteger(source.created_count ?? source.createdCount ?? source.count) ?? 0,
+  };
+}
+
+function buildSongBodies(payload) {
+  const normalizedTitle = normalizeText(payload?.title);
+  const normalizedAuthor = normalizeText(payload?.author);
+  const normalizedArtistId = normalizeOptionalPositiveId(payload?.artistId ?? payload?.artist_id);
+  const normalizedDifficultyLevel = normalizeDifficultyLevel(
+    payload?.difficultyLevel ?? payload?.difficulty_level ?? payload?.level ?? payload?.level_id,
+  );
+  const normalizedReleaseYear = normalizeInteger(payload?.releaseYear ?? payload?.release_year);
+  const normalizedDurationSeconds = normalizeInteger(
+    payload?.durationSeconds ?? payload?.duration_seconds ?? payload?.duration,
+  );
+  const normalizedOriginalLanguage = normalizeText(
+    payload?.originalLanguage ?? payload?.original_language ?? payload?.language,
+  );
+  const normalizedYoutubeUrl = normalizeText(
+    payload?.youtubeUrl ?? payload?.youtube_url ?? payload?.youtube,
+  );
+  const normalizedAudioUrl = normalizeText(payload?.audioUrl ?? payload?.audio_url ?? payload?.audio);
+  const normalizedIsPublished = normalizeOptionalBoolean(
+    payload?.isPublished ?? payload?.is_published,
+  );
+
+  const snakeBody = {
+    ...(normalizedTitle !== null ? { title: normalizedTitle } : {}),
+    ...(normalizedAuthor !== null ? { author: normalizedAuthor } : {}),
+    ...(normalizedArtistId !== null ? { artist_id: normalizedArtistId } : {}),
+    ...(normalizedDifficultyLevel !== null ? { difficulty_level: normalizedDifficultyLevel } : {}),
+    ...(normalizedReleaseYear !== null ? { release_year: normalizedReleaseYear } : {}),
+    ...(normalizedDurationSeconds !== null ? { duration_seconds: normalizedDurationSeconds } : {}),
+    ...(normalizedOriginalLanguage !== null ? { original_language: normalizedOriginalLanguage } : {}),
+    ...(normalizedIsPublished !== null ? { is_published: normalizedIsPublished } : {}),
+    ...(normalizedYoutubeUrl !== null ? { youtube_url: normalizedYoutubeUrl } : {}),
+    ...(normalizedAudioUrl !== null ? { audio_url: normalizedAudioUrl } : {}),
+  };
+
+  const camelBody = {
+    ...(normalizedTitle !== null ? { title: normalizedTitle } : {}),
+    ...(normalizedAuthor !== null ? { author: normalizedAuthor } : {}),
+    ...(normalizedArtistId !== null ? { artistId: normalizedArtistId } : {}),
+    ...(normalizedDifficultyLevel !== null ? { difficultyLevel: normalizedDifficultyLevel } : {}),
+    ...(normalizedReleaseYear !== null ? { releaseYear: normalizedReleaseYear } : {}),
+    ...(normalizedDurationSeconds !== null ? { durationSeconds: normalizedDurationSeconds } : {}),
+    ...(normalizedOriginalLanguage !== null ? { originalLanguage: normalizedOriginalLanguage } : {}),
+    ...(normalizedIsPublished !== null ? { isPublished: normalizedIsPublished } : {}),
+    ...(normalizedYoutubeUrl !== null ? { youtubeUrl: normalizedYoutubeUrl } : {}),
+    ...(normalizedAudioUrl !== null ? { audioUrl: normalizedAudioUrl } : {}),
+  };
+
+  return { snakeBody, camelBody };
 }
 
 function levelsFromSongs(songs) {
@@ -557,4 +682,76 @@ export async function fetchTrackLevelCards({ token, trackId, level } = {}) {
   );
 
   return normalizeTrackCards(data, { fallbackLevel: normalizedLevel });
+}
+
+export async function createSongRecord({ token, payload } = {}) {
+  const { snakeBody, camelBody } = buildSongBodies(payload);
+  if (!normalizeText(snakeBody.title) && !normalizeText(camelBody.title)) {
+    throw new Error('Song title is required');
+  }
+
+  const data = await requestWithFallbackBodies(SONGS_BASE_PATH, {
+    method: 'POST',
+    token,
+    bodies: [snakeBody, camelBody],
+  });
+
+  return readSongFromResponse(data);
+}
+
+export async function updateSongRecord({ token, songId, payload } = {}) {
+  const normalizedSongId = normalizeId(songId);
+  if (!normalizedSongId) throw new Error('Song id is required');
+
+  const { snakeBody, camelBody } = buildSongBodies(payload);
+  if (Object.keys(snakeBody).length === 0 && Object.keys(camelBody).length === 0) {
+    throw new Error('At least one song field is required');
+  }
+
+  const data = await requestWithFallbackBodies(
+    `${SONGS_BASE_PATH}/${encodeURIComponent(normalizedSongId)}`,
+    {
+      method: 'PATCH',
+      token,
+      bodies: [snakeBody, camelBody],
+    },
+  );
+
+  return readSongFromResponse(data, normalizedSongId);
+}
+
+export async function createTrackFlashcardTemplates({ token, trackId, level = 1, items } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const normalizedLevel = normalizeTrackLevel(level);
+  if (!normalizedLevel) throw new Error('Level must be greater than or equal to 1');
+
+  const normalizedItems = Array.isArray(items)
+    ? items.map(normalizeTrackTemplateInputItem).filter(Boolean)
+    : [];
+  if (normalizedItems.length === 0) {
+    throw new Error('Template items are required');
+  }
+
+  const camelItems = normalizedItems.map((item) => ({
+    kgText: item.kg_text,
+    ruText: item.ru_text,
+    order: item.order,
+  }));
+
+  const data = await requestWithFallbackBodies(
+    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/flashcard-templates`,
+    {
+      method: 'POST',
+      token,
+      bodies: [
+        { level: normalizedLevel, items: normalizedItems },
+        { level_idx: normalizedLevel, items: normalizedItems },
+        { level: normalizedLevel, items: camelItems },
+      ],
+    },
+  );
+
+  return normalizeCreatedTemplatesResult(data, normalizedTrackId, normalizedLevel);
 }

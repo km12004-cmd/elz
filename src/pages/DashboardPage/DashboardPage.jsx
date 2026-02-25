@@ -561,6 +561,13 @@ function DashboardPage() {
                           onClick={() => setIsUserMenuOpen(false)}>
                           Profile
                         </Link>
+                        <Link
+                          to="/admin"
+                          className={styles.userDropdownItem}
+                          role="menuitem"
+                          onClick={() => setIsUserMenuOpen(false)}>
+                          Admin console
+                        </Link>
                         <button
                           type="button"
                           className={`${styles.userDropdownItem} ${styles.userDropdownDanger}`}
