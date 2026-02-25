@@ -105,6 +105,35 @@ function pickFirstNumber(...values) {
   return null;
 }
 
+function toBoolean(value) {
+  if (typeof value === 'boolean') return value;
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return null;
+  }
+
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return null;
+
+  if (['true', '1', 'yes', 'y', 'on', 'active'].includes(normalized)) return true;
+  if (['false', '0', 'no', 'n', 'off', 'inactive'].includes(normalized)) return false;
+
+  return null;
+}
+
+function pickFirstBoolean(...values) {
+  for (const value of values) {
+    const parsed = toBoolean(value);
+    if (parsed !== null) return parsed;
+  }
+
+  return null;
+}
+
 function toNonNegativeInteger(value) {
   if (!Number.isFinite(value)) return null;
 
@@ -157,6 +186,17 @@ function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
       streakCurrent,
     ),
   );
+  const isPremium =
+    pickFirstBoolean(
+      normalizedHint?.isPremium,
+      normalizedHint?.is_premium,
+      normalizedPayload?.isPremium,
+      normalizedPayload?.is_premium,
+      tokenUser?.isPremium,
+      tokenUser?.is_premium,
+      normalizedPreviousUser?.isPremium,
+      normalizedPreviousUser?.is_premium,
+    ) ?? false;
 
   const resolvedEmail = pickFirstString(
     normalizedHint?.email,
@@ -259,6 +299,7 @@ function normalizeUser({ email, userHint, tokenPayload, previousUser } = {}) {
       normalizedPreviousUser?.streakLastLocalDate,
       normalizedPreviousUser?.streak_last_local_date,
     ),
+    isPremium,
   };
 }
 

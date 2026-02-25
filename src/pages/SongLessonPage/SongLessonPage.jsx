@@ -1804,13 +1804,6 @@ function SongLessonPage() {
           <button type="button" className={styles.ghostButton} onClick={() => navigate(-1)}>
             Back
           </button>
-          <button
-            type="button"
-            className={styles.ghostButton}
-            onClick={loadSong}
-            disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Refresh'}
-          </button>
         </div>
 
         <h2 className={styles.title}>{song?.title ?? 'Song lesson'}</h2>

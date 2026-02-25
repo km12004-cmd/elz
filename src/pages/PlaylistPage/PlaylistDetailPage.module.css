@@ -1,7 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
   padding: 22px;
 }
@@ -106,7 +106,7 @@
   height: 38px;
   border-radius: 50%;
   border-color: var(--color-border-accent);
-  background: rgba(127, 116, 255, 0.08);
+  background: var(--color-accent-soft);
   color: var(--color-primary);
   font-size: 18px;
   line-height: 1;
@@ -114,7 +114,7 @@
 
 .plusButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(127, 116, 255, 0.15);
+  background: var(--color-accent-soft-hover);
   border-color: var(--color-primary);
 }
 
@@ -127,8 +127,8 @@
 .errorText {
   margin-top: 12px;
   border-radius: 11px;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-soft);
   padding: 10px 12px;
   color: var(--color-danger);
   font-size: 13px;
@@ -184,7 +184,7 @@
 .input:focus {
   outline: none;
   border-color: var(--color-border-accent);
-  background: #ffffff;
+  background: var(--color-bg-card);
 }
 
 .discoveryPanel {
@@ -222,7 +222,7 @@
   gap: 7px;
   border-radius: 999px;
   border: 1px solid var(--color-border-accent);
-  background: rgba(127, 116, 255, 0.08);
+  background: var(--color-accent-soft);
   color: var(--color-text-main);
   padding: 6px 10px;
   font-size: 12px;
@@ -231,7 +231,7 @@
 }
 
 .artistChip:hover {
-  background: rgba(127, 116, 255, 0.15);
+  background: var(--color-accent-soft-hover);
   border-color: var(--color-primary);
 }
 
@@ -380,15 +380,15 @@
   padding: 6px;
   border-radius: 10px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-popover);
   z-index: 6;
 }
 
 .songMenuItemDanger {
   width: 100%;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-soft);
   color: var(--color-danger);
   border-radius: 8px;
   padding: 8px 10px;
@@ -399,7 +399,7 @@
 }
 
 .songMenuItemDanger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--color-danger-soft-hover);
 }
 
 .songMenuItemDanger:disabled {

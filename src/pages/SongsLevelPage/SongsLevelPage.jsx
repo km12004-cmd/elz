@@ -99,9 +99,6 @@ function SongsLevelPage() {
           <button type="button" className={styles.ghostButton} onClick={() => navigate('/')}>
             Back
           </button>
-          <button type="button" className={styles.ghostButton} onClick={loadSongs} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Refresh'}
-          </button>
         </div>
 
         <p className={styles.eyebrow}>Songs Library</p>

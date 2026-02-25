@@ -6,6 +6,7 @@ import { PlaylistDetailPage } from './pages/PlaylistPage';
 import { FolderPage } from './pages/CardsPage';
 import SongsLevelPage from './pages/SongsLevelPage';
 import SongLessonPage from './pages/SongLessonPage';
+import PremiumPage from './pages/PremiumPage';
 import XpToast from './components/ui/XpToast';
 import LevelUpModal from './components/ui/LevelUpModal';
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/songs/:songId" element={<SongLessonPage />} />
           <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/premium" element={<PremiumPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MainLayout>

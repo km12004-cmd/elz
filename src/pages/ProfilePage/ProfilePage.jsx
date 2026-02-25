@@ -112,6 +112,10 @@ function ProfilePage() {
     navigate('/', { replace: true });
   };
 
+  const onBackToHome = () => {
+    navigate('/');
+  };
+
   return (
     <section className={styles.page}>
       <div className={styles.hero}>
@@ -143,9 +147,14 @@ function ProfilePage() {
           </div>
         </div>
 
-        <button type="button" className={styles.logoutButton} onClick={onLogout} title="Sign out">
-          Logout
-        </button>
+        <div className={styles.actions}>
+          <button type="button" className={styles.homeButton} onClick={onBackToHome}>
+            Back to Home
+          </button>
+          <button type="button" className={styles.logoutButton} onClick={onLogout} title="Sign out">
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className={styles.progressBlock}>

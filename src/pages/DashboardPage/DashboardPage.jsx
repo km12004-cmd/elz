@@ -1,15 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { fetchSongLevels, getDifficultyMeta } from '../../api/songs';
 import { fetchArtists } from '../../api/artists';
 import { fetchPlaylists, fetchPlaylistDetail, createPlaylist, deletePlaylist } from '../../api/playlists';
 import { fetchFlashcardFolders, createFlashcardFolder, deleteFlashcardFolder } from '../../api/flashcards';
 import { useAuth } from '../../auth/useAuth';
+import { useTheme } from '../../contexts/useTheme';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Toast from '../../components/ui/Toast';
+import XpWidget from '../../components/layout/Header/XpWidget';
+import AuthModal from '../../components/auth/AuthModal';
+import SignInForm from '../../components/auth/SignInForm';
+import SignUpForm from '../../components/auth/SignUpForm';
 import CreatePlaylistModal from '../PlaylistPage/CreatePlaylistModal';
 import CreateFolderModal from '../CardsPage/CreateFolderModal';
 import styles from './dashboardPage.module.css';
@@ -47,13 +52,35 @@ function countCards(folder) {
   return 0;
 }
 
+function normalizeStreak(value) {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.trunc(parsed));
+}
+
+function formatStreakDays(value) {
+  const safeValue = normalizeStreak(value);
+  return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
+}
+
+function hasPremiumAccess(value) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return value === 1;
+  if (typeof value !== 'string') return false;
+
+  const normalized = value.trim().toLowerCase();
+  return ['true', '1', 'yes', 'on', 'active'].includes(normalized);
+}
+
 const FOLDER_NAME_MAX_LENGTH = 60;
 const PLAYLIST_TITLE_MAX_LENGTH = 60;
 const PLAYLIST_DESCRIPTION_MAX_LENGTH = 200;
 
 function DashboardPage() {
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, user, signOut } = useAuth();
+  const { isDarkTheme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const userMenuRef = useRef(null);
 
   // Levels state
   const [levels, setLevels] = useState(FALLBACK_LEVELS);
@@ -89,17 +116,55 @@ function DashboardPage() {
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [authView, setAuthView] = useState(null);
+
+  const nickname = user?.nickname ?? 'User';
+  const currentStreak = normalizeStreak(user?.streakCurrent ?? user?.streak_current);
+  const streakLabel = formatStreakDays(currentStreak);
+  const nextThemeLabel = isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme';
+  const isPremiumUser = hasPremiumAccess(user?.isPremium ?? user?.is_premium);
+  const premiumButtonLabel = isPremiumUser ? 'Premium on' : 'Buy Premium';
+  const premiumButtonTitle = isPremiumUser ? 'Premium is active' : 'Go to premium plans';
+  const closeAuth = () => setAuthView(null);
 
   const showToast = (message, type = 'success') => {
     setToastMessage(message);
     setToastType(type);
   };
 
+  const handleUnauthorizedError = useCallback((error) => {
+    if (error?.status !== 401) return false;
+    setAuthView('signIn');
+    signOut();
+    return true;
+  }, [signOut]);
+
   useEffect(() => {
     if (!toastMessage) return undefined;
     const timer = setTimeout(() => setToastMessage(''), 3200);
     return () => clearTimeout(timer);
   }, [toastMessage]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return undefined;
+
+    const onDocumentClick = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const onDocumentKeyDown = (event) => {
+      if (event.key === 'Escape') setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onDocumentClick);
+    document.addEventListener('keydown', onDocumentKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onDocumentClick);
+      document.removeEventListener('keydown', onDocumentKeyDown);
+    };
+  }, [isUserMenuOpen]);
 
   // Load levels
   useEffect(() => {
@@ -168,12 +233,13 @@ function DashboardPage() {
       );
       setPlaylists(withCounts);
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setPlaylists([]);
       setPlaylistsError(extractErrorMessage(error, { context: 'playlists' }));
     } finally {
       setIsLoadingPlaylists(false);
     }
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, handleUnauthorizedError]);
 
   useEffect(() => { loadPlaylists(); }, [loadPlaylists]);
 
@@ -186,14 +252,23 @@ function DashboardPage() {
       const items = await fetchFlashcardFolders({ token });
       setFolders(items);
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setFolders([]);
       setFoldersError(extractErrorMessage(error, { context: 'cards' }));
     } finally {
       setIsLoadingFolders(false);
     }
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, handleUnauthorizedError]);
 
   useEffect(() => { loadFolders(); }, [loadFolders]);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    setPlaylists([]);
+    setPlaylistsError('');
+    setFolders([]);
+    setFoldersError('');
+  }, [isAuthenticated]);
 
   // Normalize levels
   const normalizedLevels = useMemo(
@@ -231,6 +306,7 @@ function DashboardPage() {
       setIsCreatePlaylistOpen(false);
       return true;
     } catch (error) {
+      if (handleUnauthorizedError(error)) return false;
       setCreatePlaylistError(extractErrorMessage(error, { context: 'playlists' }));
       return false;
     } finally {
@@ -248,6 +324,7 @@ function DashboardPage() {
       showToast('Playlist deleted');
       setPlaylistToDelete(null);
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       showToast(extractErrorMessage(error, { context: 'playlists' }), 'error');
     } finally {
       setDeletingPlaylistId(null);
@@ -271,6 +348,7 @@ function DashboardPage() {
       setIsCreateFolderOpen(false);
       return true;
     } catch (error) {
+      if (handleUnauthorizedError(error)) return false;
       setCreateFolderError(extractErrorMessage(error, { context: 'cards' }));
       return false;
     } finally {
@@ -288,13 +366,24 @@ function DashboardPage() {
       showToast('Folder deleted');
       setFolderToDelete(null);
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       showToast(extractErrorMessage(error, { context: 'cards' }), 'error');
     } finally {
       setDeletingFolderId(null);
     }
   };
 
-  const LEVEL_COLORS = ['#f5e6ff', '#e8f5e9', '#fff3e0'];
+  const LEVEL_TONE_CLASSES = [
+    styles.levelCardToneOne,
+    styles.levelCardToneTwo,
+    styles.levelCardToneThree,
+  ];
+
+  const onLogout = () => {
+    setIsUserMenuOpen(false);
+    signOut();
+    navigate('/', { replace: true });
+  };
 
   return (
     <div className={styles.dashboard}>
@@ -311,8 +400,7 @@ function DashboardPage() {
             <button
               key={level.difficultyLevel}
               type="button"
-              className={styles.levelCard}
-              style={{ background: LEVEL_COLORS[i % LEVEL_COLORS.length] }}
+              className={`${styles.levelCard} ${LEVEL_TONE_CLASSES[i % LEVEL_TONE_CLASSES.length]}`}
               onClick={() => navigate(`/songs/levels/${encodeURIComponent(String(level.difficultyLevel))}`)}
             >
               <span className={styles.levelBadge}>Level {level.difficultyLevel}</span>
@@ -325,13 +413,13 @@ function DashboardPage() {
       </section>
 
       {/* Playlists */}
-      {isAuthenticated && (
-        <section className={`${styles.block} ${styles.playlistsSection}`}>
-          <div className={styles.blockHeader}>
-            <div>
-              <h2 className={styles.blockTitle}>My Playlists</h2>
-              <p className={styles.blockSubtitle}>Organize songs for focused learning sessions.</p>
-            </div>
+      <section className={`${styles.block} ${styles.playlistsSection}`}>
+        <div className={styles.blockHeader}>
+          <div>
+            <h2 className={styles.blockTitle}>My Playlists</h2>
+            <p className={styles.blockSubtitle}>Organize songs for focused learning sessions.</p>
+          </div>
+          {isAuthenticated ? (
             <button
               type="button"
               className={styles.primaryButton}
@@ -339,63 +427,205 @@ function DashboardPage() {
             >
               + Create Playlist
             </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => setAuthView('signIn')}
+            >
+              Sign in to create
+            </button>
+          )}
+        </div>
+        {!isAuthenticated ? (
+          <EmptyState
+            kind="playlist"
+            title="Sign in to create playlists"
+            description="Save favorite songs and build your learning sessions."
+            actionLabel="Sign in"
+            onAction={() => setAuthView('signIn')}
+          />
+        ) : (
+          <>
+            {playlistsError && <p className={styles.errorText}>{playlistsError}</p>}
+            {isLoadingPlaylists && (
+              <div className={styles.loadingRow}>
+                <LoadingSpinner size="sm" />
+                <span>Loading playlists...</span>
+              </div>
+            )}
+            {!isLoadingPlaylists && playlists.length === 0 && (
+              <EmptyState
+                kind="playlist"
+                title="No playlists yet"
+                description="Create your first playlist to collect songs."
+                actionLabel="Create playlist"
+                onAction={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
+              />
+            )}
+            {!isLoadingPlaylists && playlists.length > 0 && (
+              <div className={`${styles.itemGrid} ${styles.collectionGrid}`}>
+                {playlists.map((playlist, index) => {
+                  const id = normalizeId(playlist.id);
+                  return (
+                    <article key={id ?? `pl-${index}`} className={styles.itemCard}>
+                      <button
+                        type="button"
+                        className={styles.itemMainButton}
+                        onClick={() => id && navigate(`/playlists/${id}`)}
+                        disabled={!id}
+                      >
+                        <span className={styles.itemIcon}>&#9835;</span>
+                        <p className={styles.itemTitle}>{playlist.title}</p>
+                        <p className={styles.itemMeta}>{playlist.songsCount ?? 0} songs</p>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => setPlaylistToDelete(playlist)}
+                        title="Delete playlist"
+                      >
+                        &times;
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Profile & Progress */}
+      <section className={`${styles.block} ${styles.profileSection}`}>
+        <div className={styles.blockHeader}>
+          <div>
+            <h2 className={styles.blockTitle}>Profile & progress</h2>
+            <p className={styles.blockSubtitle}>Track your level, streak, and account settings.</p>
           </div>
-          {playlistsError && <p className={styles.errorText}>{playlistsError}</p>}
-          {isLoadingPlaylists && (
-            <div className={styles.loadingRow}>
-              <LoadingSpinner size="sm" />
-              <span>Loading playlists...</span>
-            </div>
-          )}
-          {!isLoadingPlaylists && playlists.length === 0 && (
-            <EmptyState
-              kind="playlist"
-              title="No playlists yet"
-              description="Create your first playlist to collect songs."
-              actionLabel="Create playlist"
-              onAction={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
-            />
-          )}
-          {!isLoadingPlaylists && playlists.length > 0 && (
-            <div className={`${styles.itemGrid} ${styles.collectionGrid}`}>
-              {playlists.map((playlist, index) => {
-                const id = normalizeId(playlist.id);
-                return (
-                  <article key={id ?? `pl-${index}`} className={styles.itemCard}>
+        </div>
+
+        {isAuthenticated ? (
+          <>
+            <div className={styles.profileAuthGrid}>
+              <div className={styles.profileAuthTopRow}>
+                <XpWidget />
+                <Link
+                  to="/profile"
+                  className={styles.streakPill}
+                  aria-label={`Current streak: ${streakLabel}`}
+                  title={`Current streak: ${streakLabel}`}>
+                  <span className={styles.streakFlame} aria-hidden="true" />
+                  <span className={styles.streakText}>{streakLabel}</span>
+                </Link>
+              </div>
+
+              <div className={styles.profileAuthBottomRow}>
+                <button
+                  type="button"
+                  className={`${styles.themeToggle} ${isDarkTheme ? styles.themeToggleDark : ''}`}
+                  onClick={toggleTheme}
+                  aria-label={nextThemeLabel}
+                  title={nextThemeLabel}>
+                  <span className={styles.themeIconSun} aria-hidden="true" />
+                  <span className={styles.themeIconMoon} aria-hidden="true" />
+                  <span className={styles.themeToggleThumb} aria-hidden="true" />
+                </button>
+
+                <div className={styles.profileMenuSlot}>
+                  <div className={styles.userMenu} ref={userMenuRef}>
                     <button
                       type="button"
-                      className={styles.itemMainButton}
-                      onClick={() => id && navigate(`/playlists/${id}`)}
-                      disabled={!id}
-                    >
-                      <span className={styles.itemIcon}>&#9835;</span>
-                      <p className={styles.itemTitle}>{playlist.title}</p>
-                      <p className={styles.itemMeta}>{playlist.songsCount ?? 0} songs</p>
+                      className={styles.userMenuTrigger}
+                      onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                      aria-haspopup="menu"
+                      aria-expanded={isUserMenuOpen}
+                      title="Open profile menu">
+                      <span className={styles.nickname}>{nickname}</span>
+                      {user?.avatarUrl ? (
+                        <img className={styles.avatar} src={user.avatarUrl} alt={`${nickname} avatar`} />
+                      ) : (
+                        <span className={styles.avatarFallback}>
+                          {nickname.slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
+                      <span className={`${styles.chevron} ${isUserMenuOpen ? styles.chevronOpen : ''}`} />
                     </button>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => setPlaylistToDelete(playlist)}
-                      title="Delete playlist"
-                    >
-                      &times;
-                    </button>
-                  </article>
-                );
-              })}
+
+                    {isUserMenuOpen ? (
+                      <div className={styles.userDropdown} role="menu" aria-label="User menu">
+                        <Link
+                          to="/profile"
+                          className={styles.userDropdownItem}
+                          role="menuitem"
+                          onClick={() => setIsUserMenuOpen(false)}>
+                          Profile
+                        </Link>
+                        <button
+                          type="button"
+                          className={`${styles.userDropdownItem} ${styles.userDropdownDanger}`}
+                          role="menuitem"
+                          onClick={onLogout}>
+                          Logout
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-        </section>
-      )}
+          </>
+        ) : (
+          <>
+            <div className={styles.profileTopRow}>
+              <button
+                type="button"
+                className={`${styles.themeToggle} ${isDarkTheme ? styles.themeToggleDark : ''}`}
+                onClick={toggleTheme}
+                aria-label={nextThemeLabel}
+                title={nextThemeLabel}>
+                <span className={styles.themeIconSun} aria-hidden="true" />
+                <span className={styles.themeIconMoon} aria-hidden="true" />
+                <span className={styles.themeToggleThumb} aria-hidden="true" />
+              </button>
+
+              <div className={styles.authButtons}>
+                <button
+                  type="button"
+                  className={styles.authButton}
+                  onClick={() => setAuthView('signIn')}>
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.authButton} ${styles.authButtonPrimary}`}
+                  onClick={() => setAuthView('signUp')}>
+                  Sign up
+                </button>
+              </div>
+            </div>
+            <p className={styles.guestProfileHint}>
+              Sign in to save playlists, flashcards, streak, and account progress.
+            </p>
+          </>
+        )}
+
+        <Link
+          to="/premium"
+          className={`${styles.premiumLink} ${isPremiumUser ? styles.premiumLinkOn : ''}`}
+          title={premiumButtonTitle}>
+          {premiumButtonLabel}
+        </Link>
+      </section>
 
       {/* Flashcard Folders */}
-      {isAuthenticated && (
-        <section className={`${styles.block} ${styles.foldersSection}`}>
-          <div className={styles.blockHeader}>
-            <div>
-              <h2 className={styles.blockTitle}>My Flashcards</h2>
-              <p className={styles.blockSubtitle}>Build compact decks and review vocabulary.</p>
-            </div>
+      <section className={`${styles.block} ${styles.foldersSection}`}>
+        <div className={styles.blockHeader}>
+          <div>
+            <h2 className={styles.blockTitle}>My Flashcards</h2>
+            <p className={styles.blockSubtitle}>Build compact decks and review vocabulary.</p>
+          </div>
+          {isAuthenticated ? (
             <button
               type="button"
               className={styles.primaryButton}
@@ -403,54 +633,74 @@ function DashboardPage() {
             >
               + Create Folder
             </button>
-          </div>
-          {foldersError && <p className={styles.errorText}>{foldersError}</p>}
-          {isLoadingFolders && (
-            <div className={styles.loadingRow}>
-              <LoadingSpinner size="sm" />
-              <span>Loading folders...</span>
-            </div>
+          ) : (
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => setAuthView('signIn')}
+            >
+              Sign in to create
+            </button>
           )}
-          {!isLoadingFolders && folders.length === 0 && (
-            <EmptyState
-              kind="folder"
-              title="No folders created"
-              description="Create your first folder to organize cards."
-              actionLabel="Create folder"
-              onAction={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
-            />
-          )}
-          {!isLoadingFolders && folders.length > 0 && (
-            <div className={`${styles.itemGrid} ${styles.collectionGrid}`}>
-              {folders.map((folder, index) => {
-                const id = normalizeId(folder.id);
-                return (
-                  <article key={id ?? `fl-${index}`} className={styles.itemCard}>
-                    <button
-                      type="button"
-                      className={styles.itemMainButton}
-                      onClick={() => id && navigate(`/cards/${id}`)}
-                      disabled={!id}
-                    >
-                      <span className={styles.itemIcon}>&#128193;</span>
-                      <p className={styles.itemTitle}>{folder.name}</p>
-                      <p className={styles.itemMeta}>{countCards(folder)} cards</p>
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => setFolderToDelete(folder)}
-                      title="Delete folder"
-                    >
-                      &times;
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
+        </div>
+        {!isAuthenticated ? (
+          <EmptyState
+            kind="folder"
+            title="Sign in to create flashcards"
+            description="Build folders and keep your vocabulary decks organized."
+            actionLabel="Sign in"
+            onAction={() => setAuthView('signIn')}
+          />
+        ) : (
+          <>
+            {foldersError && <p className={styles.errorText}>{foldersError}</p>}
+            {isLoadingFolders && (
+              <div className={styles.loadingRow}>
+                <LoadingSpinner size="sm" />
+                <span>Loading folders...</span>
+              </div>
+            )}
+            {!isLoadingFolders && folders.length === 0 && (
+              <EmptyState
+                kind="folder"
+                title="No folders created"
+                description="Create your first folder to organize cards."
+                actionLabel="Create folder"
+                onAction={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
+              />
+            )}
+            {!isLoadingFolders && folders.length > 0 && (
+              <div className={`${styles.itemGrid} ${styles.collectionGrid}`}>
+                {folders.map((folder, index) => {
+                  const id = normalizeId(folder.id);
+                  return (
+                    <article key={id ?? `fl-${index}`} className={styles.itemCard}>
+                      <button
+                        type="button"
+                        className={styles.itemMainButton}
+                        onClick={() => id && navigate(`/cards/${id}`)}
+                        disabled={!id}
+                      >
+                        <span className={styles.itemIcon}>&#128193;</span>
+                        <p className={styles.itemTitle}>{folder.name}</p>
+                        <p className={styles.itemMeta}>{countCards(folder)} cards</p>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => setFolderToDelete(folder)}
+                        title="Delete folder"
+                      >
+                        &times;
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Artists */}
       <section className={`${styles.block} ${styles.artistsSection}`}>
@@ -539,6 +789,14 @@ function DashboardPage() {
         message={toastMessage}
         onClose={() => setToastMessage('')}
       />
+
+      <AuthModal isOpen={authView === 'signIn'} title="Sign in" onClose={closeAuth}>
+        <SignInForm onSuccess={closeAuth} onSwitchToSignUp={() => setAuthView('signUp')} />
+      </AuthModal>
+
+      <AuthModal isOpen={authView === 'signUp'} title="Sign up" onClose={closeAuth}>
+        <SignUpForm onSuccess={closeAuth} onSwitchToSignIn={() => setAuthView('signIn')} />
+      </AuthModal>
     </div>
   );
 }

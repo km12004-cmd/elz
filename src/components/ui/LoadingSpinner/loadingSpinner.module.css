@@ -6,8 +6,8 @@
 
 .spinner {
   border-radius: 50%;
-  border: 2px solid rgba(189, 199, 232, 0.28);
-  border-top-color: rgba(177, 148, 255, 0.95);
+  border: 2px solid var(--color-spinner-track);
+  border-top-color: var(--color-spinner-head);
   animation: spin 0.9s linear infinite;
 }
 

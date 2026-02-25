@@ -1,7 +1,7 @@
 .card {
   border-radius: 16px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
   padding: 10px;
   display: flex;
@@ -73,15 +73,15 @@
   padding: 6px;
   border-radius: 10px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-popover);
   z-index: 6;
 }
 
 .menuDangerItem {
   width: 100%;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-soft);
   color: var(--color-danger);
   border-radius: 8px;
   padding: 8px 10px;
@@ -92,7 +92,7 @@
 }
 
 .menuDangerItem:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--color-danger-soft-hover);
 }
 
 .menuDangerItem:disabled {
@@ -125,7 +125,7 @@
   border-radius: 12px;
   border: 1px solid var(--color-border-soft);
   background:
-    radial-gradient(circle at 86% -8%, rgba(127, 116, 255, 0.06), transparent 50%),
+    radial-gradient(circle at 86% -8%, var(--color-accent-soft), transparent 50%),
     var(--color-bg-content);
   padding: 14px;
   backface-visibility: hidden;

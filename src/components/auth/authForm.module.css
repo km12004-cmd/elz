@@ -36,7 +36,7 @@
 
 .input:focus,
 .select:focus {
-  background: #ffffff;
+  background: var(--color-bg-card);
   border-color: var(--color-border-accent);
 }
 
@@ -45,8 +45,8 @@
 }
 
 .error {
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 13px;
@@ -60,7 +60,7 @@
   border-radius: 11px;
   font-weight: 800;
   cursor: pointer;
-  color: #ffffff;
+  color: var(--color-text-on-accent);
   background: var(--color-primary);
   transition: transform var(--transition-base), opacity var(--transition-base);
 }
@@ -93,7 +93,7 @@
 }
 
 .linkButton:hover {
-  color: #6b60e6;
+  color: var(--color-primary-link-hover);
 }
 
 @media (max-width: 640px) {

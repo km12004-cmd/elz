@@ -196,7 +196,7 @@
 }
 
 .active {
-  color: #ffffff;
+  color: var(--color-text-on-accent);
   border-color: rgba(213, 224, 255, 0.52);
   background: rgba(126, 116, 255, 0.3);
   box-shadow: none;

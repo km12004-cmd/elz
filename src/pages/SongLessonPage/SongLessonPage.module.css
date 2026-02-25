@@ -1,7 +1,7 @@
 .page {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
   padding: 20px;
   display: flex;
@@ -58,8 +58,8 @@
 
 .errorText {
   border-radius: 11px;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-soft);
   padding: 10px 12px;
   color: var(--color-danger);
   font-size: 13px;
@@ -97,11 +97,15 @@
   margin-top: 14px;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   gap: 12px;
-  overflow: auto;
+  max-height: clamp(280px, 62vh, 700px);
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 8px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(127, 116, 255, 0.3) rgba(0, 0, 0, 0.05);
+  scrollbar-color: var(--color-accent-border-soft) var(--color-surface-elevated);
 }
 
 .lyricsLine {
@@ -132,7 +136,7 @@
 .infoPanel {
   border-radius: 16px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
   padding: 14px;
 }
@@ -142,7 +146,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   border: 1px solid var(--color-border-soft);
-  background: linear-gradient(148deg, #7f74ff 0%, #a78bfa 57%, #60a5fa 100%);
+  background: var(--gradient-player);
   overflow: hidden;
 }
 
@@ -187,13 +191,13 @@
   font-size: 13px;
   font-weight: 600;
   text-decoration: underline;
-  text-decoration-color: rgba(127, 116, 255, 0.4);
+  text-decoration-color: var(--color-accent-text-decoration);
   text-underline-offset: 2px;
   transition: color var(--transition-base);
 }
 
 .playerLink:hover {
-  color: #5b4fd4;
+  color: var(--color-primary-link-hover);
 }
 
 .trackBadge {
@@ -201,8 +205,8 @@
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(127, 116, 255, 0.3);
-  background: rgba(127, 116, 255, 0.08);
+  border: 1px solid var(--color-accent-border-soft);
+  background: var(--color-accent-soft);
   color: var(--color-primary);
   padding: 4px 10px;
   font-size: 12px;
@@ -234,7 +238,7 @@
 .primaryActionButton {
   background: var(--color-primary);
   border-color: var(--color-border-accent);
-  color: #ffffff;
+  color: var(--color-text-on-accent);
 }
 
 .secondaryActionButton {
@@ -285,15 +289,19 @@
   margin-top: 8px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1 1 auto;
+  min-height: 0;
   gap: 10px;
-  overflow: auto;
+  max-height: clamp(280px, 58vh, 760px);
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 8px;
 }
 
 .taskCard {
   border-radius: 14px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-card);
   padding: 10px;
   display: flex;
@@ -327,7 +335,7 @@
 }
 
 .taskFlipArea:focus-visible {
-  outline: 2px solid rgba(127, 116, 255, 0.5);
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -349,7 +357,7 @@
   border-radius: 12px;
   border: 1px solid var(--color-border-soft);
   background:
-    radial-gradient(circle at 86% -8%, rgba(127, 116, 255, 0.06), transparent 50%),
+    radial-gradient(circle at 86% -8%, var(--color-accent-soft), transparent 50%),
     var(--color-bg-content);
   padding: 14px;
   backface-visibility: hidden;
@@ -434,7 +442,7 @@
 
 .pairsConnector {
   fill: none;
-  stroke: rgba(127, 116, 255, 0.6);
+  stroke: var(--color-accent-border-soft);
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -450,7 +458,7 @@
 }
 
 .pairsConnectorArrow {
-  fill: rgba(127, 116, 255, 0.7);
+  fill: var(--color-accent-border-soft);
 }
 
 .pairsColumn {
@@ -483,7 +491,7 @@
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   color: var(--color-text-main);
   padding: 10px 11px;
   text-align: left;
@@ -515,7 +523,7 @@
 .pairsButton:focus-visible {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(127, 116, 255, 0.2);
+  box-shadow: 0 0 0 2px var(--color-accent-soft-hover);
 }
 
 .pairsButton:disabled {
@@ -529,30 +537,30 @@
 .pairsLeftButtonSelected {
   border-color: var(--color-primary);
   box-shadow:
-    0 0 0 1px rgba(127, 116, 255, 0.3) inset,
-    0 0 16px rgba(127, 116, 255, 0.1);
+    0 0 0 1px var(--color-accent-border-soft) inset,
+    0 0 16px var(--color-accent-soft);
 }
 
 .pairsLeftButtonCorrect {
-  border-color: rgba(76, 175, 80, 0.6);
-  background: rgba(76, 175, 80, 0.08);
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft-strong);
 }
 
 .pairsLeftButtonWrong {
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.06);
+  border-color: var(--color-danger-border-stronger);
+  background: var(--color-danger-soft);
 }
 
 .pairsLeftButtonLinked {
-  border-color: rgba(96, 165, 250, 0.6);
-  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.15) inset;
+  border-color: var(--color-info-border);
+  box-shadow: 0 0 0 1px var(--color-info-inset) inset;
 }
 
 .pairsOptionButton {
 }
 
 .pairsOptionButtonReady {
-  border-color: rgba(96, 165, 250, 0.5);
+  border-color: var(--color-info-border-soft);
 }
 
 .pairsOptionButtonUsed {
@@ -560,16 +568,16 @@
 }
 
 .pairsOptionButtonSelected {
-  border-color: rgba(96, 165, 250, 0.7);
+  border-color: var(--color-info-border-strong);
   box-shadow:
-    0 0 0 1px rgba(96, 165, 250, 0.25) inset,
-    0 0 14px rgba(96, 165, 250, 0.08);
+    0 0 0 1px var(--color-info-inset-strong) inset,
+    0 0 14px var(--color-info-glow);
 }
 
 .pairsOptionButtonLocked {
   opacity: 0.82;
-  border-color: rgba(76, 175, 80, 0.5);
-  background: rgba(76, 175, 80, 0.06);
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
 }
 
 .pairsMainText {
@@ -625,7 +633,7 @@
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   color: var(--color-text-main);
   padding: 10px 12px;
   font-size: 14px;
@@ -639,7 +647,7 @@
 .typingInput:focus {
   outline: none;
   border-color: var(--color-border-accent);
-  box-shadow: 0 0 0 1px rgba(127, 116, 255, 0.15) inset;
+  box-shadow: 0 0 0 1px var(--color-accent-soft-hover) inset;
 }
 
 .typingInput:disabled {
@@ -648,13 +656,13 @@
 }
 
 .typingInputCorrect {
-  border-color: rgba(76, 175, 80, 0.6);
-  background: rgba(76, 175, 80, 0.06);
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
 }
 
 .typingInputWrong {
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.04);
+  border-color: var(--color-danger-border-stronger);
+  background: var(--color-danger-soft-muted);
 }
 
 .typingRowState {
@@ -669,7 +677,7 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--color-overlay);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -681,9 +689,9 @@
   width: min(540px, 100%);
   border-radius: 16px;
   border: 1px solid var(--color-border-soft);
-  background: #ffffff;
+  background: var(--color-bg-card);
   padding: 18px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--shadow-modal-strong);
 }
 
 .completionModalEyebrow {
@@ -859,6 +867,10 @@
     padding: 16px;
   }
 
+  .infoSidebar {
+    order: -1;
+  }
+
   .title {
     font-size: 28px;
   }
@@ -893,6 +905,10 @@
 
   .taskFaceText {
     font-size: 16px;
+  }
+
+  .taskCardsGrid {
+    max-height: 56vh;
   }
 
   .completionModal {
