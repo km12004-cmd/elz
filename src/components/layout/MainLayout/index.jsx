@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import Header from '../Header';
+import Footer from '../Footer';
 import styles from './mainLayout.module.css';
 
 function MainLayout({ children }) {
@@ -14,6 +15,8 @@ function MainLayout({ children }) {
           {children}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

@@ -507,80 +507,89 @@ function DashboardPage() {
 
         {isAuthenticated ? (
           <>
-            <div className={styles.profileAuthGrid}>
-              <div className={styles.profileAuthTopRow}>
-                <XpWidget />
-                <Link
-                  to="/profile"
-                  className={styles.streakPill}
-                  aria-label={`Current streak: ${streakLabel}`}
-                  title={`Current streak: ${streakLabel}`}>
-                  <span className={styles.streakFlame} aria-hidden="true" />
-                  <span className={styles.streakText}>{streakLabel}</span>
-                </Link>
-              </div>
+            <div className={styles.profileAuthRow}>
+              <XpWidget />
+              <Link
+                to="/profile"
+                className={styles.streakPill}
+                aria-label={`Current streak: ${streakLabel}`}
+                title={`Current streak: ${streakLabel}`}>
+                <span className={styles.streakFlame} aria-hidden="true" />
+                <span className={styles.streakText}>{streakLabel}</span>
+              </Link>
+              <button
+                type="button"
+                className={`${styles.themeToggle} ${isDarkTheme ? styles.themeToggleDark : ''}`}
+                onClick={toggleTheme}
+                aria-label={nextThemeLabel}
+                title={nextThemeLabel}>
+                <span className={styles.themeIconSun} aria-hidden="true" />
+                <span className={styles.themeIconMoon} aria-hidden="true" />
+                <span className={styles.themeToggleThumb} aria-hidden="true" />
+              </button>
 
-              <div className={styles.profileAuthBottomRow}>
-                <button
-                  type="button"
-                  className={`${styles.themeToggle} ${isDarkTheme ? styles.themeToggleDark : ''}`}
-                  onClick={toggleTheme}
-                  aria-label={nextThemeLabel}
-                  title={nextThemeLabel}>
-                  <span className={styles.themeIconSun} aria-hidden="true" />
-                  <span className={styles.themeIconMoon} aria-hidden="true" />
-                  <span className={styles.themeToggleThumb} aria-hidden="true" />
-                </button>
+              <div className={styles.profileMenuSlot}>
+                <div className={styles.userMenu} ref={userMenuRef}>
+                  <button
+                    type="button"
+                    className={styles.userMenuTrigger}
+                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                    aria-haspopup="menu"
+                    aria-expanded={isUserMenuOpen}
+                    title="Open profile menu">
+                    <span className={styles.nickname}>{nickname}</span>
+                    {user?.avatarUrl ? (
+                      <img
+                        className={styles.avatar}
+                        src={user.avatarUrl}
+                        alt={`${nickname} avatar`}
+                        width="31"
+                        height="31"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span className={styles.avatarFallback}>
+                        {nickname.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className={`${styles.chevron} ${isUserMenuOpen ? styles.chevronOpen : ''}`} />
+                  </button>
 
-                <div className={styles.profileMenuSlot}>
-                  <div className={styles.userMenu} ref={userMenuRef}>
-                    <button
-                      type="button"
-                      className={styles.userMenuTrigger}
-                      onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                      aria-haspopup="menu"
-                      aria-expanded={isUserMenuOpen}
-                      title="Open profile menu">
-                      <span className={styles.nickname}>{nickname}</span>
-                      {user?.avatarUrl ? (
-                        <img className={styles.avatar} src={user.avatarUrl} alt={`${nickname} avatar`} />
-                      ) : (
-                        <span className={styles.avatarFallback}>
-                          {nickname.slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
-                      <span className={`${styles.chevron} ${isUserMenuOpen ? styles.chevronOpen : ''}`} />
-                    </button>
-
-                    {isUserMenuOpen ? (
-                      <div className={styles.userDropdown} role="menu" aria-label="User menu">
-                        <Link
-                          to="/profile"
-                          className={styles.userDropdownItem}
-                          role="menuitem"
-                          onClick={() => setIsUserMenuOpen(false)}>
-                          Profile
-                        </Link>
-                        <Link
-                          to="/admin"
-                          className={styles.userDropdownItem}
-                          role="menuitem"
-                          onClick={() => setIsUserMenuOpen(false)}>
-                          Admin console
-                        </Link>
-                        <button
-                          type="button"
-                          className={`${styles.userDropdownItem} ${styles.userDropdownDanger}`}
-                          role="menuitem"
-                          onClick={onLogout}>
-                          Logout
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
+                  {isUserMenuOpen ? (
+                    <div className={styles.userDropdown} role="menu" aria-label="User menu">
+                      <Link
+                        to="/profile"
+                        className={styles.userDropdownItem}
+                        role="menuitem"
+                        onClick={() => setIsUserMenuOpen(false)}>
+                        Profile
+                      </Link>
+                      <Link
+                        to="/admin"
+                        className={styles.userDropdownItem}
+                        role="menuitem"
+                        onClick={() => setIsUserMenuOpen(false)}>
+                        Admin console
+                      </Link>
+                      <button
+                        type="button"
+                        className={`${styles.userDropdownItem} ${styles.userDropdownDanger}`}
+                        role="menuitem"
+                        onClick={onLogout}>
+                        Logout
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
+
+            <Link
+              to="/premium"
+              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${isPremiumUser ? styles.premiumLinkOn : ''}`}
+              title={premiumButtonTitle}>
+              {premiumButtonLabel}
+            </Link>
           </>
         ) : (
           <>
@@ -614,15 +623,15 @@ function DashboardPage() {
             <p className={styles.guestProfileHint}>
               Sign in to save playlists, flashcards, streak, and account progress.
             </p>
+
+            <Link
+              to="/premium"
+              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${isPremiumUser ? styles.premiumLinkOn : ''}`}
+              title={premiumButtonTitle}>
+              {premiumButtonLabel}
+            </Link>
           </>
         )}
-
-        <Link
-          to="/premium"
-          className={`${styles.premiumLink} ${isPremiumUser ? styles.premiumLinkOn : ''}`}
-          title={premiumButtonTitle}>
-          {premiumButtonLabel}
-        </Link>
       </section>
 
       {/* Flashcard Folders */}
@@ -732,7 +741,10 @@ function DashboardPage() {
                         src={artist.avatarUrl}
                         alt={artist.name ?? 'Artist avatar'}
                         className={styles.artistAvatarImage}
+                        width="92"
+                        height="92"
                         loading="lazy"
+                        decoding="async"
                         onError={() => setFailedAvatarByKey((prev) => ({ ...prev, [key]: true }))}
                       />
                     ) : (

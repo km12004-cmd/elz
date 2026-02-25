@@ -1,5 +1,1 @@
-import PlaylistPage from './PlaylistPage';
-import PlaylistDetailPage from './PlaylistDetailPage';
-
-export { PlaylistDetailPage };
-export default PlaylistPage;
+export { default as PlaylistDetailPage } from './PlaylistDetailPage';

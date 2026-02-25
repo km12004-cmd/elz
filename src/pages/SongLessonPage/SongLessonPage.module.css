@@ -104,6 +104,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 8px;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--color-accent-border-soft) var(--color-surface-elevated);
 }

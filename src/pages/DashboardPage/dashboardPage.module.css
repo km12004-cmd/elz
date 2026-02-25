@@ -14,11 +14,19 @@
 
 .playlistsSection,
 .profileSection {
-  grid-column: 1 / 7;
+  grid-column: 7 / -1;
+}
+
+.profileSection {
+  grid-row: 2;
+}
+
+.playlistsSection {
+  grid-row: 3;
 }
 
 .foldersSection {
-  grid-column: 7 / -1;
+  grid-column: 1 / 7;
   grid-row: 2 / span 2;
   align-self: stretch;
 }
@@ -185,28 +193,28 @@
   background: var(--color-level-tone-3);
 }
 
-.profileAuthGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.profileAuthTopRow,
-.profileAuthBottomRow {
+.profileAuthRow {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
 }
 
-.profileAuthBottomRow {
-  justify-content: flex-start;
+.profileAuthRow > * {
+  flex-shrink: 0;
 }
 
 .profileMenuSlot {
   position: relative;
   display: flex;
   justify-content: flex-start;
+}
+
+.profilePremiumLink {
+  width: 100%;
 }
 
 .profileTopRow,
@@ -640,6 +648,9 @@
   gap: 18px;
   overflow-x: auto;
   padding: 6px 2px;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scroll-snap-type: x proximity;
 }
@@ -700,7 +711,10 @@
 .collectionGrid {
   overflow-x: auto;
   overflow-y: hidden;
+  padding-top: 4px;
   padding-bottom: 4px;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
@@ -868,6 +882,8 @@
     grid-column: 1 / -1;
   }
 
+  .playlistsSection,
+  .profileSection,
   .foldersSection {
     grid-row: auto;
     align-self: start;
@@ -896,7 +912,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .profileAuthGrid {
+  .profileAuthRow {
+    flex-wrap: wrap;
+    overflow-x: visible;
     gap: 10px;
   }
 
@@ -947,12 +965,7 @@
     gap: 9px;
   }
 
-  .profileAuthGrid {
-    gap: 8px;
-  }
-
-  .profileAuthTopRow,
-  .profileAuthBottomRow {
+  .profileAuthRow {
     gap: 8px;
   }
 

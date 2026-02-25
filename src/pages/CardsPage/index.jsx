@@ -1,5 +1,1 @@
-import CardsPage from './CardsPage';
-import FolderPage from './FolderPage';
-
-export { FolderPage };
-export default CardsPage;
+export { default as FolderPage } from './FolderPage';

@@ -1,33 +1,54 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 import DashboardPage from './pages/DashboardPage';
-import ProfilePage from './pages/ProfilePage';
-import { PlaylistDetailPage } from './pages/PlaylistPage';
-import { FolderPage } from './pages/CardsPage';
-import SongsLevelPage from './pages/SongsLevelPage';
-import SongLessonPage from './pages/SongLessonPage';
-import PremiumPage from './pages/PremiumPage';
-import AdminConsolePage from './pages/AdminConsolePage';
+import LoadingSpinner from './components/ui/LoadingSpinner';
 import XpToast from './components/ui/XpToast';
 import LevelUpModal from './components/ui/LevelUpModal';
+import styles from './App.module.css';
+
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const PlaylistDetailPage = lazy(() => import('./pages/PlaylistPage/PlaylistDetailPage'));
+const FolderPage = lazy(() => import('./pages/CardsPage/FolderPage'));
+const SongsLevelPage = lazy(() => import('./pages/SongsLevelPage'));
+const SongLessonPage = lazy(() => import('./pages/SongLessonPage'));
+const PremiumPage = lazy(() => import('./pages/PremiumPage'));
+const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage'));
 
 function App() {
   return (
     <>
+      <ScrollToTop />
       <XpToast />
       <LevelUpModal />
       <MainLayout>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/cards/:folderId" element={<FolderPage />} />
-          <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
-          <Route path="/songs/:songId" element={<SongLessonPage />} />
-          <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/premium" element={<PremiumPage />} />
-          <Route path="/admin" element={<AdminConsolePage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense
+          fallback={(
+            <div className={styles.routeFallback}>
+              <LoadingSpinner size="lg" />
+            </div>
+          )}
+        >
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/cards/:folderId" element={<FolderPage />} />
+            <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
+            <Route path="/songs/:songId" element={<SongLessonPage />} />
+            <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/premium" element={<PremiumPage />} />
+            <Route path="/admin" element={<AdminConsolePage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </MainLayout>
     </>
   );
