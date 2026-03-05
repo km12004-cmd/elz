@@ -3,12 +3,6 @@ import { ApiError, apiRequest } from './client';
 const SONGS_BASE_PATH = '/api/songs';
 const TRACKS_BASE_PATH = '/api/tracks';
 
-const LEVEL_META = {
-  1: { title: 'Beginner', description: 'Basic vocabulary and simple grammar patterns.' },
-  2: { title: 'Intermediate', description: 'Richer vocabulary and more complex phrases.' },
-  3: { title: 'Expert', description: 'Advanced lyrics with nuanced language structures.' },
-};
-
 const RETRIABLE_ROUTE_STATUSES = [404, 405, 422];
 
 function asObject(value) {
@@ -46,11 +40,6 @@ function normalizeBoolean(value) {
   }
 
   return null;
-}
-
-function normalizeDifficultyLevel(value) {
-  const level = normalizeInteger(value);
-  return level === 1 || level === 2 || level === 3 ? level : null;
 }
 
 function normalizeTrackLevel(value) {
@@ -210,15 +199,6 @@ function normalizeSong(value) {
     id: pickFirstId(song, ['song_id', 'songId', 'id']),
     title: pickFirstString(song, ['title', 'name']) ?? 'Untitled song',
     author: pickFirstString(song, ['author', 'artist', 'performer']),
-    difficultyLevel: normalizeDifficultyLevel(
-      song.difficulty_level ??
-        song.difficultyLevel ??
-        song.difficulty ??
-        song.difficulty_id ??
-        song.difficultyId ??
-        song.level ??
-        song.level_id,
-    ),
     releaseYear: normalizeInteger(song.release_year ?? song.releaseYear ?? song.year),
     durationSeconds: normalizeInteger(song.duration_seconds ?? song.durationSeconds ?? song.duration),
     originalLanguage: pickFirstString(song, ['original_language', 'originalLanguage', 'language']),
@@ -310,7 +290,6 @@ function readSongFromResponse(data, fallbackSongId = null) {
     id: fallbackSongId,
     title: 'Untitled song',
     author: null,
-    difficultyLevel: null,
     releaseYear: null,
     durationSeconds: null,
     originalLanguage: null,
@@ -339,9 +318,6 @@ function buildSongBodies(payload) {
   const normalizedTitle = normalizeText(payload?.title);
   const normalizedAuthor = normalizeText(payload?.author);
   const normalizedArtistId = normalizeOptionalPositiveId(payload?.artistId ?? payload?.artist_id);
-  const normalizedDifficultyLevel = normalizeDifficultyLevel(
-    payload?.difficultyLevel ?? payload?.difficulty_level ?? payload?.level ?? payload?.level_id,
-  );
   const normalizedReleaseYear = normalizeInteger(payload?.releaseYear ?? payload?.release_year);
   const normalizedDurationSeconds = normalizeInteger(
     payload?.durationSeconds ?? payload?.duration_seconds ?? payload?.duration,
@@ -353,6 +329,12 @@ function buildSongBodies(payload) {
     payload?.youtubeUrl ?? payload?.youtube_url ?? payload?.youtube,
   );
   const normalizedAudioUrl = normalizeText(payload?.audioUrl ?? payload?.audio_url ?? payload?.audio);
+  const normalizedLyricsText = normalizeText(
+    payload?.lyricsText ?? payload?.lyrics_text ?? payload?.lyrics,
+  );
+  const normalizedLyricsTextRu = normalizeText(
+    payload?.lyricsTextRu ?? payload?.lyrics_text_ru ?? payload?.lyricsRu ?? payload?.lyrics_ru,
+  );
   const normalizedIsPublished = normalizeOptionalBoolean(
     payload?.isPublished ?? payload?.is_published,
   );
@@ -361,58 +343,31 @@ function buildSongBodies(payload) {
     ...(normalizedTitle !== null ? { title: normalizedTitle } : {}),
     ...(normalizedAuthor !== null ? { author: normalizedAuthor } : {}),
     ...(normalizedArtistId !== null ? { artist_id: normalizedArtistId } : {}),
-    ...(normalizedDifficultyLevel !== null ? { difficulty_level: normalizedDifficultyLevel } : {}),
     ...(normalizedReleaseYear !== null ? { release_year: normalizedReleaseYear } : {}),
     ...(normalizedDurationSeconds !== null ? { duration_seconds: normalizedDurationSeconds } : {}),
     ...(normalizedOriginalLanguage !== null ? { original_language: normalizedOriginalLanguage } : {}),
     ...(normalizedIsPublished !== null ? { is_published: normalizedIsPublished } : {}),
     ...(normalizedYoutubeUrl !== null ? { youtube_url: normalizedYoutubeUrl } : {}),
     ...(normalizedAudioUrl !== null ? { audio_url: normalizedAudioUrl } : {}),
+    ...(normalizedLyricsText !== null ? { lyrics_text: normalizedLyricsText } : {}),
+    ...(normalizedLyricsTextRu !== null ? { lyrics_text_ru: normalizedLyricsTextRu } : {}),
   };
 
   const camelBody = {
     ...(normalizedTitle !== null ? { title: normalizedTitle } : {}),
     ...(normalizedAuthor !== null ? { author: normalizedAuthor } : {}),
     ...(normalizedArtistId !== null ? { artistId: normalizedArtistId } : {}),
-    ...(normalizedDifficultyLevel !== null ? { difficultyLevel: normalizedDifficultyLevel } : {}),
     ...(normalizedReleaseYear !== null ? { releaseYear: normalizedReleaseYear } : {}),
     ...(normalizedDurationSeconds !== null ? { durationSeconds: normalizedDurationSeconds } : {}),
     ...(normalizedOriginalLanguage !== null ? { originalLanguage: normalizedOriginalLanguage } : {}),
     ...(normalizedIsPublished !== null ? { isPublished: normalizedIsPublished } : {}),
     ...(normalizedYoutubeUrl !== null ? { youtubeUrl: normalizedYoutubeUrl } : {}),
     ...(normalizedAudioUrl !== null ? { audioUrl: normalizedAudioUrl } : {}),
+    ...(normalizedLyricsText !== null ? { lyricsText: normalizedLyricsText } : {}),
+    ...(normalizedLyricsTextRu !== null ? { lyricsTextRu: normalizedLyricsTextRu } : {}),
   };
 
   return { snakeBody, camelBody };
-}
-
-function levelsFromSongs(songs) {
-  const songsByLevel = new Map([
-    [1, 0],
-    [2, 0],
-    [3, 0],
-  ]);
-
-  songs.forEach((song) => {
-    const normalizedLevel = normalizeDifficultyLevel(song?.difficultyLevel);
-    if (!normalizedLevel) return;
-
-    songsByLevel.set(normalizedLevel, (songsByLevel.get(normalizedLevel) ?? 0) + 1);
-  });
-
-  return [1, 2, 3].map((difficultyLevel) => ({
-    difficultyLevel,
-    title: LEVEL_META[difficultyLevel].title,
-    description: LEVEL_META[difficultyLevel].description,
-    songsCount: songsByLevel.get(difficultyLevel) ?? 0,
-  }));
-}
-
-function filterSongsByDifficulty(songs, difficultyLevel) {
-  const songsWithKnownDifficulty = songs.filter((song) => normalizeDifficultyLevel(song.difficultyLevel));
-  if (songsWithKnownDifficulty.length === 0) return songs;
-
-  return songs.filter((song) => normalizeDifficultyLevel(song.difficultyLevel) === difficultyLevel);
 }
 
 async function fetchAllSongs({ token } = {}) {
@@ -428,112 +383,6 @@ export async function fetchSongsCatalog({ token } = {}) {
   return fetchAllSongs({ token });
 }
 
-function normalizeLevelItem(value, index) {
-  const level = asObject(value) ?? {};
-
-  const difficultyLevel =
-    normalizeDifficultyLevel(
-      level.difficulty_level ?? level.difficultyLevel ?? level.level ?? level.level_id ?? level.id,
-    ) ?? (index === 0 || index === 1 || index === 2 ? index + 1 : null);
-
-  if (!difficultyLevel) return null;
-
-  const songsCount =
-    normalizeInteger(
-      level.songs_count ??
-        level.songsCount ??
-        level.count ??
-        level.total ??
-        level.total_songs ??
-        level.totalSongs,
-    ) ?? 0;
-
-  return {
-    difficultyLevel,
-    title: pickFirstString(level, ['title', 'name', 'label']) ?? LEVEL_META[difficultyLevel].title,
-    description:
-      pickFirstString(level, ['description', 'subtitle', 'hint']) ??
-      LEVEL_META[difficultyLevel].description,
-    songsCount,
-  };
-}
-
-export function getDifficultyMeta(difficultyLevel) {
-  const normalizedLevel = normalizeDifficultyLevel(difficultyLevel);
-  if (!normalizedLevel) return null;
-
-  return {
-    difficultyLevel: normalizedLevel,
-    ...LEVEL_META[normalizedLevel],
-  };
-}
-
-export async function fetchSongLevels({ token } = {}) {
-  try {
-    const data = await requestFirstAvailable(
-      [`${SONGS_BASE_PATH}/levels`, `${SONGS_BASE_PATH}/difficulty-levels`],
-      { token },
-    );
-    const collection = readCollection(data, ['levels', 'items', 'data', 'results']);
-
-    const levelsMap = new Map();
-
-    collection.forEach((item, index) => {
-      const normalized = normalizeLevelItem(item, index);
-      if (!normalized) return;
-      levelsMap.set(normalized.difficultyLevel, normalized);
-    });
-
-    return [1, 2, 3].map((difficultyLevel) => {
-      const fromApi = levelsMap.get(difficultyLevel);
-      if (fromApi) return fromApi;
-
-      return {
-        difficultyLevel,
-        title: LEVEL_META[difficultyLevel].title,
-        description: LEVEL_META[difficultyLevel].description,
-        songsCount: 0,
-      };
-    });
-  } catch (error) {
-    if (!isRetriableRouteError(error)) {
-      throw error;
-    }
-  }
-
-  const songs = await fetchAllSongs({ token });
-  return levelsFromSongs(songs);
-}
-
-export async function fetchSongsByDifficulty({ token, difficultyLevel } = {}) {
-  const normalizedLevel = normalizeDifficultyLevel(difficultyLevel);
-  if (!normalizedLevel) throw new Error('Difficulty level must be 1, 2, or 3');
-
-  try {
-    const data = await requestFirstAvailable(
-      [
-        `${SONGS_BASE_PATH}/levels/${normalizedLevel}`,
-        `${SONGS_BASE_PATH}?difficulty_level=${normalizedLevel}`,
-        `${SONGS_BASE_PATH}?difficultyLevel=${normalizedLevel}`,
-        `${SONGS_BASE_PATH}?level=${normalizedLevel}`,
-        `${SONGS_BASE_PATH}?level_id=${normalizedLevel}`,
-      ],
-      { token },
-    );
-    const normalizedSongs = normalizeSongsCollection(data);
-    const filteredSongs = filterSongsByDifficulty(normalizedSongs, normalizedLevel);
-
-    if (filteredSongs.length > 0) return filteredSongs;
-  } catch (error) {
-    if (!isRetriableRouteError(error)) {
-      throw error;
-    }
-  }
-
-  const songs = await fetchAllSongs({ token });
-  return filterSongsByDifficulty(songs, normalizedLevel);
-}
-
 export async function fetchSongDetail({ token, songId } = {}) {
   const normalizedSongId = normalizeId(songId);
   if (!normalizedSongId) throw new Error('Song id is required');
@@ -546,6 +395,9 @@ export async function fetchSongDetail({ token, songId } = {}) {
     ...normalized,
     id: normalized.id ?? normalizedSongId,
     lyricsText: pickFirstString(source, ['lyrics_text', 'lyricsText', 'lyrics']) ?? null,
+    lyricsTextRu:
+      pickFirstString(source, ['lyrics_text_ru', 'lyricsTextRu', 'lyrics_ru', 'lyricsRu']) ??
+      null,
   };
 }
 
@@ -557,19 +409,28 @@ export async function fetchSongLyrics({ token, songId } = {}) {
     token,
   });
 
+  const lyricsKeys = ['lyrics_text', 'lyricsText', 'lyrics', 'text', 'content'];
+  const lyricsRuKeys = ['lyrics_text_ru', 'lyricsTextRu', 'lyrics_ru', 'lyricsRu', 'text_ru'];
+
   if (typeof data === 'string') {
     const trimmed = data.trim();
-    return trimmed || null;
+    return {
+      lyricsText: trimmed || null,
+      lyricsTextRu: null,
+    };
   }
 
   const object = asObject(data);
   if (!object) return null;
 
-  return (
-    pickFirstString(object, ['lyrics_text', 'lyricsText', 'lyrics', 'text', 'content']) ??
-    pickFirstString(object.data, ['lyrics_text', 'lyricsText', 'lyrics', 'text', 'content']) ??
-    null
-  );
+  const nested = asObject(object.data);
+  const lyricsText = pickFirstString(object, lyricsKeys) ?? pickFirstString(nested, lyricsKeys) ?? null;
+  const lyricsTextRu =
+    pickFirstString(object, lyricsRuKeys) ?? pickFirstString(nested, lyricsRuKeys) ?? null;
+
+  if (!lyricsText && !lyricsTextRu) return null;
+
+  return { lyricsText, lyricsTextRu };
 }
 
 export async function fetchTrackLearningState({ token, trackId } = {}) {

@@ -535,6 +535,11 @@
 }
 
 @media (max-width: 640px) {
+  .header {
+    min-height: 98px;
+    padding: 6px 0;
+  }
+
   .headerInner {
     width: calc(100% - 12px);
   }
@@ -610,21 +615,27 @@
   }
 
   .welcomeContent {
-    margin-top: 6px;
+    margin-top: 4px;
     gap: 4px;
     max-width: 100%;
   }
 
   .welcomeContent h1 {
-    font-size: 1.75rem;
+    font-size: 1.58rem;
+    line-height: 1.02;
   }
 
   .welcomeContent p {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.35;
   }
 }
 
 @media (max-width: 430px) {
+  .header {
+    min-height: 92px;
+  }
+
   .streakText {
     display: none;
   }
@@ -647,7 +658,13 @@
     padding: 7px 10px;
   }
 
+  .welcomeContent h1 {
+    font-size: 1.42rem;
+  }
+
   .welcomeContent p {
-    display: none;
+    display: block;
+    font-size: 0.76rem;
+    line-height: 1.3;
   }
 }

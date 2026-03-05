@@ -269,6 +269,38 @@
   color: var(--color-text-secondary);
 }
 
+.languageControl {
+  margin-top: 16px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.languageLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.languageSelect {
+  min-width: 180px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
+  padding: 9px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+
+.languageSelect:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
 .infoGrid {
   margin-top: 18px;
   display: grid;

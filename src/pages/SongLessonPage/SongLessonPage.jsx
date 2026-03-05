@@ -14,7 +14,6 @@ import {
   fetchTrackFlashcardTemplates,
   fetchTrackLearningState,
   fetchTrackLevelCards,
-  getDifficultyMeta,
   markTrackAsListened,
   startTrackLearning,
 } from '../../api/songs';
@@ -416,6 +415,8 @@ function SongLessonPage() {
 
   const [song, setSong] = useState(null);
   const [lyrics, setLyrics] = useState(null);
+  const [lyricsRu, setLyricsRu] = useState(null);
+  const [showTranslation, setShowTranslation] = useState(false);
   const [learningState, setLearningState] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -478,6 +479,8 @@ function SongLessonPage() {
     if (!normalizedSongId) {
       setSong(null);
       setLyrics(null);
+      setLyricsRu(null);
+      setShowTranslation(false);
       setLearningState(null);
       setExerciseOneFolderId(null);
       setLoadError('Invalid song id');
@@ -489,9 +492,17 @@ function SongLessonPage() {
 
     try {
       const detail = await fetchSongDetail({ token, songId: normalizedSongId });
-      const lyricsText =
-        detail.lyricsText ??
-        (await fetchSongLyrics({ token, songId: normalizedSongId }).catch(() => null));
+      const fetchedLyrics = await fetchSongLyrics({ token, songId: normalizedSongId }).catch(
+        () => null,
+      );
+      const fallbackLyricsText =
+        typeof fetchedLyrics === 'string' ? fetchedLyrics : fetchedLyrics?.lyricsText ?? null;
+      const fallbackLyricsTextRu =
+        fetchedLyrics && typeof fetchedLyrics === 'object'
+          ? fetchedLyrics.lyricsTextRu ?? null
+          : null;
+      const lyricsText = detail.lyricsText ?? fallbackLyricsText;
+      const lyricsTextRu = detail.lyricsTextRu ?? fallbackLyricsTextRu;
       const nextLearningState = await fetchTrackLearningState({
         token,
         trackId: normalizedSongId,
@@ -499,11 +510,13 @@ function SongLessonPage() {
 
       setSong(detail);
       setLyrics(lyricsText);
+      setLyricsRu(lyricsTextRu);
       setLearningState(nextLearningState);
       setExerciseOneFolderId(normalizeId(nextLearningState?.folderId));
     } catch (error) {
       setSong(null);
       setLyrics(null);
+      setLyricsRu(null);
       setLearningState(null);
       setExerciseOneFolderId(null);
       setLoadError(extractErrorMessage(error, { context: 'songLesson' }));
@@ -560,23 +573,40 @@ function SongLessonPage() {
     setTaskFiveResults({});
     setCompletionModal(null);
     setActiveStage(LESSON_STAGE.SONG);
+    setLyrics(null);
+    setLyricsRu(null);
+    setShowTranslation(false);
   }, [normalizedSongId]);
 
-  const levelMeta = getDifficultyMeta(song?.difficultyLevel);
   const preparedTaskCards = useMemo(() => uniqueTaskCards(taskCards), [taskCards]);
   const learningStatus = useMemo(
     () => formatLearningStatus(learningState?.status),
     [learningState?.status],
   );
+  const hasKyrgyzLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0;
+  const hasRussianLyrics = typeof lyricsRu === 'string' && lyricsRu.trim().length > 0;
+  const canToggleLyrics = hasKyrgyzLyrics && hasRussianLyrics;
+  const activeLyrics = useMemo(() => {
+    if (showTranslation && hasRussianLyrics) return lyricsRu;
+    if (hasKyrgyzLyrics) return lyrics;
+    if (hasRussianLyrics) return lyricsRu;
+    return null;
+  }, [hasKyrgyzLyrics, hasRussianLyrics, lyrics, lyricsRu, showTranslation]);
+  const activeLyricsLanguage = useMemo(() => {
+    if (showTranslation && hasRussianLyrics) return 'ru';
+    if (hasKyrgyzLyrics) return 'kg';
+    if (hasRussianLyrics) return 'ru';
+    return null;
+  }, [hasKyrgyzLyrics, hasRussianLyrics, showTranslation]);
   const lyricsLines = useMemo(
     () =>
-      typeof lyrics === 'string'
-        ? lyrics
+      typeof activeLyrics === 'string'
+        ? activeLyrics
             .split(/\r?\n/g)
             .map((line) => line.trimEnd())
             .filter((line, index, lines) => line || (index > 0 && lines[index - 1]))
         : [],
-    [lyrics],
+    [activeLyrics],
   );
   const youtubeEmbedUrl = useMemo(() => toYouTubeEmbedUrl(song?.youtubeUrl), [song?.youtubeUrl]);
   const youtubeUrl = typeof song?.youtubeUrl === 'string' ? song.youtubeUrl.trim() : '';
@@ -586,6 +616,10 @@ function SongLessonPage() {
   const isTaskThreeStage = activeStage === LESSON_STAGE.TASK_3;
   const isTaskFourStage = activeStage === LESSON_STAGE.TASK_4;
   const isTaskFiveStage = activeStage === LESSON_STAGE.TASK_5;
+  const toggleLyricsTranslation = useCallback(() => {
+    if (!canToggleLyrics) return;
+    setShowTranslation((previous) => !previous);
+  }, [canToggleLyrics]);
 
   const taskTwoItems = useMemo(
     () => (Array.isArray(taskTwoSession?.items) ? taskTwoSession.items : []),
@@ -2390,10 +2424,40 @@ function SongLessonPage() {
             !isTaskFourStage &&
             !isTaskFiveStage ? (
               <>
+                <div className={styles.lyricsHeader}>
+                  <div className={styles.lyricsHeading}>
+                    <p className={styles.lyricsTitle}>Lyrics</p>
+                    {activeLyricsLanguage ? (
+                      <span className={styles.lyricsTag}>
+                        {activeLyricsLanguage === 'ru' ? 'Russian' : 'Kyrgyz'}
+                      </span>
+                    ) : null}
+                  </div>
+                  {hasRussianLyrics ? (
+                    <button
+                      type="button"
+                      className={`${styles.translateButton} ${
+                        showTranslation ? styles.translateButtonActive : ''
+                      }`}
+                      onClick={toggleLyricsTranslation}
+                      disabled={!canToggleLyrics}
+                      aria-pressed={showTranslation}>
+                      {showTranslation ? 'Show Kyrgyz' : 'Translate'}
+                    </button>
+                  ) : null}
+                </div>
                 {lyricsLines.length > 0 ? (
-                  <div className={styles.lyricsList}>
+                  <div
+                    key={`lyrics-${activeLyricsLanguage ?? 'none'}-${
+                      showTranslation ? 'ru' : 'kg'
+                    }`}
+                    className={`${styles.lyricsList} ${styles.lyricsListAnimated}`}
+                    data-i18n-skip="true">
                     {lyricsLines.map((line, index) => (
-                      <p key={`line-${index}`} className={styles.lyricsLine}>
+                      <p
+                        key={`line-${index}`}
+                        className={styles.lyricsLine}
+                        style={{ '--line-index': index }}>
                         {line || ' '}
                       </p>
                     ))}
@@ -2621,10 +2685,6 @@ function SongLessonPage() {
                 <div className={styles.metaRow}>
                   <dt>Artist</dt>
                   <dd>{song.author ?? 'Unknown artist'}</dd>
-                </div>
-                <div className={styles.metaRow}>
-                  <dt>Difficulty</dt>
-                  <dd>{levelMeta?.title ?? '—'}</dd>
                 </div>
                 <div className={styles.metaRow}>
                   <dt>Year</dt>

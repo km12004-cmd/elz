@@ -152,12 +152,6 @@ function enrichSong(song, fallbackSong) {
       normalizeText(fallback.addedAt) ||
       normalizeText(fallback.added_at) ||
       null,
-    difficulty:
-      normalizeText(source.difficulty) ||
-      normalizeText(source.difficulty_name) ||
-      normalizeText(fallback.difficulty) ||
-      normalizeText(fallback.difficulty_name) ||
-      null,
     durationSeconds,
     youtubeUrl:
       normalizeText(source.youtubeUrl) ||
@@ -608,7 +602,6 @@ function PlaylistDetailPage() {
                 const songMeta = [
                   normalizeText(song.author) || 'Unknown artist',
                   formatDuration(song.durationSeconds),
-                  normalizeText(song.difficulty),
                 ]
                   .filter(Boolean)
                   .join(' • ');

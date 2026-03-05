@@ -43,7 +43,6 @@ The Vite dev proxy maps `/api` → `http://127.0.0.1:8000`. Override with `VITE_
 ### Routing (`src/App.jsx`)
 ```
 /                          → Home (placeholder)
-/songs/levels/:level       → Songs by difficulty (1, 2, 3)
 /songs/:songId             → Song lesson (SongLessonPage - largest page, ~2600 lines)
 /cards                     → Flashcard folders
 /cards/:folderId           → Cards in folder

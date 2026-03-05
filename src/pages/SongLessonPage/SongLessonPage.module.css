@@ -93,6 +93,100 @@
   overflow: hidden;
 }
 
+.lyricsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lyricsHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lyricsTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-text-muted);
+}
+
+.lyricsTag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--color-accent-border-soft);
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.translateButton {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: linear-gradient(120deg, var(--color-primary), var(--color-primary-soft));
+  color: var(--color-text-on-accent);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    opacity var(--transition-base),
+    border-color var(--transition-base);
+  box-shadow: 0 10px 20px rgba(79, 66, 171, 0.24);
+}
+
+.translateButton::after {
+  content: '';
+  position: absolute;
+  top: -120%;
+  left: -30%;
+  width: 60%;
+  height: 340%;
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  opacity: 0;
+  transform: rotate(12deg);
+  transition: opacity 280ms ease, transform 480ms ease;
+}
+
+.translateButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(79, 66, 171, 0.32);
+}
+
+.translateButton:hover:not(:disabled)::after {
+  opacity: 0.75;
+  transform: translateX(160%) rotate(12deg);
+}
+
+.translateButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.translateButtonActive {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 14px 28px rgba(79, 66, 171, 0.38);
+}
+
+.translateButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
 .lyricsList {
   margin-top: 14px;
   display: flex;
@@ -111,6 +205,10 @@
   scrollbar-color: var(--color-accent-border-soft) var(--color-surface-elevated);
 }
 
+.lyricsListAnimated {
+  animation: lyricsPanelIn 320ms ease;
+}
+
 .lyricsLine {
   color: var(--color-text-main);
   font-family: 'Sora', sans-serif;
@@ -120,10 +218,53 @@
   font-weight: 600;
 }
 
+.lyricsListAnimated .lyricsLine {
+  animation: lyricsLineIn 420ms ease both;
+  animation-delay: calc(var(--line-index, 0) * 32ms);
+}
+
 .lyricsEmpty {
   margin-top: 12px;
   color: var(--color-text-muted);
   font-size: 14px;
+}
+
+@keyframes lyricsPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lyricsLineIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyricsListAnimated {
+    animation: none;
+  }
+
+  .lyricsListAnimated .lyricsLine {
+    animation: none;
+  }
+
+  .translateButton {
+    transition: none;
+  }
 }
 
 .infoSidebar {

@@ -17,6 +17,7 @@ import {
   createSongRecord,
   createTrackFlashcardTemplates,
   fetchSongDetail,
+  fetchSongLyrics,
   fetchSongsCatalog,
   updateSongRecord,
 } from '../../api/songs';
@@ -29,8 +30,6 @@ import styles from './adminConsolePage.module.css';
 
 const LIMIT_OPTIONS = [10, 20, 50, 100];
 const ROLE_OPTIONS = ['user', 'admin'];
-const SONG_LEVEL_OPTIONS = [1, 2, 3];
-
 function normalizeId(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   if (typeof value === 'string') {
@@ -172,12 +171,13 @@ function AdminConsolePage() {
     title: '',
     author: '',
     artistId: '',
-    difficultyLevel: '1',
     releaseYear: '',
     durationSeconds: '',
     originalLanguage: '',
     youtubeUrl: '',
     audioUrl: '',
+    lyricsText: '',
+    lyricsTextRu: '',
     isPublished: true,
   });
   const [flashcardsForm, setFlashcardsForm] = useState({
@@ -341,21 +341,24 @@ function AdminConsolePage() {
     loadContentCatalog();
   }, [loadContentCatalog]);
 
-  const fillSongFormFromDetail = useCallback((detail) => {
+  const fillSongFormFromDetail = useCallback((detail, lyricsPayload) => {
+    const fallbackLyricsText =
+      typeof lyricsPayload === 'string' ? lyricsPayload : lyricsPayload?.lyricsText ?? '';
+    const fallbackLyricsTextRu =
+      typeof lyricsPayload === 'object' ? lyricsPayload?.lyricsTextRu ?? '' : '';
+
     setSongForm((previous) => ({
       ...previous,
       songId: detail?.id ?? previous.songId,
       title: detail?.title ?? '',
       author: detail?.author ?? '',
-      difficultyLevel:
-        Number.isInteger(detail?.difficultyLevel) && SONG_LEVEL_OPTIONS.includes(detail.difficultyLevel)
-          ? String(detail.difficultyLevel)
-          : previous.difficultyLevel,
       releaseYear: Number.isInteger(detail?.releaseYear) ? String(detail.releaseYear) : '',
       durationSeconds: Number.isInteger(detail?.durationSeconds) ? String(detail.durationSeconds) : '',
       originalLanguage: detail?.originalLanguage ?? '',
       youtubeUrl: detail?.youtubeUrl ?? '',
       audioUrl: detail?.audioUrl ?? '',
+      lyricsText: detail?.lyricsText ?? fallbackLyricsText ?? '',
+      lyricsTextRu: detail?.lyricsTextRu ?? fallbackLyricsTextRu ?? '',
       isPublished: typeof detail?.isPublished === 'boolean' ? detail.isPublished : previous.isPublished,
     }));
   }, []);
@@ -372,8 +375,11 @@ function AdminConsolePage() {
       setContentError('');
 
       try {
-        const detail = await fetchSongDetail({ token, songId: normalizedSongId });
-        fillSongFormFromDetail(detail);
+        const [detail, lyricsPayload] = await Promise.all([
+          fetchSongDetail({ token, songId: normalizedSongId }),
+          fetchSongLyrics({ token, songId: normalizedSongId }).catch(() => null),
+        ]);
+        fillSongFormFromDetail(detail, lyricsPayload);
       } catch (error) {
         if (handleUnauthorizedError(error)) return;
         setContentError(extractErrorMessage(error, { context: 'admin' }));
@@ -629,14 +635,9 @@ function AdminConsolePage() {
   const onCreateSong = async (event) => {
     event.preventDefault();
 
-    const difficultyLevel = parseIntegerInput(songForm.difficultyLevel);
     const releaseYearInput = parseOptionalIntegerInput(songForm.releaseYear);
     const durationSecondsInput = parseOptionalIntegerInput(songForm.durationSeconds);
 
-    if (!SONG_LEVEL_OPTIONS.includes(difficultyLevel)) {
-      setContentError('Song level must be 1, 2, or 3.');
-      return;
-    }
     if (!releaseYearInput.valid || (releaseYearInput.value !== null && releaseYearInput.value < 0)) {
       setContentError('Release year must be a valid non-negative integer.');
       return;
@@ -659,12 +660,13 @@ function AdminConsolePage() {
           title: songForm.title,
           author: songForm.author,
           artistId: songForm.artistId,
-          difficultyLevel,
           releaseYear: releaseYearInput.value,
           durationSeconds: durationSecondsInput.value,
           originalLanguage: songForm.originalLanguage,
           youtubeUrl: songForm.youtubeUrl,
           audioUrl: songForm.audioUrl,
+          lyricsText: songForm.lyricsText,
+          lyricsTextRu: songForm.lyricsTextRu,
           isPublished: Boolean(songForm.isPublished),
         },
       });
@@ -686,16 +688,11 @@ function AdminConsolePage() {
     event.preventDefault();
 
     const songId = normalizeId(songForm.songId);
-    const difficultyLevel = parseIntegerInput(songForm.difficultyLevel);
     const releaseYearInput = parseOptionalIntegerInput(songForm.releaseYear);
     const durationSecondsInput = parseOptionalIntegerInput(songForm.durationSeconds);
 
     if (!songId) {
       setContentError('Song ID is required for update.');
-      return;
-    }
-    if (!SONG_LEVEL_OPTIONS.includes(difficultyLevel)) {
-      setContentError('Song level must be 1, 2, or 3.');
       return;
     }
     if (!releaseYearInput.valid || (releaseYearInput.value !== null && releaseYearInput.value < 0)) {
@@ -721,12 +718,13 @@ function AdminConsolePage() {
           title: songForm.title,
           author: songForm.author,
           artistId: songForm.artistId,
-          difficultyLevel,
           releaseYear: releaseYearInput.value,
           durationSeconds: durationSecondsInput.value,
           originalLanguage: songForm.originalLanguage,
           youtubeUrl: songForm.youtubeUrl,
           audioUrl: songForm.audioUrl,
+          lyricsText: songForm.lyricsText,
+          lyricsTextRu: songForm.lyricsTextRu,
           isPublished: Boolean(songForm.isPublished),
         },
       });
@@ -1275,18 +1273,6 @@ function AdminConsolePage() {
               />
 
               <div className={styles.inlineRow}>
-                <select
-                  className={styles.select}
-                  value={songForm.difficultyLevel}
-                  onChange={(event) => onSongFieldChange('difficultyLevel', event.target.value)}
-                  disabled={isMutatingContent}
-                >
-                  {SONG_LEVEL_OPTIONS.map((level) => (
-                    <option key={level} value={level}>
-                      Level {level}
-                    </option>
-                  ))}
-                </select>
                 <input
                   type="number"
                   min="0"
@@ -1330,6 +1316,32 @@ function AdminConsolePage() {
                 value={songForm.audioUrl}
                 onChange={(event) => onSongFieldChange('audioUrl', event.target.value)}
                 disabled={isMutatingContent}
+              />
+
+              <label className={styles.fieldLabel} htmlFor="song-lyrics-kg">
+                Lyrics (Kyrgyz)
+              </label>
+              <textarea
+                id="song-lyrics-kg"
+                className={styles.textarea}
+                placeholder="Kyrgyz lyrics (optional)"
+                value={songForm.lyricsText}
+                onChange={(event) => onSongFieldChange('lyricsText', event.target.value)}
+                disabled={isMutatingContent}
+                rows={6}
+              />
+
+              <label className={styles.fieldLabel} htmlFor="song-lyrics-ru">
+                Lyrics translation (Russian)
+              </label>
+              <textarea
+                id="song-lyrics-ru"
+                className={styles.textarea}
+                placeholder="Russian translation (optional)"
+                value={songForm.lyricsTextRu}
+                onChange={(event) => onSongFieldChange('lyricsTextRu', event.target.value)}
+                disabled={isMutatingContent}
+                rows={6}
               />
 
               <label className={styles.checkboxRow}>

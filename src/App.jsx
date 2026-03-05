@@ -18,7 +18,6 @@ import styles from './App.module.css';
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const PlaylistDetailPage = lazy(() => import('./pages/PlaylistPage/PlaylistDetailPage'));
 const FolderPage = lazy(() => import('./pages/CardsPage/FolderPage'));
-const SongsLevelPage = lazy(() => import('./pages/SongsLevelPage'));
 const SongLessonPage = lazy(() => import('./pages/SongLessonPage'));
 const PremiumPage = lazy(() => import('./pages/PremiumPage'));
 const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage'));
@@ -40,7 +39,6 @@ function App() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/cards/:folderId" element={<FolderPage />} />
-            <Route path="/songs/levels/:difficultyLevel" element={<SongsLevelPage />} />
             <Route path="/songs/:songId" element={<SongLessonPage />} />
             <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />

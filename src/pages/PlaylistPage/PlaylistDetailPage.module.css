@@ -245,7 +245,8 @@
 .songList {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(225px, 245px));
+  justify-content: flex-start;
   gap: 12px;
 }
 
@@ -254,16 +255,13 @@
   border-radius: 14px;
   border: 1px solid var(--color-border-soft);
   background: var(--color-bg-content);
-  padding: 11px;
+  padding: 10px;
 }
 
 .songItem {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  aspect-ratio: 1 / 1;
-  min-height: 270px;
+  gap: 8px;
 }
 
 .songHeader {
@@ -280,16 +278,14 @@
 }
 
 .songActions {
-  position: absolute;
-  right: 11px;
-  bottom: 11px;
+  margin-top: auto;
   display: flex;
   justify-content: flex-end;
   z-index: 2;
 }
 
 .songTitle {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-text-main);
   display: -webkit-box;
@@ -300,21 +296,20 @@
 }
 
 .songMeta {
-  margin-top: 6px;
-  font-size: 13px;
+  margin-top: 5px;
+  font-size: 12px;
   color: var(--color-text-secondary);
 }
 
 .songSecondaryMeta {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-muted);
 }
 
 .songMedia {
   width: 100%;
-  aspect-ratio: 16 / 10;
-  min-height: 170px;
+  aspect-ratio: 16 / 9;
   border-radius: 11px;
   border: 1px solid var(--color-border-soft);
   overflow: hidden;
@@ -410,9 +405,7 @@
 .songSkeleton {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  aspect-ratio: 1 / 1;
-  min-height: 270px;
+  gap: 8px;
 }
 
 .skeletonTitle {
@@ -439,7 +432,7 @@
   }
 
   .songList {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(210px, 230px));
   }
 }
 
@@ -462,27 +455,12 @@
     width: 100%;
   }
 
-  .songItem {
-    aspect-ratio: auto;
-    min-height: 0;
-  }
-
-  .songSkeleton {
-    aspect-ratio: auto;
-    min-height: 0;
-  }
-
   .songHeader {
     flex-direction: column;
   }
 
-  .songActions {
-    position: static;
-    margin-top: auto;
-  }
-
   .songList {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   }
 }
 
@@ -513,7 +491,7 @@
     grid-template-columns: 1fr;
   }
 
-  .songMedia {
-    min-height: 150px;
+  .songList {
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   }
 }

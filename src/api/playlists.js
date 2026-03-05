@@ -77,10 +77,6 @@ function normalizeSong(value) {
         ? song.position
         : null,
     addedAt: pickFirstString(song, ['added_at', 'addedAt', 'created_at', 'createdAt']),
-    difficultyLevel: normalizeInteger(
-      song.difficulty_level ?? song.difficultyLevel ?? song.level ?? song.level_id ?? song.levelId,
-    ),
-    difficulty: pickFirstString(song, ['difficulty', 'difficulty_name', 'difficultyName']),
   };
 }
 

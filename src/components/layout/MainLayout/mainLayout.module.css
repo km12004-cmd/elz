@@ -7,7 +7,7 @@
 
 .pageFrame {
   width: min(1220px, calc(100% - 40px));
-  margin: 18px auto 24px;
+  margin: 18px auto 148px;
   flex: 1;
 }
 
@@ -18,20 +18,20 @@
 @media (max-width: 1200px) {
   .pageFrame {
     width: min(1120px, calc(100% - 30px));
-    margin: 14px auto 20px;
+    margin: 14px auto 134px;
   }
 }
 
 @media (max-width: 900px) {
   .pageFrame {
     width: calc(100% - 18px);
-    margin: 10px auto 14px;
+    margin: 10px auto 118px;
   }
 }
 
 @media (max-width: 640px) {
   .pageFrame {
     width: calc(100% - 12px);
-    margin: 8px auto 10px;
+    margin: 8px auto 28px;
   }
 }

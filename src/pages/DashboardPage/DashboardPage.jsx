@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchSongLevels, getDifficultyMeta } from '../../api/songs';
 import { fetchArtists } from '../../api/artists';
 import { fetchPlaylists, fetchPlaylistDetail, createPlaylist, deletePlaylist } from '../../api/playlists';
 import { fetchFlashcardFolders, createFlashcardFolder, deleteFlashcardFolder } from '../../api/flashcards';
@@ -18,12 +17,6 @@ import SignUpForm from '../../components/auth/SignUpForm';
 import CreatePlaylistModal from '../PlaylistPage/CreatePlaylistModal';
 import CreateFolderModal from '../CardsPage/CreateFolderModal';
 import styles from './dashboardPage.module.css';
-
-const FALLBACK_LEVELS = [1, 2, 3].map((difficultyLevel) => ({
-  difficultyLevel,
-  songsCount: 0,
-  ...(getDifficultyMeta(difficultyLevel) ?? {}),
-}));
 
 function getArtistInitials(name) {
   if (typeof name !== 'string') return '?';
@@ -81,11 +74,6 @@ function DashboardPage() {
   const { isDarkTheme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
-
-  // Levels state
-  const [levels, setLevels] = useState(FALLBACK_LEVELS);
-  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
-  const [levelsError, setLevelsError] = useState('');
 
   // Artists state
   const [artists, setArtists] = useState([]);
@@ -165,28 +153,6 @@ function DashboardPage() {
       document.removeEventListener('keydown', onDocumentKeyDown);
     };
   }, [isUserMenuOpen]);
-
-  // Load levels
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      setIsLoadingLevels(true);
-      setLevelsError('');
-      try {
-        const items = await fetchSongLevels({ token });
-        if (!cancelled) setLevels(items.length > 0 ? items : FALLBACK_LEVELS);
-      } catch (error) {
-        if (!cancelled) {
-          setLevels(FALLBACK_LEVELS);
-          setLevelsError(extractErrorMessage(error, { context: 'home' }));
-        }
-      } finally {
-        if (!cancelled) setIsLoadingLevels(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [token]);
 
   // Load artists
   useEffect(() => {
@@ -269,23 +235,6 @@ function DashboardPage() {
     setFolders([]);
     setFoldersError('');
   }, [isAuthenticated]);
-
-  // Normalize levels
-  const normalizedLevels = useMemo(
-    () =>
-      levels.map((level, index) => {
-        const parsed = Number.parseInt(String(level?.difficultyLevel ?? '').trim(), 10);
-        const difficultyLevel = parsed === 1 || parsed === 2 || parsed === 3 ? parsed : index + 1;
-        const fallbackMeta = getDifficultyMeta(difficultyLevel) ?? {};
-        return {
-          difficultyLevel,
-          title: level?.title ?? fallbackMeta.title ?? 'Level',
-          description: level?.description ?? fallbackMeta.description ?? '',
-          songsCount: typeof level?.songsCount === 'number' && Number.isFinite(level.songsCount) ? level.songsCount : 0,
-        };
-      }),
-    [levels],
-  );
 
   // Playlist actions
   const handleCreatePlaylist = async ({ title, description }) => {
@@ -373,12 +322,6 @@ function DashboardPage() {
     }
   };
 
-  const LEVEL_TONE_CLASSES = [
-    styles.levelCardToneOne,
-    styles.levelCardToneTwo,
-    styles.levelCardToneThree,
-  ];
-
   const onLogout = () => {
     setIsUserMenuOpen(false);
     signOut();
@@ -387,31 +330,6 @@ function DashboardPage() {
 
   return (
     <div className={styles.dashboard}>
-      {/* Song Levels */}
-      <section className={`${styles.block} ${styles.levelsSection}`}>
-        <div className={styles.blockHeader}>
-          <h2 className={styles.blockTitle}>Choose your level</h2>
-          <p className={styles.blockSubtitle}>Open the song library for a specific difficulty.</p>
-        </div>
-        {isLoadingLevels && <p className={styles.loadingText}>Loading levels...</p>}
-        {levelsError && <p className={styles.errorText}>{levelsError}</p>}
-        <div className={styles.levelsGrid}>
-          {normalizedLevels.map((level, i) => (
-            <button
-              key={level.difficultyLevel}
-              type="button"
-              className={`${styles.levelCard} ${LEVEL_TONE_CLASSES[i % LEVEL_TONE_CLASSES.length]}`}
-              onClick={() => navigate(`/songs/levels/${encodeURIComponent(String(level.difficultyLevel))}`)}
-            >
-              <span className={styles.levelBadge}>Level {level.difficultyLevel}</span>
-              <span className={styles.levelName}>{level.title}</span>
-              <span className={styles.levelDescription}>{level.description}</span>
-              <span className={styles.levelMeta}>{level.songsCount} songs</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
       {/* Playlists */}
       <section className={`${styles.block} ${styles.playlistsSection}`}>
         <div className={styles.blockHeader}>
