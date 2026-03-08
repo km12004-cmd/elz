@@ -35,3 +35,10 @@
     margin: 8px auto 28px;
   }
 }
+
+@media (max-width: 380px) {
+  .pageFrame {
+    width: calc(100% - 8px);
+    margin: 6px auto 24px;
+  }
+}

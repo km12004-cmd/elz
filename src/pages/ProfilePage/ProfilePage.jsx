@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { useProgress } from '../../contexts/useProgress';
 import { useI18n } from '../../contexts/useI18n';
+import { normalizeRole } from '../../utils/roles';
 import { xpFillPercent } from '../../utils/xpLevels';
 import styles from './profilePage.module.css';
 
@@ -110,6 +111,7 @@ function ProfilePage() {
   }, { locale, t });
   const currentStreak = normalizeStreak(user?.streakCurrent ?? user?.streak_current);
   const bestStreak = normalizeStreak(user?.streakBest ?? user?.streak_best, currentStreak);
+  const canAccessAdminConsole = normalizeRole(user?.role) === 'admin';
 
   const avatarLetter = (normalizeString(user?.nickname) ?? normalizeString(user?.firstName) ?? 'U')
     .slice(0, 1)
@@ -178,9 +180,11 @@ function ProfilePage() {
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.adminButton} onClick={onOpenAdminConsole}>
-            {t('Admin console')}
-          </button>
+          {canAccessAdminConsole ? (
+            <button type="button" className={styles.adminButton} onClick={onOpenAdminConsole}>
+              {t('Admin console')}
+            </button>
+          ) : null}
           <button type="button" className={styles.homeButton} onClick={onBackToHome}>
             {t('Back to Home')}
           </button>

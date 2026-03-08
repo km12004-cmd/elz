@@ -1,11 +1,14 @@
 .header {
   position: relative;
   width: 100%;
+  --header-content-min-height: 122px;
+  --header-controls-space: 340px;
   min-height: 146px;
   padding: 12px 0;
-  overflow: hidden;
+  overflow: visible;
   border-bottom: 1px solid var(--color-border-soft);
   background: var(--gradient-header);
+  z-index: 10;
 }
 
 .headerInner {
@@ -14,10 +17,72 @@
 }
 
 .topBar,
+.headerContent,
 .welcomeContent,
 .headerInner {
   position: relative;
   z-index: 1;
+}
+
+.headerContent {
+  min-height: var(--header-content-min-height);
+  padding-right: var(--header-controls-space);
+}
+
+.headerControls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.languageSwitch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--header-action-border);
+  background: var(--header-action-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.languageButton {
+  min-width: 44px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--header-text-muted);
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    background var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.languageButton:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--header-text-main);
+}
+
+.languageButtonActive {
+  background: var(--header-primary-bg);
+  color: var(--header-primary-text);
+  box-shadow: 0 6px 14px rgba(7, 10, 18, 0.16);
+}
+
+.languageButtonText {
+  display: block;
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
 }
 
 .topBar {
@@ -384,9 +449,13 @@
 }
 
 .nickname {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .avatar,
@@ -498,6 +567,8 @@
 
 @media (max-width: 1200px) {
   .header {
+    --header-content-min-height: 116px;
+    --header-controls-space: 326px;
     min-height: 136px;
     padding: 10px 0;
   }
@@ -517,6 +588,8 @@
 
 @media (max-width: 900px) {
   .header {
+    --header-content-min-height: 106px;
+    --header-controls-space: 300px;
     min-height: 122px;
     padding: 8px 0;
   }
@@ -536,6 +609,7 @@
 
 @media (max-width: 640px) {
   .header {
+    --header-content-min-height: 86px;
     min-height: 98px;
     padding: 6px 0;
   }
@@ -554,6 +628,30 @@
     margin-left: 0;
     align-items: stretch;
     gap: 6px;
+  }
+
+  .headerContent {
+    min-height: auto;
+    padding-right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .headerControls {
+    position: static;
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .languageSwitch {
+    padding: 3px;
+  }
+
+  .languageButton {
+    min-width: 40px;
+    height: 27px;
   }
 
   .userTopRow,
@@ -654,6 +752,11 @@
     justify-content: flex-end;
   }
 
+  .headerControls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
   .premiumLink {
     padding: 7px 10px;
   }
@@ -666,5 +769,44 @@
     display: block;
     font-size: 0.76rem;
     line-height: 1.3;
+  }
+}
+
+@media (max-width: 380px) {
+  .header {
+    --header-content-min-height: 72px;
+    min-height: 84px;
+  }
+
+  .headerInner {
+    width: calc(100% - 8px);
+  }
+
+  .welcomeContent h1 {
+    font-size: 1.3rem;
+  }
+
+  .welcomeContent p {
+    font-size: 0.72rem;
+  }
+
+  .authButton {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  .premiumLink {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+
+  .userMenuTrigger {
+    padding: 3px 6px;
+  }
+
+  .avatar,
+  .avatarFallback {
+    width: 28px;
+    height: 28px;
   }
 }

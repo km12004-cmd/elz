@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createFlashcardFolder, createFlashcardInFolder } from '../../api/flashcards';
+import {
+  createFlashcardFolder,
+  createFlashcardInFolder,
+  fetchFlashcardFolders,
+} from '../../api/flashcards';
 import {
   createTrackPairsTemplates,
   fetchTrackPairsTemplates,
@@ -17,6 +21,7 @@ import {
   markTrackAsListened,
   startTrackLearning,
 } from '../../api/songs';
+import { fetchTokenizedLyrics, fetchSongTranslations } from '../../api/lyrics';
 import { useAuth } from '../../auth/useAuth';
 import { useProgress } from '../../contexts/useProgress';
 import { openSong, completeSong } from '../../api/xp';
@@ -118,13 +123,13 @@ function isRetriableRouteError(error) {
 }
 
 function formatLearningStatus(status) {
-  if (typeof status !== 'string' || !status.trim()) return 'Not started';
+  if (typeof status !== 'string' || !status.trim()) return 'Не начато';
 
   const normalized = status.trim().toLowerCase();
-  if (normalized === 'not_started') return 'Not started';
-  if (normalized === 'listened') return 'Listened';
-  if (normalized === 'in_progress') return 'In progress';
-  if (normalized === 'completed') return 'Completed';
+  if (normalized === 'not_started') return 'Не начато';
+  if (normalized === 'listened') return 'Прослушано';
+  if (normalized === 'in_progress') return 'В процессе';
+  if (normalized === 'completed') return 'Завершено';
 
   return normalized
     .split('_')
@@ -387,7 +392,7 @@ function buildConnectorPaths(boardNode, assignments, leftNodeMap, rightNodeMap) 
 
 async function createSongFolderFromCards({ token, songTitle, cards } = {}) {
   const normalizedName = normalizeCardText(songTitle);
-  const folderName = normalizedName || 'Song lesson';
+  const folderName = normalizedName || 'Урок по песне';
   const preparedCards = uniqueTaskCards(cards);
 
   const createdFolder = await createFlashcardFolder({ token, name: folderName });
@@ -404,6 +409,22 @@ async function createSongFolderFromCards({ token, songTitle, cards } = {}) {
   }
 
   return folderId;
+}
+
+function pickAvailableFolderId(folders, ...candidates) {
+  const preparedFolders = Array.isArray(folders) ? folders : [];
+  const availableIds = new Set(
+    preparedFolders.map((folder) => normalizeId(folder?.id)).filter(Boolean),
+  );
+
+  for (const candidate of candidates) {
+    const normalizedCandidate = normalizeId(candidate);
+    if (normalizedCandidate && availableIds.has(normalizedCandidate)) {
+      return normalizedCandidate;
+    }
+  }
+
+  return normalizeId(preparedFolders[0]?.id);
 }
 
 function SongLessonPage() {
@@ -459,6 +480,18 @@ function SongLessonPage() {
   const [taskFiveInputs, setTaskFiveInputs] = useState({});
   const [taskFiveResults, setTaskFiveResults] = useState({});
 
+  const [tokenizedLines, setTokenizedLines] = useState(null);
+  const [translationsMap, setTranslationsMap] = useState(null);
+  const [selectedWord, setSelectedWord] = useState(null);
+  const [lyricsFolders, setLyricsFolders] = useState([]);
+  const [isLoadingLyricsFolders, setIsLoadingLyricsFolders] = useState(false);
+  const [hasLoadedLyricsFolders, setHasLoadedLyricsFolders] = useState(false);
+  const [selectedLyricsFolderId, setSelectedLyricsFolderId] = useState(null);
+  const [lyricsWordActionError, setLyricsWordActionError] = useState('');
+  const [lyricsWordActionSuccess, setLyricsWordActionSuccess] = useState('');
+  const [isAddingLyricsWordCard, setIsAddingLyricsWordCard] = useState(false);
+  const [lyricsFoldersError, setLyricsFoldersError] = useState('');
+
   const [isPreparingTask, setIsPreparingTask] = useState(false);
   const [isCompletingTask, setIsCompletingTask] = useState(false);
   const [isCompletingTaskFour, setIsCompletingTaskFour] = useState(false);
@@ -468,6 +501,8 @@ function SongLessonPage() {
   const [isFinishingPairs, setIsFinishingPairs] = useState(false);
   const [completionModal, setCompletionModal] = useState(null);
 
+  const lyricsContainerRef = useRef(null);
+  const lyricsWordPopoverRef = useRef(null);
   const taskTwoBoardRef = useRef(null);
   const taskTwoLeftNodesRef = useRef(new Map());
   const taskTwoRightNodesRef = useRef(new Map());
@@ -536,6 +571,36 @@ function SongLessonPage() {
     }
   }, [normalizedSongId, token]);
 
+  // Load tokenized lyrics and translations
+  useEffect(() => {
+    if (!token || !normalizedSongId || !song) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [tokenized, tMap] = await Promise.all([
+          fetchTokenizedLyrics({ token, songId: normalizedSongId }).catch(() => null),
+          fetchSongTranslations({ token, songId: normalizedSongId, lang: 'ru' }).catch(
+            () => new Map(),
+          ),
+        ]);
+        if (!cancelled) {
+          setTokenizedLines(tokenized?.lines?.length ? tokenized.lines : null);
+          setTranslationsMap(tMap instanceof Map ? tMap : new Map());
+        }
+      } catch {
+        if (!cancelled) {
+          setTokenizedLines(null);
+          setTranslationsMap(new Map());
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, normalizedSongId, song]);
+
   useEffect(() => {
     setTaskCards([]);
     setTaskError('');
@@ -576,6 +641,17 @@ function SongLessonPage() {
     setLyrics(null);
     setLyricsRu(null);
     setShowTranslation(false);
+    setTokenizedLines(null);
+    setTranslationsMap(null);
+    setSelectedWord(null);
+    setLyricsFolders([]);
+    setIsLoadingLyricsFolders(false);
+    setHasLoadedLyricsFolders(false);
+    setSelectedLyricsFolderId(null);
+    setLyricsFoldersError('');
+    setLyricsWordActionError('');
+    setLyricsWordActionSuccess('');
+    setIsAddingLyricsWordCard(false);
   }, [normalizedSongId]);
 
   const preparedTaskCards = useMemo(() => uniqueTaskCards(taskCards), [taskCards]);
@@ -608,6 +684,43 @@ function SongLessonPage() {
         : [],
     [activeLyrics],
   );
+  const preferredLyricsFolderId = useMemo(
+    () => normalizeId(exerciseOneFolderId) ?? normalizeId(learningState?.folderId) ?? null,
+    [exerciseOneFolderId, learningState?.folderId],
+  );
+  const selectedWordPopoverStyle = useMemo(() => {
+    if (!selectedWord) return null;
+
+    return {
+      top: `${selectedWord.top + 8}px`,
+      left: `clamp(146px, ${selectedWord.left}px, calc(100% - 146px))`,
+    };
+  }, [selectedWord]);
+
+  useEffect(() => {
+    if (!selectedWord) return;
+    const popoverNode = lyricsWordPopoverRef.current;
+    const containerNode = lyricsContainerRef.current;
+    if (!popoverNode || !containerNode) return;
+
+    requestAnimationFrame(() => {
+      const containerRect = containerNode.getBoundingClientRect();
+      const popoverRect = popoverNode.getBoundingClientRect();
+
+      if (popoverRect.left < containerRect.left + 4) {
+        popoverNode.style.left = `${popoverRect.width / 2 + 4}px`;
+      } else if (popoverRect.right > containerRect.right - 4) {
+        popoverNode.style.left = `${containerNode.scrollWidth - popoverRect.width / 2 - 4}px`;
+      }
+
+      if (popoverRect.bottom > containerRect.bottom) {
+        const aboveTop = selectedWord.top - popoverRect.height - 12;
+        if (aboveTop > 0) {
+          popoverNode.style.top = `${aboveTop}px`;
+        }
+      }
+    });
+  }, [selectedWord]);
   const youtubeEmbedUrl = useMemo(() => toYouTubeEmbedUrl(song?.youtubeUrl), [song?.youtubeUrl]);
   const youtubeUrl = typeof song?.youtubeUrl === 'string' ? song.youtubeUrl.trim() : '';
 
@@ -619,7 +732,126 @@ function SongLessonPage() {
   const toggleLyricsTranslation = useCallback(() => {
     if (!canToggleLyrics) return;
     setShowTranslation((previous) => !previous);
+    setSelectedWord(null);
   }, [canToggleLyrics]);
+
+  const loadLyricsFolders = useCallback(async () => {
+    if (!token) return;
+
+    setIsLoadingLyricsFolders(true);
+    setLyricsFoldersError('');
+
+    try {
+      const fetchedFolders = await fetchFlashcardFolders({ token });
+      const normalizedFolders = (Array.isArray(fetchedFolders) ? fetchedFolders : []).filter(
+        (folder) => normalizeId(folder?.id),
+      );
+      const defaultFolderId = pickAvailableFolderId(
+        normalizedFolders,
+        selectedLyricsFolderId,
+        preferredLyricsFolderId,
+      );
+
+      setLyricsFolders(normalizedFolders);
+      setSelectedLyricsFolderId(defaultFolderId ?? null);
+    } catch (error) {
+      setLyricsFolders([]);
+      setSelectedLyricsFolderId(null);
+      setLyricsFoldersError(extractErrorMessage(error, { context: 'cards' }));
+    } finally {
+      setIsLoadingLyricsFolders(false);
+      setHasLoadedLyricsFolders(true);
+    }
+  }, [preferredLyricsFolderId, selectedLyricsFolderId, token]);
+
+  const addSelectedWordToFlashcards = useCallback(async () => {
+    if (!selectedWord) return;
+
+    const folderId = normalizeId(selectedLyricsFolderId);
+    const frontText = normalizeCardText(selectedWord.surface);
+    const backText = normalizeCardText(selectedWord.translation);
+
+    if (!folderId) {
+      setLyricsWordActionError('Сначала выберите папку для карточек.');
+      setLyricsWordActionSuccess('');
+      return;
+    }
+
+    if (!frontText || !backText) {
+      setLyricsWordActionError('Перевод для этого слова отсутствует.');
+      setLyricsWordActionSuccess('');
+      return;
+    }
+
+    setIsAddingLyricsWordCard(true);
+    setLyricsWordActionError('');
+    setLyricsWordActionSuccess('');
+
+    try {
+      await createFlashcardInFolder({
+        token,
+        folderId,
+        frontText,
+        backText,
+      });
+      setLyricsWordActionSuccess('Карточка добавлена');
+    } catch (error) {
+      setLyricsWordActionError(extractErrorMessage(error, { context: 'folder' }));
+    } finally {
+      setIsAddingLyricsWordCard(false);
+    }
+  }, [selectedLyricsFolderId, selectedWord, token]);
+
+  useEffect(() => {
+    if (!selectedWord || hasLoadedLyricsFolders || isLoadingLyricsFolders) return;
+    loadLyricsFolders();
+  }, [hasLoadedLyricsFolders, isLoadingLyricsFolders, loadLyricsFolders, selectedWord]);
+
+  useEffect(() => {
+    if (!lyricsFolders.length) return;
+
+    setSelectedLyricsFolderId((previous) => {
+      const nextFolderId = pickAvailableFolderId(lyricsFolders, previous, preferredLyricsFolderId);
+      return nextFolderId ?? null;
+    });
+  }, [lyricsFolders, preferredLyricsFolderId]);
+
+  useEffect(() => {
+    if (!selectedWord) return undefined;
+
+    const onDocumentPointerDown = (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (lyricsWordPopoverRef.current?.contains(target)) return;
+      if (target.closest('[data-lyrics-word="true"]')) return;
+      setSelectedWord(null);
+    };
+
+    const onDocumentKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setSelectedWord(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', onDocumentPointerDown);
+    document.addEventListener('keydown', onDocumentKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onDocumentPointerDown);
+      document.removeEventListener('keydown', onDocumentKeyDown);
+    };
+  }, [selectedWord]);
+
+  useEffect(() => {
+    if (!lyricsWordActionError && !lyricsWordActionSuccess) return undefined;
+
+    const timer = setTimeout(() => {
+      setLyricsWordActionError('');
+      setLyricsWordActionSuccess('');
+    }, 2200);
+
+    return () => clearTimeout(timer);
+  }, [lyricsWordActionError, lyricsWordActionSuccess]);
 
   const taskTwoItems = useMemo(
     () => (Array.isArray(taskTwoSession?.items) ? taskTwoSession.items : []),
@@ -1836,11 +2068,11 @@ function SongLessonPage() {
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <button type="button" className={styles.ghostButton} onClick={() => navigate(-1)}>
-            Back
+            Назад
           </button>
         </div>
 
-        <h2 className={styles.title}>{song?.title ?? 'Song lesson'}</h2>
+        <h2 className={styles.title}>{song?.title ?? 'Урок по песне'}</h2>
       </header>
 
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
@@ -1850,7 +2082,7 @@ function SongLessonPage() {
         <>
           <div className={styles.loadingRow}>
             <LoadingSpinner size="sm" />
-            <span>Loading song details...</span>
+            <span>Загрузка песни...</span>
           </div>
           <div className={styles.layout}>
             <section className={styles.lyricsPane}>
@@ -1882,10 +2114,10 @@ function SongLessonPage() {
           <section className={styles.lyricsPane}>
             {isTaskOneStage ? (
               <div className={styles.taskPane}>
-                <p className={styles.taskEyebrow}>Task 1</p>
-                <h3 className={styles.taskTitle}>Tap and memorize cards</h3>
+                <p className={styles.taskEyebrow}>Задание 1</p>
+                <h3 className={styles.taskTitle}>Нажимай и запоминай карточки</h3>
                 <p className={styles.taskSubtitle}>
-                  Open each card to see translation, then press OK to continue to Exercise 2.
+                  Открой каждую карточку, чтобы увидеть перевод, затем нажми ОК для перехода к заданию 2.
                 </p>
 
                 {preparedTaskCards.length > 0 ? (
@@ -1897,7 +2129,7 @@ function SongLessonPage() {
                       return (
                         <li key={cardId}>
                           <article className={styles.taskCard}>
-                            <p className={styles.taskCardHint}>Tap card to flip</p>
+                            <p className={styles.taskCardHint}>Нажми, чтобы перевернуть</p>
 
                             <div
                               className={styles.taskFlipArea}
@@ -1931,7 +2163,7 @@ function SongLessonPage() {
                   </ul>
                 ) : (
                   <p className={styles.taskEmpty}>
-                    This track does not have prepared cards for Task 1 yet.
+                    Для этого трека ещё нет подготовленных карточек.
                   </p>
                 )}
               </div>
@@ -1939,25 +2171,25 @@ function SongLessonPage() {
 
             {isTaskTwoStage ? (
               <div className={styles.taskPane}>
-                <p className={styles.taskEyebrow}>Task 2</p>
-                <h3 className={styles.taskTitle}>Match words from Task 1</h3>
+                <p className={styles.taskEyebrow}>Задание 2</p>
+                <h3 className={styles.taskTitle}>Соедини слова из задания 1</h3>
 
                 <p className={styles.pairsProgress}>
-                  {taskTwoResolvedCount}/{taskTwoItems.length || 0} correct · {taskTwoLinkedCount}/
-                  {taskTwoItems.length || 0} connected
+                  {taskTwoResolvedCount}/{taskTwoItems.length || 0} верно · {taskTwoLinkedCount}/
+                  {taskTwoItems.length || 0} связано
                 </p>
 
                 {taskTwoItems.length > 0 && taskTwoOptions.length > 0 ? (
                   <>
                     <p className={styles.pairsHint}>
                       {taskTwoAllCorrect
-                        ? 'All pairs are correct. You can continue to Exercise 3.'
+                        ? 'Все пары верны! Можно переходить к заданию 3.'
                         : taskTwoSelectedPairId
-                        ? 'Choose a right option for selected card, then press Check answers.'
-                        : 'Select a card on the left to connect it with translation on the right.'}
+                        ? 'Выбери правильный вариант, затем нажми «Проверить».'
+                        : 'Выбери слово слева, чтобы соединить с переводом справа.'}
                     </p>
                     <p className={styles.pairsMeta}>
-                      Accuracy: {taskTwoAccuracy}% · Errors: {taskTwoStats.errors} · Checks:{' '}
+                      Точность: {taskTwoAccuracy}% · Ошибки: {taskTwoStats.errors} · Проверки:{' '}
                       {taskTwoStats.checks}
                     </p>
 
@@ -1991,7 +2223,7 @@ function SongLessonPage() {
 
                       <div className={styles.pairsBoard}>
                         <section className={styles.pairsColumn}>
-                          <h4 className={styles.pairsColumnTitle}>Kyrgyz</h4>
+                          <h4 className={styles.pairsColumnTitle}>Кыргызча</h4>
                           <ul className={styles.pairsList} onScroll={onTaskTwoBoardScroll}>
                             {taskTwoItems.map((item, index) => {
                               const pairId = normalizeId(item?.pairId);
@@ -2033,13 +2265,13 @@ function SongLessonPage() {
                                       {item.leftText || '—'}
                                     </span>
                                     {isCorrect ? (
-                                      <span className={styles.pairsStateText}>Correct</span>
+                                      <span className={styles.pairsStateText}>Верно</span>
                                     ) : null}
                                     {isWrong ? (
-                                      <span className={styles.pairsStateText}>Try again</span>
+                                      <span className={styles.pairsStateText}>Ещё раз</span>
                                     ) : null}
                                     {!isCorrect && !isWrong && isLinked ? (
-                                      <span className={styles.pairsStateText}>Linked</span>
+                                      <span className={styles.pairsStateText}>Связано</span>
                                     ) : null}
                                   </button>
                                 </li>
@@ -2049,7 +2281,7 @@ function SongLessonPage() {
                         </section>
 
                         <section className={styles.pairsColumn}>
-                          <h4 className={styles.pairsColumnTitle}>Russian options</h4>
+                          <h4 className={styles.pairsColumnTitle}>Варианты (русский)</h4>
                           <ul className={styles.pairsList} onScroll={onTaskTwoBoardScroll}>
                             {taskTwoOptions.map((option, index) => {
                               const optionId = normalizeId(option?.optionId);
@@ -2116,7 +2348,7 @@ function SongLessonPage() {
                   </>
                 ) : (
                   <p className={styles.taskEmpty}>
-                    No Exercise 2 pairs were returned for this track.
+                    Для этого трека нет пар для задания 2.
                   </p>
                 )}
               </div>
@@ -2124,25 +2356,25 @@ function SongLessonPage() {
 
             {isTaskThreeStage ? (
               <div className={styles.taskPane}>
-                <p className={styles.taskEyebrow}>Task 3</p>
-                <h3 className={styles.taskTitle}>Match phrases from your database</h3>
+                <p className={styles.taskEyebrow}>Задание 3</p>
+                <h3 className={styles.taskTitle}>Соедини фразы из базы данных</h3>
 
                 <p className={styles.pairsProgress}>
-                  {taskThreeResolvedCount}/{pairsItems.length || 0} correct · {taskThreeLinkedCount}
-                  /{pairsItems.length || 0} connected
+                  {taskThreeResolvedCount}/{pairsItems.length || 0} верно · {taskThreeLinkedCount}
+                  /{pairsItems.length || 0} связано
                 </p>
 
                 {pairsItems.length > 0 && pairsOptions.length > 0 ? (
                   <>
                     <p className={styles.pairsHint}>
                       {taskThreeAllCorrect
-                        ? 'All pairs are correct. You can continue to Exercise 4.'
+                        ? 'Все пары верны! Можно переходить к заданию 4.'
                         : taskThreeSelectedPairId
-                        ? 'Choose a right option for selected phrase, then press Check answers.'
-                        : 'Select a phrase on the left to connect it with translation.'}
+                        ? 'Выбери правильный вариант, затем нажми «Проверить».'
+                        : 'Выбери фразу слева, чтобы соединить с переводом.'}
                     </p>
                     <p className={styles.pairsMeta}>
-                      Accuracy: {taskThreeAccuracy}% · Errors: {taskThreeStats.errors} · Checks:{' '}
+                      Точность: {taskThreeAccuracy}% · Ошибки: {taskThreeStats.errors} · Проверки:{' '}
                       {taskThreeStats.checks}
                     </p>
 
@@ -2176,7 +2408,7 @@ function SongLessonPage() {
 
                       <div className={styles.pairsBoard}>
                         <section className={styles.pairsColumn}>
-                          <h4 className={styles.pairsColumnTitle}>Kyrgyz</h4>
+                          <h4 className={styles.pairsColumnTitle}>Кыргызча</h4>
                           <ul className={styles.pairsList} onScroll={onTaskThreeBoardScroll}>
                             {pairsItems.map((item, index) => {
                               const pairId = normalizeId(item?.pairId);
@@ -2218,13 +2450,13 @@ function SongLessonPage() {
                                       {item.leftText || '—'}
                                     </span>
                                     {isCorrect ? (
-                                      <span className={styles.pairsStateText}>Correct</span>
+                                      <span className={styles.pairsStateText}>Верно</span>
                                     ) : null}
                                     {isWrong ? (
-                                      <span className={styles.pairsStateText}>Try again</span>
+                                      <span className={styles.pairsStateText}>Ещё раз</span>
                                     ) : null}
                                     {!isCorrect && !isWrong && isLinked ? (
-                                      <span className={styles.pairsStateText}>Linked</span>
+                                      <span className={styles.pairsStateText}>Связано</span>
                                     ) : null}
                                   </button>
                                 </li>
@@ -2234,7 +2466,7 @@ function SongLessonPage() {
                         </section>
 
                         <section className={styles.pairsColumn}>
-                          <h4 className={styles.pairsColumnTitle}>Russian options</h4>
+                          <h4 className={styles.pairsColumnTitle}>Варианты (русский)</h4>
                           <ul className={styles.pairsList} onScroll={onTaskThreeBoardScroll}>
                             {pairsOptions.map((option, index) => {
                               const optionId = normalizeId(option?.optionId);
@@ -2310,14 +2542,14 @@ function SongLessonPage() {
 
             {isTaskFourStage ? (
               <div className={styles.taskPane}>
-                <p className={styles.taskEyebrow}>Task 4</p>
-                <h3 className={styles.taskTitle}>Type Kyrgyz translation</h3>
+                <p className={styles.taskEyebrow}>Задание 4</p>
+                <h3 className={styles.taskTitle}>Напиши перевод на кыргызском</h3>
                 <p className={styles.taskSubtitle}>
-                  Write each Kyrgyz sentence. Case and punctuation are ignored.
+                  Напиши каждое предложение на кыргызском. Регистр и пунктуация не учитываются.
                 </p>
 
                 <p className={styles.pairsProgress}>
-                  {taskFourCorrectCount}/{taskFourRows.length || 0} correct
+                  {taskFourCorrectCount}/{taskFourRows.length || 0} верно
                 </p>
 
                 {taskFourRows.length > 0 ? (
@@ -2341,15 +2573,15 @@ function SongLessonPage() {
                             type="text"
                             className={inputClassName}
                             value={rowValue}
-                            placeholder="Type in Kyrgyz"
+                            placeholder="Введи на кыргызском"
                             onChange={(event) => onTaskFourInputChange(rowId, event.target.value)}
                             disabled={isCompletingTaskFour || isPreparingPairs}
                           />
                           {rowResult === true ? (
-                            <p className={styles.typingRowState}>Correct</p>
+                            <p className={styles.typingRowState}>Верно</p>
                           ) : null}
                           {rowResult === false ? (
-                            <p className={styles.typingRowState}>Try again</p>
+                            <p className={styles.typingRowState}>Попробуй ещё</p>
                           ) : null}
                         </li>
                       );
@@ -2357,7 +2589,7 @@ function SongLessonPage() {
                   </ol>
                 ) : (
                   <p className={styles.taskEmpty}>
-                    No Exercise 4 prompts were returned for this track.
+                    Для этого трека нет заданий для упражнения 4.
                   </p>
                 )}
               </div>
@@ -2365,14 +2597,14 @@ function SongLessonPage() {
 
             {isTaskFiveStage ? (
               <div className={styles.taskPane}>
-                <p className={styles.taskEyebrow}>Task 5</p>
-                <h3 className={styles.taskTitle}>Type short translation</h3>
+                <p className={styles.taskEyebrow}>Задание 5</p>
+                <h3 className={styles.taskTitle}>Напиши краткий перевод</h3>
                 <p className={styles.taskSubtitle}>
-                  Write each Kyrgyz sentence. Case and punctuation are ignored.
+                  Напиши каждое предложение на кыргызском. Регистр и пунктуация не учитываются.
                 </p>
 
                 <p className={styles.pairsProgress}>
-                  {taskFiveCorrectCount}/{taskFiveRows.length || 0} correct
+                  {taskFiveCorrectCount}/{taskFiveRows.length || 0} верно
                 </p>
 
                 {taskFiveRows.length > 0 ? (
@@ -2396,15 +2628,15 @@ function SongLessonPage() {
                             type="text"
                             className={inputClassName}
                             value={rowValue}
-                            placeholder="Type in Kyrgyz"
+                            placeholder="Введи на кыргызском"
                             onChange={(event) => onTaskFiveInputChange(rowId, event.target.value)}
                             disabled={isCompletingTaskFive || isPreparingPairs}
                           />
                           {rowResult === true ? (
-                            <p className={styles.typingRowState}>Correct</p>
+                            <p className={styles.typingRowState}>Верно</p>
                           ) : null}
                           {rowResult === false ? (
-                            <p className={styles.typingRowState}>Try again</p>
+                            <p className={styles.typingRowState}>Попробуй ещё</p>
                           ) : null}
                         </li>
                       );
@@ -2412,7 +2644,7 @@ function SongLessonPage() {
                   </ol>
                 ) : (
                   <p className={styles.taskEmpty}>
-                    No Exercise 5 prompts were returned for this track.
+                    Для этого трека нет заданий для упражнения 5.
                   </p>
                 )}
               </div>
@@ -2426,10 +2658,10 @@ function SongLessonPage() {
               <>
                 <div className={styles.lyricsHeader}>
                   <div className={styles.lyricsHeading}>
-                    <p className={styles.lyricsTitle}>Lyrics</p>
+                    <p className={styles.lyricsTitle}>Текст песни</p>
                     {activeLyricsLanguage ? (
                       <span className={styles.lyricsTag}>
-                        {activeLyricsLanguage === 'ru' ? 'Russian' : 'Kyrgyz'}
+                        {activeLyricsLanguage === 'ru' ? 'Русский' : 'Кыргызский'}
                       </span>
                     ) : null}
                   </div>
@@ -2442,28 +2674,178 @@ function SongLessonPage() {
                       onClick={toggleLyricsTranslation}
                       disabled={!canToggleLyrics}
                       aria-pressed={showTranslation}>
-                      {showTranslation ? 'Show Kyrgyz' : 'Translate'}
+                      {showTranslation ? 'Кыргызский' : 'Перевести'}
                     </button>
                   ) : null}
                 </div>
                 {lyricsLines.length > 0 ? (
                   <div
+                    ref={lyricsContainerRef}
                     key={`lyrics-${activeLyricsLanguage ?? 'none'}-${
                       showTranslation ? 'ru' : 'kg'
                     }`}
                     className={`${styles.lyricsList} ${styles.lyricsListAnimated}`}
                     data-i18n-skip="true">
-                    {lyricsLines.map((line, index) => (
-                      <p
-                        key={`line-${index}`}
-                        className={styles.lyricsLine}
-                        style={{ '--line-index': index }}>
-                        {line || ' '}
-                      </p>
-                    ))}
+                    {tokenizedLines && activeLyricsLanguage === 'kg' && !showTranslation
+                      ? tokenizedLines.map((line, lineIdx) => (
+                          <p
+                            key={`tline-${line.id}`}
+                            className={styles.lyricsLine}
+                            style={{ '--line-index': lineIdx }}>
+                            {line.tokens.length > 0
+                              ? line.tokens.map((tok) =>
+                                  tok.isWord ? (
+                                    <span
+                                      key={tok.id}
+                                      role="button"
+                                      tabIndex={0}
+                                      data-lyrics-word="true"
+                                      className={`${styles.lyricsWord}${
+                                        selectedWord?.id === tok.id
+                                          ? ` ${styles.lyricsWordActive}`
+                                          : ''
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const containerNode = lyricsContainerRef.current;
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const containerRect = containerNode?.getBoundingClientRect();
+                                        const scrollTop = containerNode?.scrollTop ?? 0;
+                                        const scrollLeft = containerNode?.scrollLeft ?? 0;
+                                        const translation = translationsMap?.get(tok.normalized) ?? null;
+                                        setLyricsWordActionError('');
+                                        setLyricsWordActionSuccess('');
+                                        setSelectedWord({
+                                          id: tok.id,
+                                          surface: tok.surface,
+                                          normalized: tok.normalized,
+                                          translation,
+                                          top: rect.bottom - (containerRect?.top ?? 0) + scrollTop,
+                                          left:
+                                            rect.left -
+                                            (containerRect?.left ?? 0) +
+                                            scrollLeft +
+                                            rect.width / 2,
+                                        });
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                          e.preventDefault();
+                                          e.currentTarget.click();
+                                        }
+                                      }}>
+                                      {tok.surface}
+                                    </span>
+                                  ) : (
+                                    <span key={`s-${tok.id}`}>{tok.surface}</span>
+                                  ),
+                                )
+                              : line.textRaw || ' '}
+                          </p>
+                        ))
+                      : lyricsLines.map((line, index) => (
+                          <p
+                            key={`line-${index}`}
+                            className={styles.lyricsLine}
+                            style={{ '--line-index': index }}>
+                            {line || ' '}
+                          </p>
+                        ))}
+                    {selectedWord ? (
+                      <div
+                        ref={lyricsWordPopoverRef}
+                        className={styles.wordPopover}
+                        style={selectedWordPopoverStyle}
+                        role="dialog"
+                        aria-label="Word translation">
+                        <div className={styles.wordPopoverHeader}>
+                          <span className={styles.wordPopoverWord}>{selectedWord.surface}</span>
+                          <button
+                            type="button"
+                            className={styles.wordPopoverAddButton}
+                            onClick={addSelectedWordToFlashcards}
+                            disabled={
+                              isAddingLyricsWordCard ||
+                              isLoadingLyricsFolders ||
+                              !selectedWord.translation ||
+                              !selectedLyricsFolderId
+                            }
+                            title={
+                              selectedWord.translation
+                                ? 'Добавить в карточки'
+                                : 'Перевод недоступен'
+                            }
+                            aria-label="Добавить в карточки">
+                            {isAddingLyricsWordCard ? '...' : '+'}
+                          </button>
+                        </div>
+
+                        <p className={styles.wordPopoverTranslation}>
+                          {selectedWord.translation ?? 'Перевод пока недоступен'}
+                        </p>
+
+                        <div className={styles.wordPopoverControls}>
+                          <label
+                            htmlFor="lyrics-word-folder-select"
+                            className={styles.wordPopoverLabel}>
+                            Папка карточек
+                          </label>
+                          <select
+                            id="lyrics-word-folder-select"
+                            className={styles.wordPopoverSelect}
+                            value={selectedLyricsFolderId ?? ''}
+                            onChange={(event) => {
+                              setSelectedLyricsFolderId(normalizeId(event.target.value));
+                              setLyricsWordActionError('');
+                              setLyricsWordActionSuccess('');
+                            }}
+                            disabled={
+                              isLoadingLyricsFolders ||
+                              isAddingLyricsWordCard ||
+                              lyricsFolders.length === 0
+                            }>
+                            <option value="" disabled>
+                              {isLoadingLyricsFolders
+                                ? 'Загрузка папок...'
+                                : lyricsFolders.length > 0
+                                ? 'Выбери папку'
+                                : 'Нет доступных папок'}
+                            </option>
+                            {lyricsFolders.map((folder, index) => {
+                              const folderId = normalizeId(folder?.id);
+                              if (!folderId) return null;
+                              return (
+                                <option key={folderId ?? `lyrics-folder-${index}`} value={folderId}>
+                                  {folder.name || 'Без названия'}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+
+                        {lyricsFoldersError ? (
+                          <p className={styles.wordPopoverStateError}>{lyricsFoldersError}</p>
+                        ) : null}
+                        {lyricsFoldersError ? (
+                          <button
+                            type="button"
+                            className={styles.wordPopoverRetryButton}
+                            onClick={loadLyricsFolders}
+                            disabled={isLoadingLyricsFolders}>
+                            Повторить
+                          </button>
+                        ) : null}
+                        {lyricsWordActionError ? (
+                          <p className={styles.wordPopoverStateError}>{lyricsWordActionError}</p>
+                        ) : null}
+                        {lyricsWordActionSuccess ? (
+                          <p className={styles.wordPopoverStateSuccess}>{lyricsWordActionSuccess}</p>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
-                  <p className={styles.lyricsEmpty}>Lyrics are not available for this song yet.</p>
+                  <p className={styles.lyricsEmpty}>Текст песни пока недоступен.</p>
                 )}
               </>
             ) : null}
@@ -2485,15 +2867,15 @@ function SongLessonPage() {
                 </div>
               ) : (
                 <div className={styles.playerFallback}>
-                  YouTube player is unavailable for this song.
+                  YouTube-плеер недоступен для этой песни.
                 </div>
               )}
 
-              <h3 className={styles.trackTitle}>{song.title ?? 'Untitled song'}</h3>
-              <p className={styles.trackArtist}>{song.author ?? 'Unknown artist'}</p>
+              <h3 className={styles.trackTitle}>{song.title ?? 'Без названия'}</h3>
+              <p className={styles.trackArtist}>{song.author ?? 'Неизвестный исполнитель'}</p>
               {youtubeUrl ? (
                 <a className={styles.playerLink} href={youtubeUrl} target="_blank" rel="noreferrer">
-                  Open on YouTube
+                  Открыть на YouTube
                 </a>
               ) : null}
 
@@ -2505,14 +2887,14 @@ function SongLessonPage() {
                       className={styles.primaryActionButton}
                       onClick={completeTaskOne}
                       disabled={isCompletingTask || isPreparingPairs || isPreparingTask}>
-                      {isCompletingTask || isPreparingPairs ? 'Preparing...' : 'OK'}
+                      {isCompletingTask || isPreparingPairs ? 'Подготовка...' : 'ОК'}
                     </button>
                     <button
                       type="button"
                       className={styles.secondaryActionButton}
                       onClick={() => setActiveStage(LESSON_STAGE.SONG)}
                       disabled={isCompletingTask || isPreparingPairs}>
-                      Back to song
+                      Вернуться к песне
                     </button>
                   </>
                 ) : null}
@@ -2535,10 +2917,10 @@ function SongLessonPage() {
                               isFinishingPairs
                         }>
                         {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                          ? 'Checking...'
+                          ? 'Проверка...'
                           : taskTwoAllCorrect
-                          ? 'Start exercise 3'
-                          : 'Check answers'}
+                          ? 'Начать задание 3'
+                          : 'Проверить'}
                       </button>
                     ) : (
                       <button
@@ -2547,8 +2929,8 @@ function SongLessonPage() {
                         onClick={startTaskThreeFromTaskTwo}
                         disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
                         {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                          ? 'Preparing...'
-                          : 'Open exercise 3'}
+                          ? 'Подготовка...'
+                          : 'Открыть задание 3'}
                       </button>
                     )}
 
@@ -2557,7 +2939,7 @@ function SongLessonPage() {
                       className={styles.secondaryActionButton}
                       onClick={() => setActiveStage(LESSON_STAGE.TASK_1)}
                       disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
-                      Back to task 1
+                      К заданию 1
                     </button>
                   </>
                 ) : null}
@@ -2580,10 +2962,10 @@ function SongLessonPage() {
                               isFinishingPairs
                         }>
                         {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                          ? 'Checking...'
+                          ? 'Проверка...'
                           : taskThreeAllCorrect
-                          ? 'Start exercise 4'
-                          : 'Check answers'}
+                          ? 'Начать задание 4'
+                          : 'Проверить'}
                       </button>
                     ) : (
                       <button
@@ -2591,7 +2973,7 @@ function SongLessonPage() {
                         className={styles.primaryActionButton}
                         onClick={startTaskFourFromTaskThree}
                         disabled={isPreparingPairs || isFinishingPairs || isSubmittingPairsAnswer}>
-                        Open exercise 4
+                        Открыть задание 4
                       </button>
                     )}
 
@@ -2600,7 +2982,7 @@ function SongLessonPage() {
                       className={styles.secondaryActionButton}
                       onClick={() => setActiveStage(LESSON_STAGE.TASK_2)}
                       disabled={isFinishingPairs || isSubmittingPairsAnswer || isPreparingPairs}>
-                      Back to task 2
+                      К заданию 2
                     </button>
                   </>
                 ) : null}
@@ -2615,15 +2997,15 @@ function SongLessonPage() {
                         isCompletingTaskFour || isPreparingPairs || taskFourRows.length === 0
                       }>
                       {isCompletingTaskFour || isPreparingPairs
-                        ? 'Preparing...'
-                        : 'Check answers & start exercise 5'}
+                        ? 'Подготовка...'
+                        : 'Проверить и начать задание 5'}
                     </button>
                     <button
                       type="button"
                       className={styles.secondaryActionButton}
                       onClick={() => setActiveStage(LESSON_STAGE.TASK_3)}
                       disabled={isCompletingTaskFour || isPreparingPairs}>
-                      Back to task 3
+                      К заданию 3
                     </button>
                   </>
                 ) : null}
@@ -2637,14 +3019,14 @@ function SongLessonPage() {
                       disabled={
                         isCompletingTaskFive || isPreparingPairs || taskFiveRows.length === 0
                       }>
-                      {isCompletingTaskFive || isPreparingPairs ? 'Finishing...' : 'Finish lesson'}
+                      {isCompletingTaskFive || isPreparingPairs ? 'Завершение...' : 'Завершить урок'}
                     </button>
                     <button
                       type="button"
                       className={styles.secondaryActionButton}
                       onClick={() => setActiveStage(LESSON_STAGE.TASK_4)}
                       disabled={isCompletingTaskFive || isPreparingPairs}>
-                      Back to task 4
+                      К заданию 4
                     </button>
                   </>
                 ) : null}
@@ -2659,43 +3041,43 @@ function SongLessonPage() {
                     className={styles.primaryActionButton}
                     onClick={openTaskOne}
                     disabled={isPreparingTask}>
-                    {isPreparingTask ? 'Preparing...' : 'Ready to learn'}
+                    {isPreparingTask ? 'Подготовка...' : 'Начать обучение'}
                   </button>
                 ) : null}
               </div>
 
               <span className={styles.trackBadge}>
                 {isTaskFiveStage
-                  ? 'Exercise 5: typing'
+                  ? 'Задание 5: ввод текста'
                   : isTaskFourStage
-                  ? 'Exercise 4: typing'
+                  ? 'Задание 4: ввод текста'
                   : isTaskThreeStage
-                  ? 'Exercise 3: matching'
+                  ? 'Задание 3: соединение'
                   : isTaskTwoStage
-                  ? 'Exercise 2: matching'
+                  ? 'Задание 2: соединение'
                   : isTaskOneStage
-                  ? 'Exercise 1: flashcards'
-                  : 'Listening mode'}
+                  ? 'Задание 1: карточки'
+                  : 'Режим прослушивания'}
               </span>
             </article>
 
             <article className={styles.infoPanel}>
-              <h3 className={styles.sidebarTitle}>Details</h3>
+              <h3 className={styles.sidebarTitle}>Детали</h3>
               <dl className={styles.metaList}>
                 <div className={styles.metaRow}>
-                  <dt>Artist</dt>
-                  <dd>{song.author ?? 'Unknown artist'}</dd>
+                  <dt>Исполнитель</dt>
+                  <dd>{song.author ?? 'Неизвестный исполнитель'}</dd>
                 </div>
                 <div className={styles.metaRow}>
-                  <dt>Year</dt>
+                  <dt>Год</dt>
                   <dd>{song.releaseYear ?? '—'}</dd>
                 </div>
                 <div className={styles.metaRow}>
-                  <dt>Duration</dt>
+                  <dt>Длительность</dt>
                   <dd>{formatDuration(song.durationSeconds)}</dd>
                 </div>
                 <div className={styles.metaRow}>
-                  <dt>Learning</dt>
+                  <dt>Обучение</dt>
                   <dd>{learningStatus}</dd>
                 </div>
               </dl>
@@ -2711,7 +3093,7 @@ function SongLessonPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="completion-modal-title">
-            <p className={styles.completionModalEyebrow}>Lesson complete</p>
+            <p className={styles.completionModalEyebrow}>Урок завершён</p>
             <h3 id="completion-modal-title" className={styles.completionModalTitle}>
               {completionModal.title}
             </h3>
@@ -2719,21 +3101,21 @@ function SongLessonPage() {
 
             <dl className={styles.completionStats}>
               <div className={styles.completionStatItem}>
-                <dt>Accuracy</dt>
+                <dt>Точность</dt>
                 <dd>{completionModal.accuracy}%</dd>
               </div>
               <div className={styles.completionStatItem}>
-                <dt>Correct</dt>
+                <dt>Правильно</dt>
                 <dd>
                   {completionModal.correct}/{completionModal.total}
                 </dd>
               </div>
               <div className={styles.completionStatItem}>
-                <dt>Mistakes</dt>
+                <dt>Ошибки</dt>
                 <dd>{completionModal.errors}</dd>
               </div>
               <div className={styles.completionStatItem}>
-                <dt>Checks</dt>
+                <dt>Проверки</dt>
                 <dd>{completionModal.checks}</dd>
               </div>
             </dl>
@@ -2749,7 +3131,7 @@ function SongLessonPage() {
                 type="button"
                 className={styles.primaryActionButton}
                 onClick={goToMainFromCompletionModal}>
-                Back to main screen
+                На главную
               </button>
             </div>
           </article>

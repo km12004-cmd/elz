@@ -289,9 +289,9 @@ export async function createFlashcardInFolder({ token, folderId, frontText, back
         body,
       }),
     [
+      { front: normalizedFrontText, back: normalizedBackText },
       { front_text: normalizedFrontText, back_text: normalizedBackText },
       { prompt_text: normalizedFrontText, answer_text: normalizedBackText },
-      { front: normalizedFrontText, back: normalizedBackText },
     ],
   );
 

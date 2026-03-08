@@ -7,9 +7,30 @@
   align-items: start;
 }
 
+.songsSection,
 .levelsSection,
 .artistsSection {
   grid-column: 1 / -1;
+}
+
+.songsGrid {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(145px, 200px);
+  grid-template-rows: 1fr;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-inline: 4px;
+}
+
+.songsGrid > .itemCard {
+  scroll-snap-align: start;
 }
 
 .playlistsSection,
@@ -718,6 +739,7 @@
   scrollbar-width: thin;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
+  scroll-padding-inline: 4px;
 }
 
 .collectionGrid > .itemCard {
@@ -874,7 +896,610 @@
   font-size: 13px;
 }
 
+.guestScreen {
+  position: relative;
+  display: flex;
+  min-height: clamp(500px, 68vh, 740px);
+  padding: clamp(14px, 2vw, 24px);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 36px 22px 34px 20px;
+  background:
+    radial-gradient(circle at 12% 12%, var(--color-accent-soft-hover), transparent 26%),
+    radial-gradient(circle at 88% 88%, rgba(96, 165, 250, 0.12), transparent 28%),
+    var(--gradient-dashboard-block);
+  box-shadow: var(--shadow-lifted);
+  overflow: hidden;
+  --guest-surface-strong: rgba(255, 255, 255, 0.82);
+  --guest-surface-soft: rgba(255, 255, 255, 0.58);
+  --guest-illustration-shadow: 0 24px 52px rgba(30, 37, 52, 0.15);
+  --guest-outline: rgba(16, 20, 34, 0.12);
+}
+
+[data-theme='dark'] .guestScreen {
+  --guest-surface-strong: rgba(17, 28, 46, 0.9);
+  --guest-surface-soft: rgba(17, 28, 46, 0.72);
+  --guest-illustration-shadow: 0 28px 60px rgba(0, 0, 0, 0.36);
+  --guest-outline: rgba(196, 210, 245, 0.18);
+}
+
+.guestScreen::before,
+.guestScreen::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.guestScreen::before {
+  width: 360px;
+  height: 360px;
+  top: -160px;
+  right: -70px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.26) 0%, transparent 72%);
+}
+
+.guestScreen::after {
+  width: 280px;
+  height: 280px;
+  left: -100px;
+  bottom: -110px;
+  background: radial-gradient(circle, var(--color-accent-soft-hover) 0%, transparent 72%);
+}
+
+.guestScene {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 100%;
+}
+
+.guestMainPanel {
+  position: relative;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  gap: clamp(20px, 2.6vw, 36px);
+  align-items: center;
+  min-height: 100%;
+  padding: clamp(20px, 2.4vw, 30px);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 30px 20px 28px 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0%, transparent 44%),
+    linear-gradient(160deg, var(--guest-surface-strong) 0%, var(--guest-surface-soft) 100%);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.guestMainPanel::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px 16px 22px 14px;
+  pointer-events: none;
+}
+
+.guestArtwork {
+  position: relative;
+  min-height: clamp(320px, 34vw, 460px);
+  border-radius: 28px 22px 34px 20px;
+  border: 1px solid var(--guest-outline);
+  background:
+    radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.46) 0%, transparent 32%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.22) 0%, rgba(127, 116, 255, 0.08) 100%),
+    var(--gradient-hero);
+  overflow: hidden;
+  box-shadow: var(--guest-illustration-shadow);
+  width: 100%;
+}
+
+[data-theme='dark'] .guestArtwork {
+  background:
+    radial-gradient(circle at 24% 24%, rgba(232, 239, 255, 0.22) 0%, transparent 32%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.04) 0%, rgba(167, 152, 255, 0.12) 100%),
+    var(--gradient-hero);
+}
+
+.guestArtworkGlow {
+  position: absolute;
+  inset: auto auto 18% 16%;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, transparent 72%);
+}
+
+.guestArtworkCard {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: clamp(118px, 30%, 154px);
+  padding: 16px;
+  border-radius: 22px 16px 20px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 36px rgba(14, 16, 24, 0.14);
+}
+
+[data-theme='dark'] .guestArtworkCard {
+  background: rgba(18, 28, 47, 0.86);
+  border-color: rgba(216, 226, 255, 0.18);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.34);
+}
+
+.guestArtworkCardTop {
+  top: 14%;
+  left: 12%;
+  transform: rotate(-14deg);
+}
+
+.guestArtworkCardBottom {
+  right: 12%;
+  bottom: 16%;
+  transform: rotate(12deg);
+}
+
+.guestArtworkBadge,
+.guestArtworkBadgeAlt,
+.guestArtworkPillTop,
+.guestArtworkPillBottom,
+.guestArtworkCaption {
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guestArtworkBadge,
+.guestArtworkBadgeAlt {
+  align-self: flex-start;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #ffffff;
+}
+
+.guestArtworkBadge {
+  background: linear-gradient(135deg, #ff7d4f 0%, #ff5764 100%);
+}
+
+.guestArtworkBadgeAlt {
+  background: linear-gradient(135deg, #2db789 0%, #5bc5ff 100%);
+}
+
+.guestArtworkLineLong,
+.guestArtworkLineShort {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(121, 132, 177, 0.24);
+}
+
+[data-theme='dark'] .guestArtworkLineLong,
+[data-theme='dark'] .guestArtworkLineShort {
+  background: rgba(201, 214, 255, 0.18);
+}
+
+.guestArtworkLineLong {
+  width: 100%;
+}
+
+.guestArtworkLineShort {
+  width: 62%;
+}
+
+.guestArtworkWave {
+  width: 100%;
+  height: 18px;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(127, 116, 255, 0.85) 0 10px,
+      rgba(127, 116, 255, 0.18) 10px 18px
+    );
+}
+
+[data-theme='dark'] .guestArtworkWave {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(184, 172, 255, 0.92) 0 10px,
+      rgba(184, 172, 255, 0.2) 10px 18px
+    );
+}
+
+.guestArtworkOrb {
+  position: absolute;
+  top: 24%;
+  left: 50%;
+  width: clamp(124px, 28%, 150px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+}
+
+.guestArtworkOrbRing,
+.guestArtworkOrbCore {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.guestArtworkOrbRing {
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  animation: guestPulseRing 6s linear infinite;
+}
+
+.guestArtworkOrbCore {
+  inset: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 18px 32px rgba(10, 12, 18, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.66);
+}
+
+[data-theme='dark'] .guestArtworkOrbCore {
+  background: rgba(245, 248, 255, 0.96);
+}
+
+.guestArtworkLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(14, 18, 28, 0.14));
+}
+
+.guestArtworkNote {
+  position: absolute;
+  top: 18%;
+  right: 18%;
+  width: 22px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  transform: rotate(16deg);
+}
+
+.guestArtworkNote::before,
+.guestArtworkNote::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+}
+
+.guestArtworkNote::before {
+  top: -6px;
+  right: -14px;
+  width: 16px;
+  height: 18px;
+  border-radius: 7px;
+}
+
+.guestArtworkNote::after {
+  bottom: -7px;
+  left: -7px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.guestArtworkPillTop,
+.guestArtworkPillBottom {
+  position: absolute;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(13, 15, 23, 0.16);
+}
+
+.guestArtworkPillTop {
+  left: 16%;
+  bottom: 18%;
+  background: linear-gradient(135deg, #52b788 0%, #2ec4b6 100%);
+}
+
+.guestArtworkPillBottom {
+  right: 18%;
+  top: 24%;
+  background: linear-gradient(135deg, #ffb703 0%, #ff7b00 100%);
+}
+
+.guestArtworkCaption {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(7, 10, 18, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+.guestCopy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.guestEyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 11px;
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.guestTitle {
+  max-width: 12ch;
+  font-size: clamp(34px, 4.2vw, 66px);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  color: var(--color-text-main);
+  overflow-wrap: anywhere;
+}
+
+.guestDescription {
+  max-width: 34ch;
+  color: var(--color-text-secondary);
+  font-size: clamp(15px, 1.45vw, 18px);
+  line-height: 1.45;
+}
+
+.guestActionRow,
+.guestPopupActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.guestPrimaryCta,
+.guestSecondaryCta,
+.guestPopupPrimary,
+.guestPopupSecondary {
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.guestPrimaryCta,
+.guestPopupPrimary {
+  border: 1.5px solid var(--border-primary-action);
+  background: var(--gradient-primary-action);
+  color: var(--color-text-on-accent);
+  box-shadow: 0 12px 26px rgba(255, 104, 75, 0.2);
+}
+
+.guestPrimaryCta:hover,
+.guestPopupPrimary:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.08);
+}
+
+.guestSecondaryCta,
+.guestPopupSecondary {
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+}
+
+.guestSecondaryCta:hover,
+.guestPopupSecondary:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+}
+
+.guestSignalRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.guestSignalPill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: var(--shadow-soft);
+}
+
+.guestSupportText {
+  max-width: 36ch;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.guestPopup {
+  position: relative;
+  align-self: start;
+  padding: 22px 18px 18px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 26px 18px 24px 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 36%),
+    var(--color-surface-glass);
+  box-shadow: var(--shadow-modal);
+  backdrop-filter: blur(16px);
+  transform: translateY(12px);
+}
+
+[data-theme='dark'] .guestPopup {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 36%),
+    var(--color-surface-glass);
+}
+
+.guestPopupHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.guestPopupKicker {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guestPopupTitle {
+  font-size: 22px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--color-text-main);
+}
+
+.guestPopupText {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.guestOptionGroup + .guestOptionGroup {
+  margin-top: 18px;
+}
+
+.guestOptionLabel {
+  margin-bottom: 10px;
+  color: var(--color-text-main);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.guestOptionRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.guestOptionButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.guestOptionButton:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+}
+
+.guestOptionButtonActive {
+  border-color: var(--color-border-accent);
+  background: var(--color-accent-soft);
+  box-shadow: 0 0 0 1px var(--color-accent-border-soft) inset;
+}
+
+.guestOptionBadge,
+.guestOptionSwatch {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.guestOptionBadge {
+  display: grid;
+  place-items: center;
+  background: var(--gradient-hero);
+  color: #ffffff;
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.guestOptionSwatch {
+  border: 1px solid var(--color-border-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.guestOptionSwatchLight {
+  background: linear-gradient(135deg, #fef7d7 0%, #f6fbff 100%);
+}
+
+.guestOptionSwatchDark {
+  background: linear-gradient(135deg, #101a2b 0%, #314d8b 100%);
+}
+
+.guestOptionTitle {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.guestPopupActions {
+  margin-top: 22px;
+}
+
+.guestPopupActions > * {
+  flex: 1 1 0;
+  justify-content: center;
+}
+
+@keyframes guestPulseRing {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 1180px) {
+  .guestMainPanel {
+    grid-template-columns: minmax(300px, 0.88fr) minmax(360px, 1.12fr);
+    gap: 18px;
+  }
+
   .playlistsSection,
   .profileSection,
   .foldersSection,
@@ -895,6 +1520,39 @@
 }
 
 @media (max-width: 900px) {
+  .guestScreen {
+    padding: 14px;
+    border-radius: 28px 18px 26px 16px;
+  }
+
+  .guestScene {
+    gap: 16px;
+  }
+
+  .guestMainPanel {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .guestMainPanel::after {
+    inset: 12px;
+  }
+
+  .guestArtwork {
+    min-height: 300px;
+  }
+
+  .guestArtworkOrbCore {
+    inset: 11px;
+    padding: 12px;
+  }
+
+  .guestTitle {
+    max-width: 12ch;
+    font-size: clamp(34px, 6vw, 54px);
+  }
+
   .dashboard {
     gap: 10px;
   }
@@ -938,6 +1596,74 @@
 }
 
 @media (max-width: 640px) {
+  .guestScreen {
+    padding: 12px;
+    border-radius: 22px 16px 20px 14px;
+  }
+
+  .guestMainPanel {
+    padding: 13px;
+    border-radius: 22px 16px 20px 14px;
+  }
+
+  .guestMainPanel::after {
+    inset: 10px;
+    border-radius: 18px 12px 16px 10px;
+  }
+
+  .guestArtwork {
+    min-height: 252px;
+    border-radius: 20px 16px 24px 16px;
+  }
+
+  .guestArtworkCard {
+    width: 128px;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .guestArtworkOrb {
+    width: 118px;
+  }
+
+  .guestArtworkOrbCore {
+    padding: 11px;
+  }
+
+  .guestArtworkPillTop,
+  .guestArtworkPillBottom,
+  .guestArtworkCaption {
+    font-size: 10px;
+  }
+
+  .guestCopy {
+    gap: 14px;
+    align-items: stretch;
+  }
+
+  .guestEyebrow {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .guestTitle {
+    max-width: none;
+    font-size: 30px;
+  }
+
+  .guestDescription {
+    font-size: 13px;
+    max-width: none;
+  }
+
+  .guestActionRow {
+    flex-direction: column;
+  }
+
+  .guestActionRow > * {
+    width: 100%;
+  }
+
   .dashboard {
     gap: 9px;
   }
@@ -964,9 +1690,26 @@
     gap: 8px;
   }
 
+  .blockTitle {
+    font-size: 17px;
+  }
+
+  .blockSubtitle {
+    font-size: 11px;
+  }
+
   .itemGrid {
     grid-auto-columns: minmax(132px, 176px);
     gap: 9px;
+  }
+
+  .songsGrid {
+    grid-auto-columns: minmax(120px, 160px);
+  }
+
+  .artistsRow {
+    gap: 12px;
+    padding: 4px 2px;
   }
 
   .profileAuthRow {
@@ -1040,9 +1783,109 @@
   .artistName {
     font-size: 11px;
   }
+
+  .itemTitle {
+    font-size: 13px;
+  }
+
+  .itemMeta {
+    font-size: 10px;
+  }
+
+  .primaryButton {
+    padding: 7px 11px;
+    font-size: 11px;
+  }
+
+  .levelCard {
+    min-height: 110px;
+    padding: 10px;
+  }
+
+  .levelBadge {
+    font-size: 9px;
+    padding: 3px 7px;
+  }
+
+  .levelName {
+    font-size: 14px;
+  }
+
+  .levelDescription {
+    font-size: 11px;
+  }
+
+  .levelMeta {
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 430px) {
+  .guestScreen {
+    padding: 10px;
+  }
+
+  .guestMainPanel {
+    padding: 12px;
+  }
+
+  .guestArtwork {
+    min-height: 216px;
+  }
+
+  .guestArtworkCard {
+    width: 112px;
+    padding: 10px;
+  }
+
+  .guestArtworkOrb {
+    width: 102px;
+  }
+
+  .guestArtworkOrbCore {
+    inset: 12px;
+    padding: 9px;
+  }
+
+  .guestArtworkPillTop {
+    left: 12%;
+    bottom: 14%;
+  }
+
+  .guestArtworkPillBottom {
+    right: 12%;
+    top: 19%;
+  }
+
+  .guestTitle {
+    font-size: 30px;
+  }
+
+  .guestSignalRow {
+    gap: 8px;
+  }
+
+  .guestSignalPill {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .dashboard {
+    gap: 8px;
+  }
+
+  .block {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .block::after {
+    width: 28px;
+    height: 28px;
+    top: 8px;
+    right: 10px;
+  }
+
   .streakText {
     display: none;
   }
@@ -1059,5 +1902,44 @@
   .authButtons {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .songsGrid {
+    grid-auto-columns: minmax(110px, 145px);
+  }
+
+  .itemGrid {
+    grid-auto-columns: minmax(115px, 155px);
+    gap: 8px;
+  }
+
+  .itemMainButton {
+    padding: 9px 10px 8px;
+    gap: 3px;
+  }
+
+  .itemIcon {
+    font-size: 18px;
+  }
+
+  .guestProfileHint {
+    font-size: 11px;
+  }
+
+  .artistCard {
+    width: 58px;
+  }
+
+  .artistAvatar {
+    width: 58px;
+    height: 58px;
+  }
+
+  .artistAvatarFallback {
+    font-size: 15px;
+  }
+
+  .artistName {
+    font-size: 10px;
   }
 }

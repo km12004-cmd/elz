@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchArtists } from '../../api/artists';
-import { fetchPlaylists, fetchPlaylistDetail, createPlaylist, deletePlaylist } from '../../api/playlists';
-import { fetchFlashcardFolders, createFlashcardFolder, deleteFlashcardFolder } from '../../api/flashcards';
+import { fetchSongsCatalog } from '../../api/songs';
+import {
+  fetchPlaylists,
+  fetchPlaylistDetail,
+  createPlaylist,
+  deletePlaylist,
+} from '../../api/playlists';
+import {
+  fetchFlashcardFolders,
+  createFlashcardFolder,
+  deleteFlashcardFolder,
+} from '../../api/flashcards';
 import { useAuth } from '../../auth/useAuth';
-import { useTheme } from '../../contexts/useTheme';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
@@ -14,6 +23,7 @@ import XpWidget from '../../components/layout/Header/XpWidget';
 import AuthModal from '../../components/auth/AuthModal';
 import SignInForm from '../../components/auth/SignInForm';
 import SignUpForm from '../../components/auth/SignUpForm';
+import logo from '../../assets/images/logo.svg';
 import CreatePlaylistModal from '../PlaylistPage/CreatePlaylistModal';
 import CreateFolderModal from '../CardsPage/CreateFolderModal';
 import styles from './dashboardPage.module.css';
@@ -68,12 +78,16 @@ function hasPremiumAccess(value) {
 const FOLDER_NAME_MAX_LENGTH = 60;
 const PLAYLIST_TITLE_MAX_LENGTH = 60;
 const PLAYLIST_DESCRIPTION_MAX_LENGTH = 200;
+const GUEST_SIGNAL_LABELS = Object.freeze(['Songs', 'My Flashcards', 'Profile & progress']);
 
 function DashboardPage() {
   const { token, isAuthenticated, user, signOut } = useAuth();
-  const { isDarkTheme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const userMenuRef = useRef(null);
+
+  // Songs state
+  const [songs, setSongs] = useState([]);
+  const [isLoadingSongs, setIsLoadingSongs] = useState(false);
+  const [songsError, setSongsError] = useState('');
 
   // Artists state
   const [artists, setArtists] = useState([]);
@@ -104,13 +118,10 @@ function DashboardPage() {
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [authView, setAuthView] = useState(null);
 
-  const nickname = user?.nickname ?? 'User';
   const currentStreak = normalizeStreak(user?.streakCurrent ?? user?.streak_current);
   const streakLabel = formatStreakDays(currentStreak);
-  const nextThemeLabel = isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme';
   const isPremiumUser = hasPremiumAccess(user?.isPremium ?? user?.is_premium);
   const premiumButtonLabel = isPremiumUser ? 'Premium on' : 'Buy Premium';
   const premiumButtonTitle = isPremiumUser ? 'Premium is active' : 'Go to premium plans';
@@ -121,12 +132,15 @@ function DashboardPage() {
     setToastType(type);
   };
 
-  const handleUnauthorizedError = useCallback((error) => {
-    if (error?.status !== 401) return false;
-    setAuthView('signIn');
-    signOut();
-    return true;
-  }, [signOut]);
+  const handleUnauthorizedError = useCallback(
+    (error) => {
+      if (error?.status !== 401) return false;
+      setAuthView('signIn');
+      signOut();
+      return true;
+    },
+    [signOut],
+  );
 
   useEffect(() => {
     if (!toastMessage) return undefined;
@@ -134,30 +148,46 @@ function DashboardPage() {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
+  // Load songs
   useEffect(() => {
-    if (!isUserMenuOpen) return undefined;
-
-    const onDocumentClick = (event) => {
-      if (!userMenuRef.current?.contains(event.target)) {
-        setIsUserMenuOpen(false);
+    let cancelled = false;
+    const load = async () => {
+      if (!isAuthenticated) {
+        setSongs([]);
+        setSongsError('');
+        setIsLoadingSongs(false);
+        return;
+      }
+      setIsLoadingSongs(true);
+      setSongsError('');
+      try {
+        const data = await fetchSongsCatalog({ token });
+        if (!cancelled) setSongs(Array.isArray(data) ? data : []);
+      } catch (error) {
+        if (!cancelled) {
+          setSongs([]);
+          setSongsError(extractErrorMessage(error, { context: 'songs' }));
+        }
+      } finally {
+        if (!cancelled) setIsLoadingSongs(false);
       }
     };
-    const onDocumentKeyDown = (event) => {
-      if (event.key === 'Escape') setIsUserMenuOpen(false);
-    };
-
-    document.addEventListener('pointerdown', onDocumentClick);
-    document.addEventListener('keydown', onDocumentKeyDown);
+    load();
     return () => {
-      document.removeEventListener('pointerdown', onDocumentClick);
-      document.removeEventListener('keydown', onDocumentKeyDown);
+      cancelled = true;
     };
-  }, [isUserMenuOpen]);
+  }, [token, isAuthenticated]);
 
   // Load artists
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      if (!isAuthenticated) {
+        setArtists([]);
+        setArtistsError('');
+        setIsLoadingArtists(false);
+        return;
+      }
       setIsLoadingArtists(true);
       setArtistsError('');
       try {
@@ -173,10 +203,14 @@ function DashboardPage() {
       }
     };
     load();
-    return () => { cancelled = true; };
-  }, [token]);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, isAuthenticated]);
 
-  useEffect(() => { setFailedAvatarByKey({}); }, [artists]);
+  useEffect(() => {
+    setFailedAvatarByKey({});
+  }, [artists]);
 
   // Load playlists
   const loadPlaylists = useCallback(async () => {
@@ -207,7 +241,9 @@ function DashboardPage() {
     }
   }, [token, isAuthenticated, handleUnauthorizedError]);
 
-  useEffect(() => { loadPlaylists(); }, [loadPlaylists]);
+  useEffect(() => {
+    loadPlaylists();
+  }, [loadPlaylists]);
 
   // Load folders
   const loadFolders = useCallback(async () => {
@@ -226,7 +262,9 @@ function DashboardPage() {
     }
   }, [token, isAuthenticated, handleUnauthorizedError]);
 
-  useEffect(() => { loadFolders(); }, [loadFolders]);
+  useEffect(() => {
+    loadFolders();
+  }, [loadFolders]);
 
   useEffect(() => {
     if (isAuthenticated) return;
@@ -240,11 +278,27 @@ function DashboardPage() {
   const handleCreatePlaylist = async ({ title, description }) => {
     const normalizedTitle = normalizeText(title);
     const normalizedDescription = normalizeText(description);
-    if (!normalizedTitle) { setCreatePlaylistError('Playlist title is required'); return false; }
-    if (normalizedTitle.length > PLAYLIST_TITLE_MAX_LENGTH) { setCreatePlaylistError(`Title must be ${PLAYLIST_TITLE_MAX_LENGTH} characters or less`); return false; }
-    if (normalizedDescription.length > PLAYLIST_DESCRIPTION_MAX_LENGTH) { setCreatePlaylistError(`Description must be ${PLAYLIST_DESCRIPTION_MAX_LENGTH} characters or less`); return false; }
-    const isDuplicate = playlists.some((p) => normalizeText(p.title).toLowerCase() === normalizedTitle.toLowerCase());
-    if (isDuplicate) { setCreatePlaylistError('A playlist with this title already exists'); return false; }
+    if (!normalizedTitle) {
+      setCreatePlaylistError('Playlist title is required');
+      return false;
+    }
+    if (normalizedTitle.length > PLAYLIST_TITLE_MAX_LENGTH) {
+      setCreatePlaylistError(`Title must be ${PLAYLIST_TITLE_MAX_LENGTH} characters or less`);
+      return false;
+    }
+    if (normalizedDescription.length > PLAYLIST_DESCRIPTION_MAX_LENGTH) {
+      setCreatePlaylistError(
+        `Description must be ${PLAYLIST_DESCRIPTION_MAX_LENGTH} characters or less`,
+      );
+      return false;
+    }
+    const isDuplicate = playlists.some(
+      (p) => normalizeText(p.title).toLowerCase() === normalizedTitle.toLowerCase(),
+    );
+    if (isDuplicate) {
+      setCreatePlaylistError('A playlist with this title already exists');
+      return false;
+    }
 
     setIsCreatingPlaylist(true);
     setCreatePlaylistError('');
@@ -265,7 +319,10 @@ function DashboardPage() {
 
   const confirmDeletePlaylist = async () => {
     const playlistId = normalizeId(playlistToDelete?.id);
-    if (!playlistId) { setPlaylistToDelete(null); return; }
+    if (!playlistId) {
+      setPlaylistToDelete(null);
+      return;
+    }
     setDeletingPlaylistId(playlistId);
     try {
       await deletePlaylist({ token, playlistId });
@@ -283,10 +340,21 @@ function DashboardPage() {
   // Folder actions
   const handleCreateFolder = async (rawName) => {
     const name = normalizeText(rawName);
-    if (!name) { setCreateFolderError('Folder name is required'); return false; }
-    if (name.length > FOLDER_NAME_MAX_LENGTH) { setCreateFolderError(`Folder name must be ${FOLDER_NAME_MAX_LENGTH} characters or less`); return false; }
-    const isDuplicate = folders.some((f) => normalizeText(f.name).toLowerCase() === name.toLowerCase());
-    if (isDuplicate) { setCreateFolderError('A folder with this name already exists'); return false; }
+    if (!name) {
+      setCreateFolderError('Folder name is required');
+      return false;
+    }
+    if (name.length > FOLDER_NAME_MAX_LENGTH) {
+      setCreateFolderError(`Folder name must be ${FOLDER_NAME_MAX_LENGTH} characters or less`);
+      return false;
+    }
+    const isDuplicate = folders.some(
+      (f) => normalizeText(f.name).toLowerCase() === name.toLowerCase(),
+    );
+    if (isDuplicate) {
+      setCreateFolderError('A folder with this name already exists');
+      return false;
+    }
 
     setIsCreatingFolder(true);
     setCreateFolderError('');
@@ -307,7 +375,10 @@ function DashboardPage() {
 
   const confirmDeleteFolder = async () => {
     const folderId = normalizeId(folderToDelete?.id);
-    if (!folderId) { setFolderToDelete(null); return; }
+    if (!folderId) {
+      setFolderToDelete(null);
+      return;
+    }
     setDeletingFolderId(folderId);
     try {
       await deleteFlashcardFolder({ token, folderId });
@@ -322,14 +393,128 @@ function DashboardPage() {
     }
   };
 
-  const onLogout = () => {
-    setIsUserMenuOpen(false);
-    signOut();
-    navigate('/', { replace: true });
-  };
+  if (!isAuthenticated) {
+    return (
+      <>
+        <section className={styles.guestScreen}>
+          <div className={styles.guestScene}>
+            <div className={styles.guestMainPanel}>
+              <div className={styles.guestArtwork} aria-hidden="true" data-i18n-skip="true">
+                <div className={styles.guestArtworkGlow} />
+                <div className={`${styles.guestArtworkCard} ${styles.guestArtworkCardTop}`}>
+                  <span className={styles.guestArtworkBadge}>KG</span>
+                  <span className={styles.guestArtworkLineLong} />
+                  <span className={styles.guestArtworkLineShort} />
+                </div>
+                <div className={`${styles.guestArtworkCard} ${styles.guestArtworkCardBottom}`}>
+                  <span className={styles.guestArtworkBadgeAlt}>RU</span>
+                  <span className={styles.guestArtworkWave} />
+                </div>
+                <div className={styles.guestArtworkOrb}>
+                  <span className={styles.guestArtworkOrbRing} />
+                  <span className={styles.guestArtworkOrbCore}>
+                    <img src={logo} alt="" className={styles.guestArtworkLogo} />
+                  </span>
+                </div>
+                <div className={styles.guestArtworkNote} />
+                <div className={styles.guestArtworkPillTop}>SONG</div>
+                <div className={styles.guestArtworkPillBottom}>CARD</div>
+                <div className={styles.guestArtworkCaption}>Artwork placeholder</div>
+              </div>
+
+              <div className={styles.guestCopy}>
+                <span className={styles.guestEyebrow}>A calm place to begin</span>
+                <h2 className={styles.guestTitle}>Learn Kyrgyz through songs that stay with you.</h2>
+                <p className={styles.guestDescription}>
+                  Set the language and theme in the header, then sign in when you&apos;re ready to
+                  start.
+                </p>
+
+                <div className={styles.guestActionRow}>
+                  <button
+                    type="button"
+                    className={styles.guestPrimaryCta}
+                    onClick={() => setAuthView('signUp')}>
+                    Sign up
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.guestSecondaryCta}
+                    onClick={() => setAuthView('signIn')}>
+                    Sign in
+                  </button>
+                </div>
+
+                <div className={styles.guestSignalRow}>
+                  {GUEST_SIGNAL_LABELS.map((label) => (
+                    <span key={label} className={styles.guestSignalPill}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+
+                <p className={styles.guestSupportText}>
+                  Sign in to save playlists, flashcards, streak, and account progress.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <Toast type={toastType} message={toastMessage} onClose={() => setToastMessage('')} />
+
+        <AuthModal isOpen={authView === 'signIn'} title="Sign in" onClose={closeAuth}>
+          <SignInForm onSuccess={closeAuth} onSwitchToSignUp={() => setAuthView('signUp')} />
+        </AuthModal>
+
+        <AuthModal isOpen={authView === 'signUp'} title="Sign up" onClose={closeAuth}>
+          <SignUpForm onSuccess={closeAuth} onSwitchToSignIn={() => setAuthView('signIn')} />
+        </AuthModal>
+      </>
+    );
+  }
 
   return (
     <div className={styles.dashboard}>
+      {/* Songs */}
+      <section className={`${styles.block} ${styles.songsSection}`}>
+        <div className={styles.blockHeader}>
+          <div>
+            <h2 className={styles.blockTitle}>Songs</h2>
+          </div>
+        </div>
+        {isLoadingSongs && (
+          <div className={styles.loadingRow}>
+            <LoadingSpinner size="sm" />
+            <span>Loading songs...</span>
+          </div>
+        )}
+        {songsError && <p className={styles.errorText}>{songsError}</p>}
+        {!isLoadingSongs && !songsError && songs.length === 0 && (
+          <p className={styles.emptyText}>Songs will appear here soon.</p>
+        )}
+        {!isLoadingSongs && songs.length > 0 && (
+          <div className={`${styles.itemGrid} ${styles.songsGrid}`}>
+            {songs.map((song, index) => {
+              const id = normalizeId(song.id);
+              return (
+                <article key={id ?? `song-${index}`} className={styles.itemCard}>
+                  <button
+                    type="button"
+                    className={styles.itemMainButton}
+                    onClick={() => id && navigate(`/songs/${id}`)}
+                    disabled={!id}>
+                    <span className={styles.itemIcon}>&#127925;</span>
+                    <p className={styles.itemTitle}>{song.title}</p>
+                    {song.author && <p className={styles.itemMeta}>{song.author}</p>}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {/* Playlists */}
       <section className={`${styles.block} ${styles.playlistsSection}`}>
         <div className={styles.blockHeader}>
@@ -341,16 +526,17 @@ function DashboardPage() {
             <button
               type="button"
               className={styles.primaryButton}
-              onClick={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
-            >
+              onClick={() => {
+                setCreatePlaylistError('');
+                setIsCreatePlaylistOpen(true);
+              }}>
               + Create Playlist
             </button>
           ) : (
             <button
               type="button"
               className={styles.primaryButton}
-              onClick={() => setAuthView('signIn')}
-            >
+              onClick={() => setAuthView('signIn')}>
               Sign in to create
             </button>
           )}
@@ -378,7 +564,10 @@ function DashboardPage() {
                 title="No playlists yet"
                 description="Create your first playlist to collect songs."
                 actionLabel="Create playlist"
-                onAction={() => { setCreatePlaylistError(''); setIsCreatePlaylistOpen(true); }}
+                onAction={() => {
+                  setCreatePlaylistError('');
+                  setIsCreatePlaylistOpen(true);
+                }}
               />
             )}
             {!isLoadingPlaylists && playlists.length > 0 && (
@@ -391,8 +580,7 @@ function DashboardPage() {
                         type="button"
                         className={styles.itemMainButton}
                         onClick={() => id && navigate(`/playlists/${id}`)}
-                        disabled={!id}
-                      >
+                        disabled={!id}>
                         <span className={styles.itemIcon}>&#9835;</span>
                         <p className={styles.itemTitle}>{playlist.title}</p>
                         <p className={styles.itemMeta}>{playlist.songsCount ?? 0} songs</p>
@@ -401,8 +589,7 @@ function DashboardPage() {
                         type="button"
                         className={styles.deleteButton}
                         onClick={() => setPlaylistToDelete(playlist)}
-                        title="Delete playlist"
-                      >
+                        title="Delete playlist">
                         &times;
                       </button>
                     </article>
@@ -419,7 +606,7 @@ function DashboardPage() {
         <div className={styles.blockHeader}>
           <div>
             <h2 className={styles.blockTitle}>Profile & progress</h2>
-            <p className={styles.blockSubtitle}>Track your level, streak, and account settings.</p>
+            <p className={styles.blockSubtitle}>Track your level, streak, and premium status.</p>
           </div>
         </div>
 
@@ -435,76 +622,13 @@ function DashboardPage() {
                 <span className={styles.streakFlame} aria-hidden="true" />
                 <span className={styles.streakText}>{streakLabel}</span>
               </Link>
-              <button
-                type="button"
-                className={`${styles.themeToggle} ${isDarkTheme ? styles.themeToggleDark : ''}`}
-                onClick={toggleTheme}
-                aria-label={nextThemeLabel}
-                title={nextThemeLabel}>
-                <span className={styles.themeIconSun} aria-hidden="true" />
-                <span className={styles.themeIconMoon} aria-hidden="true" />
-                <span className={styles.themeToggleThumb} aria-hidden="true" />
-              </button>
-
-              <div className={styles.profileMenuSlot}>
-                <div className={styles.userMenu} ref={userMenuRef}>
-                  <button
-                    type="button"
-                    className={styles.userMenuTrigger}
-                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                    aria-haspopup="menu"
-                    aria-expanded={isUserMenuOpen}
-                    title="Open profile menu">
-                    <span className={styles.nickname}>{nickname}</span>
-                    {user?.avatarUrl ? (
-                      <img
-                        className={styles.avatar}
-                        src={user.avatarUrl}
-                        alt={`${nickname} avatar`}
-                        width="31"
-                        height="31"
-                        decoding="async"
-                      />
-                    ) : (
-                      <span className={styles.avatarFallback}>
-                        {nickname.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <span className={`${styles.chevron} ${isUserMenuOpen ? styles.chevronOpen : ''}`} />
-                  </button>
-
-                  {isUserMenuOpen ? (
-                    <div className={styles.userDropdown} role="menu" aria-label="User menu">
-                      <Link
-                        to="/profile"
-                        className={styles.userDropdownItem}
-                        role="menuitem"
-                        onClick={() => setIsUserMenuOpen(false)}>
-                        Profile
-                      </Link>
-                      <Link
-                        to="/admin"
-                        className={styles.userDropdownItem}
-                        role="menuitem"
-                        onClick={() => setIsUserMenuOpen(false)}>
-                        Admin console
-                      </Link>
-                      <button
-                        type="button"
-                        className={`${styles.userDropdownItem} ${styles.userDropdownDanger}`}
-                        role="menuitem"
-                        onClick={onLogout}>
-                        Logout
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
             </div>
 
             <Link
               to="/premium"
-              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${isPremiumUser ? styles.premiumLinkOn : ''}`}
+              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${
+                isPremiumUser ? styles.premiumLinkOn : ''
+              }`}
               title={premiumButtonTitle}>
               {premiumButtonLabel}
             </Link>
@@ -512,17 +636,6 @@ function DashboardPage() {
         ) : (
           <>
             <div className={styles.profileTopRow}>
-              <button
-                type="button"
-                className={`${styles.themeToggle} ${isDarkTheme ? styles.themeToggleDark : ''}`}
-                onClick={toggleTheme}
-                aria-label={nextThemeLabel}
-                title={nextThemeLabel}>
-                <span className={styles.themeIconSun} aria-hidden="true" />
-                <span className={styles.themeIconMoon} aria-hidden="true" />
-                <span className={styles.themeToggleThumb} aria-hidden="true" />
-              </button>
-
               <div className={styles.authButtons}>
                 <button
                   type="button"
@@ -544,7 +657,9 @@ function DashboardPage() {
 
             <Link
               to="/premium"
-              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${isPremiumUser ? styles.premiumLinkOn : ''}`}
+              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${
+                isPremiumUser ? styles.premiumLinkOn : ''
+              }`}
               title={premiumButtonTitle}>
               {premiumButtonLabel}
             </Link>
@@ -563,16 +678,17 @@ function DashboardPage() {
             <button
               type="button"
               className={styles.primaryButton}
-              onClick={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
-            >
+              onClick={() => {
+                setCreateFolderError('');
+                setIsCreateFolderOpen(true);
+              }}>
               + Create Folder
             </button>
           ) : (
             <button
               type="button"
               className={styles.primaryButton}
-              onClick={() => setAuthView('signIn')}
-            >
+              onClick={() => setAuthView('signIn')}>
               Sign in to create
             </button>
           )}
@@ -600,7 +716,10 @@ function DashboardPage() {
                 title="No folders created"
                 description="Create your first folder to organize cards."
                 actionLabel="Create folder"
-                onAction={() => { setCreateFolderError(''); setIsCreateFolderOpen(true); }}
+                onAction={() => {
+                  setCreateFolderError('');
+                  setIsCreateFolderOpen(true);
+                }}
               />
             )}
             {!isLoadingFolders && folders.length > 0 && (
@@ -613,8 +732,7 @@ function DashboardPage() {
                         type="button"
                         className={styles.itemMainButton}
                         onClick={() => id && navigate(`/cards/${id}`)}
-                        disabled={!id}
-                      >
+                        disabled={!id}>
                         <span className={styles.itemIcon}>&#128193;</span>
                         <p className={styles.itemTitle}>{folder.name}</p>
                         <p className={styles.itemMeta}>{countCards(folder)} cards</p>
@@ -623,8 +741,7 @@ function DashboardPage() {
                         type="button"
                         className={styles.deleteButton}
                         onClick={() => setFolderToDelete(folder)}
-                        title="Delete folder"
-                      >
+                        title="Delete folder">
                         &times;
                       </button>
                     </article>
@@ -686,7 +803,12 @@ function DashboardPage() {
           errorMessage={createPlaylistError}
           titleMaxLength={PLAYLIST_TITLE_MAX_LENGTH}
           descriptionMaxLength={PLAYLIST_DESCRIPTION_MAX_LENGTH}
-          onClose={() => { if (!isCreatingPlaylist) { setIsCreatePlaylistOpen(false); setCreatePlaylistError(''); } }}
+          onClose={() => {
+            if (!isCreatingPlaylist) {
+              setIsCreatePlaylistOpen(false);
+              setCreatePlaylistError('');
+            }
+          }}
           onCreate={handleCreatePlaylist}
         />
       )}
@@ -696,7 +818,12 @@ function DashboardPage() {
           isSubmitting={isCreatingFolder}
           errorMessage={createFolderError}
           maxLength={FOLDER_NAME_MAX_LENGTH}
-          onClose={() => { if (!isCreatingFolder) { setIsCreateFolderOpen(false); setCreateFolderError(''); } }}
+          onClose={() => {
+            if (!isCreatingFolder) {
+              setIsCreateFolderOpen(false);
+              setCreateFolderError('');
+            }
+          }}
           onCreate={handleCreateFolder}
         />
       )}
@@ -704,28 +831,32 @@ function DashboardPage() {
       <ConfirmDialog
         isOpen={Boolean(playlistToDelete)}
         title="Delete playlist"
-        description={`This will remove "${playlistToDelete?.title ?? 'playlist'}" from your library.`}
+        description={`This will remove "${
+          playlistToDelete?.title ?? 'playlist'
+        }" from your library.`}
         confirmLabel="Delete"
         isProcessing={Boolean(deletingPlaylistId)}
-        onCancel={() => { if (!deletingPlaylistId) setPlaylistToDelete(null); }}
+        onCancel={() => {
+          if (!deletingPlaylistId) setPlaylistToDelete(null);
+        }}
         onConfirm={confirmDeletePlaylist}
       />
 
       <ConfirmDialog
         isOpen={Boolean(folderToDelete)}
         title="Delete folder"
-        description={`This will remove "${folderToDelete?.name ?? 'folder'}" and all cards inside it.`}
+        description={`This will remove "${
+          folderToDelete?.name ?? 'folder'
+        }" and all cards inside it.`}
         confirmLabel="Delete"
         isProcessing={Boolean(deletingFolderId)}
-        onCancel={() => { if (!deletingFolderId) setFolderToDelete(null); }}
+        onCancel={() => {
+          if (!deletingFolderId) setFolderToDelete(null);
+        }}
         onConfirm={confirmDeleteFolder}
       />
 
-      <Toast
-        type={toastType}
-        message={toastMessage}
-        onClose={() => setToastMessage('')}
-      />
+      <Toast type={toastType} message={toastMessage} onClose={() => setToastMessage('')} />
 
       <AuthModal isOpen={authView === 'signIn'} title="Sign in" onClose={closeAuth}>
         <SignInForm onSuccess={closeAuth} onSwitchToSignUp={() => setAuthView('signUp')} />

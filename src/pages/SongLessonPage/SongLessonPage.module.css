@@ -188,6 +188,7 @@
 }
 
 .lyricsList {
+  position: relative;
   margin-top: 14px;
   display: flex;
   flex-direction: column;
@@ -229,6 +230,180 @@
   font-size: 14px;
 }
 
+.lyricsWord {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.lyricsWord:hover {
+  background-color: var(--color-accent-border-soft, rgba(99, 102, 241, 0.15));
+}
+
+.lyricsWordActive {
+  background-color: var(--color-accent-border-soft, rgba(99, 102, 241, 0.2));
+}
+
+.wordPopover {
+  position: absolute;
+  width: min(280px, calc(100% - 16px));
+  transform: translateX(-50%);
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-popover);
+  box-shadow: var(--shadow-popover);
+  animation: wordPopoverIn 170ms ease;
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+}
+
+.wordPopover::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid var(--color-border-soft);
+  border-left: 1px solid var(--color-border-soft);
+  background: var(--color-bg-popover);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.wordPopoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wordPopoverWord {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-main);
+  overflow-wrap: anywhere;
+}
+
+.wordPopoverAddButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-accent);
+  background: var(--color-primary);
+  color: var(--color-text-on-accent);
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition:
+    transform var(--transition-base),
+    opacity var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.wordPopoverAddButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.wordPopoverAddButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.wordPopoverTranslation {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.wordPopoverControls {
+  display: grid;
+  gap: 5px;
+}
+
+.wordPopoverLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wordPopoverSelect {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 10px;
+}
+
+.wordPopoverSelect:focus {
+  outline: none;
+  border-color: var(--color-border-accent);
+}
+
+.wordPopoverRetryButton {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.wordPopoverRetryButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.wordPopoverStateError,
+.wordPopoverStateSuccess {
+  border-radius: 8px;
+  padding: 5px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.wordPopoverStateError {
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.wordPopoverStateSuccess {
+  border: 1px solid var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+}
+
+@keyframes wordPopoverIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 @keyframes lyricsPanelIn {
   from {
     opacity: 0;
@@ -259,6 +434,10 @@
   }
 
   .lyricsListAnimated .lyricsLine {
+    animation: none;
+  }
+
+  .wordPopover {
     animation: none;
   }
 
@@ -1043,6 +1222,26 @@
     font-size: clamp(20px, 6.8vw, 30px);
   }
 
+  .wordPopover {
+    width: min(252px, calc(100% - 10px));
+    padding: 9px;
+    gap: 7px;
+  }
+
+  .wordPopoverWord {
+    font-size: 14px;
+  }
+
+  .wordPopoverTranslation {
+    font-size: 13px;
+  }
+
+  .wordPopoverAddButton {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+  }
+
   .trackTitle {
     font-size: 20px;
   }
@@ -1082,21 +1281,180 @@
     font-size: 19px;
   }
 
+  .taskSubtitle {
+    font-size: 13px;
+  }
+
   .metaRow {
     grid-template-columns: 1fr;
     gap: 4px;
   }
 
+  .pairsBoard {
+    gap: 8px;
+  }
+
+  .pairsColumn {
+    padding: 8px;
+    min-height: 120px;
+  }
+
+  .pairsColumnTitle {
+    font-size: 11px;
+  }
+
   .pairsButton {
     align-items: flex-start;
     gap: 6px;
+    padding: 8px 9px;
+  }
+
+  .pairsMainText {
+    font-size: 13px;
   }
 
   .pairsStateText {
     padding-inline: 6px;
+    font-size: 10px;
+  }
+
+  .pairsList {
+    max-height: 320px;
+    gap: 6px;
+  }
+
+  .typingRow {
+    padding: 8px;
+  }
+
+  .typingPrompt {
+    font-size: 14px;
+  }
+
+  .typingInput {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .wordPopoverSelect {
+    font-size: 11px;
+    padding: 6px 8px;
   }
 
   .completionModalBackdrop {
     padding: 12px;
+  }
+
+  .completionStatItem {
+    padding: 8px;
+  }
+
+  .completionStatItem dd {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .page {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .title {
+    font-size: 21px;
+  }
+
+  .ghostButton {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .lyricsPane {
+    padding: 12px;
+  }
+
+  .lyricsLine {
+    font-size: 18px;
+  }
+
+  .lyricsList {
+    gap: 10px;
+  }
+
+  .wordPopover {
+    width: min(220px, calc(100% - 8px));
+    padding: 8px;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .wordPopoverWord {
+    font-size: 13px;
+  }
+
+  .wordPopoverTranslation {
+    font-size: 12px;
+  }
+
+  .wordPopoverAddButton {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+
+  .taskCardsGrid {
+    gap: 8px;
+    max-height: 50vh;
+  }
+
+  .taskCard {
+    padding: 8px;
+  }
+
+  .taskFlipArea {
+    min-height: 148px;
+  }
+
+  .taskFlipInner {
+    min-height: 148px;
+  }
+
+  .taskFaceText {
+    font-size: 15px;
+  }
+
+  .trackTitle {
+    font-size: 18px;
+  }
+
+  .trackArtist {
+    font-size: 13px;
+  }
+
+  .trackCard,
+  .infoPanel {
+    padding: 10px;
+  }
+
+  .sidebarTitle {
+    font-size: 17px;
+  }
+
+  .completionModal {
+    padding: 12px;
+  }
+
+  .completionModalTitle {
+    font-size: 20px;
+  }
+
+  .completionModalSubtitle {
+    font-size: 13px;
+  }
+
+  .primaryActionButton,
+  .secondaryActionButton {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }

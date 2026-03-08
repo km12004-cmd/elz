@@ -21,6 +21,7 @@ import {
   fetchSongsCatalog,
   updateSongRecord,
 } from '../../api/songs';
+import { tokenizeSongLyrics, upsertSongDictionaryBulk } from '../../api/lyrics';
 import { useAuth } from '../../auth/useAuth';
 import { extractErrorMessage } from '../../components/auth/extractErrorMessage';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -122,8 +123,49 @@ function parseTemplateRows(value) {
   return items;
 }
 
+function normalizeDictionarySource(value) {
+  if (typeof value !== 'string') return '';
+
+  return value
+    .toLocaleLowerCase()
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseDictionaryRows(value) {
+  const lines = String(value ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const items = [];
+
+  lines.forEach((line) => {
+    const separatorMatch = line.match(/\s*(?:—|–|-)\s*/u);
+    if (!separatorMatch || typeof separatorMatch.index !== 'number') return;
+
+    const separatorStart = separatorMatch.index;
+    const separatorLength = separatorMatch[0].length;
+
+    const sourceText = line.slice(0, separatorStart).trim();
+    const translation = line.slice(separatorStart + separatorLength).trim();
+    const normalized = normalizeDictionarySource(sourceText);
+
+    if (!sourceText || !translation || !normalized) return;
+
+    items.push({
+      sourceText,
+      normalized,
+      translation,
+    });
+  });
+
+  return items;
+}
+
 function AdminConsolePage() {
-  const { token, isAuthenticated, signOut } = useAuth();
+  const { token, isAuthenticated, user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const [searchInput, setSearchInput] = useState('');
@@ -195,12 +237,18 @@ function AdminConsolePage() {
     exerciseIdx: '',
     rows: '',
   });
+  const [lyricsDictionaryForm, setLyricsDictionaryForm] = useState({
+    trackId: '',
+    rows: '',
+  });
 
   const [isSavingArtist, setIsSavingArtist] = useState(false);
   const [isSavingSong, setIsSavingSong] = useState(false);
   const [isSavingFlashcards, setIsSavingFlashcards] = useState(false);
   const [isSavingPairsSpecific, setIsSavingPairsSpecific] = useState(false);
   const [isSavingPairsGeneric, setIsSavingPairsGeneric] = useState(false);
+  const [isSavingLyricsDictionary, setIsSavingLyricsDictionary] = useState(false);
+  const [isTokenizingLyrics, setIsTokenizingLyrics] = useState(false);
 
   const canGoPrev = offset > 0;
   const hasKnownTotal = Number.isInteger(usersTotal) && usersTotal >= 0;
@@ -215,6 +263,8 @@ function AdminConsolePage() {
     isSavingFlashcards ||
     isSavingPairsSpecific ||
     isSavingPairsGeneric ||
+    isSavingLyricsDictionary ||
+    isTokenizingLyrics ||
     isLoadingSongDetail;
 
   const showToast = useCallback((message, type = 'success') => {
@@ -340,6 +390,16 @@ function AdminConsolePage() {
   useEffect(() => {
     loadContentCatalog();
   }, [loadContentCatalog]);
+
+  useEffect(() => {
+    const currentSongId = normalizeId(songForm.songId);
+    if (!currentSongId) return;
+
+    setLyricsDictionaryForm((previous) => {
+      if (normalizeId(previous.trackId)) return previous;
+      return { ...previous, trackId: currentSongId };
+    });
+  }, [songForm.songId]);
 
   const fillSongFormFromDetail = useCallback((detail, lyricsPayload) => {
     const fallbackLyricsText =
@@ -562,6 +622,10 @@ function AdminConsolePage() {
 
   const onPairsGenericFieldChange = (field, value) => {
     setPairsGenericForm((previous) => ({ ...previous, [field]: value }));
+  };
+
+  const onLyricsDictionaryFieldChange = (field, value) => {
+    setLyricsDictionaryForm((previous) => ({ ...previous, [field]: value }));
   };
 
   const onCreateArtist = async (event) => {
@@ -861,7 +925,77 @@ function AdminConsolePage() {
     }
   };
 
-  if (!isAuthenticated) {
+  const onUpsertLyricsDictionary = async (event) => {
+    event.preventDefault();
+
+    const trackId = normalizeId(lyricsDictionaryForm.trackId);
+    const items = parseDictionaryRows(lyricsDictionaryForm.rows);
+
+    if (!trackId) {
+      setContentError('Track ID is required for dictionary entries.');
+      return;
+    }
+    if (items.length === 0) {
+      setContentError('Add lines in format "Жанымда — рядом со мной".');
+      return;
+    }
+
+    setIsSavingLyricsDictionary(true);
+    setContentError('');
+
+    try {
+      const result = await upsertSongDictionaryBulk({
+        token,
+        songId: trackId,
+        items,
+        srcLang: 'kg',
+        dstLang: 'ru',
+      });
+      setLyricsDictionaryForm((previous) => ({ ...previous, rows: '' }));
+      showToast(`Dictionary rows saved: ${result?.upsertedCount ?? items.length}.`);
+    } catch (error) {
+      if (handleUnauthorizedError(error)) return;
+      setContentError(extractErrorMessage(error, { context: 'admin' }));
+    } finally {
+      setIsSavingLyricsDictionary(false);
+    }
+  };
+
+  const onTokenizeLyrics = async () => {
+    const trackId = normalizeId(lyricsDictionaryForm.trackId) ?? normalizeId(songForm.songId);
+    if (!trackId) {
+      setContentError('Track ID is required to tokenize lyrics.');
+      return;
+    }
+
+    setIsTokenizingLyrics(true);
+    setContentError('');
+
+    try {
+      const result = await tokenizeSongLyrics({
+        token,
+        songId: trackId,
+      });
+
+      setLyricsDictionaryForm((previous) => ({
+        ...previous,
+        trackId: trackId ?? previous.trackId,
+      }));
+
+      const linesPart =
+        typeof result?.linesCount === 'number' ? `${result.linesCount} lines` : 'lyrics lines';
+      const tokensPart =
+        typeof result?.tokensCount === 'number' ? `${result.tokensCount} tokens` : 'tokens';
+      showToast(`Tokenization complete: ${linesPart}, ${tokensPart}.`);
+    } catch (error) {
+      if (handleUnauthorizedError(error)) return;
+      setContentError(extractErrorMessage(error, { context: 'admin' }));
+    } finally {
+      setIsTokenizingLyrics(false);
+    }
+  };
+
+  if (!isAuthenticated || normalizeRole(user?.role) !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
@@ -1478,6 +1612,46 @@ function AdminConsolePage() {
               <button type="submit" className={styles.actionButton} disabled={isMutatingContent}>
                 {isSavingPairsGeneric ? 'Saving...' : 'POST /tracks/{id}/games/pairs/templates'}
               </button>
+            </form>
+
+            <form className={styles.formRow} onSubmit={onUpsertLyricsDictionary}>
+              <h5 className={styles.subsectionTitle}>Lyrics dictionary (RU)</h5>
+              <p className={styles.actionDescription}>
+                Use lines like <code>Жанымда — рядом со мной</code>.
+              </p>
+              <p className={styles.actionDescription}>
+                Flow: save Kyrgyz lyrics, run tokenize, then upload dictionary rows.
+              </p>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Track ID"
+                value={lyricsDictionaryForm.trackId}
+                onChange={(event) => onLyricsDictionaryFieldChange('trackId', event.target.value)}
+                disabled={isMutatingContent}
+              />
+              <textarea
+                className={styles.textarea}
+                placeholder={'Жанымда — рядом со мной\nКелечек — будущее'}
+                value={lyricsDictionaryForm.rows}
+                onChange={(event) => onLyricsDictionaryFieldChange('rows', event.target.value)}
+                disabled={isMutatingContent}
+                rows={5}
+              />
+              <div className={styles.buttonRow}>
+                <button
+                  type="button"
+                  className={styles.mutedButton}
+                  onClick={onTokenizeLyrics}
+                  disabled={isMutatingContent}>
+                  {isTokenizingLyrics ? 'Tokenizing...' : 'POST /lyrics/songs/{id}/tokenize'}
+                </button>
+                <button type="submit" className={styles.actionButton} disabled={isMutatingContent}>
+                  {isSavingLyricsDictionary
+                    ? 'Saving...'
+                    : 'POST /lyrics/songs/{id}/dictionary/bulk'}
+                </button>
+              </div>
             </form>
           </article>
         </div>
