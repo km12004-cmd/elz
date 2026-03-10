@@ -107,6 +107,7 @@ function SongLessonPage() {
 
   const lyricsContainerRef = useRef(null);
   const lyricsWordPopoverRef = useRef(null);
+  const lessonErrorsRef = useRef(0);
 
   const isTaskOneStage = activeStage === LESSON_STAGE.TASK_1;
   const isTaskTwoStage = activeStage === LESSON_STAGE.TASK_2;
@@ -133,6 +134,7 @@ function SongLessonPage() {
 
     setIsLoading(true);
     setLoadError('');
+    lessonErrorsRef.current = 0;
 
     try {
       const detail = await fetchSongDetail({ token, songId: normalizedSongId });
@@ -831,9 +833,10 @@ function SongLessonPage() {
         });
       }
 
-      const { allResolved } = taskTwo.applyCheckResults(checkResults);
+      const { nextStats, allResolved } = taskTwo.applyCheckResults(checkResults);
 
       if (allResolved) {
+        lessonErrorsRef.current += nextStats.errors;
         setIsFinishingPairs(true);
 
         let task2FinishResult = null;
@@ -912,8 +915,12 @@ function SongLessonPage() {
   const completeTaskFour = async () => {
     if (typingFour.rows.length === 0) return;
 
-    const { allCorrect } = typingFour.checkAllAnswers();
-    if (!allCorrect) return;
+    const { nextResults, allCorrect } = typingFour.checkAllAnswers();
+    if (!allCorrect) {
+      const wrongCount = Object.values(nextResults).filter((v) => v === false).length;
+      lessonErrorsRef.current += wrongCount;
+      return;
+    }
 
     setIsCompletingTaskFour(true);
     setTaskError('');
@@ -960,8 +967,12 @@ function SongLessonPage() {
   const completeTaskFive = async () => {
     if (typingFive.rows.length === 0) return;
 
-    const { allCorrect } = typingFive.checkAllAnswers();
-    if (!allCorrect) return;
+    const { nextResults, allCorrect } = typingFive.checkAllAnswers();
+    if (!allCorrect) {
+      const wrongCount = Object.values(nextResults).filter((v) => v === false).length;
+      lessonErrorsRef.current += wrongCount;
+      return;
+    }
 
     setIsCompletingTaskFive(true);
     setTaskError('');
@@ -991,7 +1002,7 @@ function SongLessonPage() {
       let songXpShown = false;
       if (finishResult?.passed && normalizedSongId && token) {
         try {
-          const songXp = await completeSong({ token, songId: normalizedSongId });
+          const songXp = await completeSong({ token, songId: normalizedSongId, totalErrors: lessonErrorsRef.current });
           applyXpResult({
             applied: songXp.applied,
             xpDelta: songXp.xpDelta,
@@ -1097,9 +1108,10 @@ function SongLessonPage() {
         });
       }
 
-      const { allResolved } = taskThree.applyCheckResults(checkResults);
+      const { nextStats, allResolved } = taskThree.applyCheckResults(checkResults);
 
       if (allResolved) {
+        lessonErrorsRef.current += nextStats.errors;
         setIsFinishingPairs(true);
 
         let task3FinishResult = null;

@@ -35,16 +35,13 @@ function GuestScreen({ authView, setAuthView, toastType, toastMessage, setToastM
               <div className={styles.guestArtworkNote} />
               <div className={styles.guestArtworkPillTop}>SONG</div>
               <div className={styles.guestArtworkPillBottom}>CARD</div>
-              <div className={styles.guestArtworkCaption}>Artwork placeholder</div>
             </div>
 
             <div className={styles.guestCopy}>
               <span className={styles.guestEyebrow}>A calm place to begin</span>
-              <h2 className={styles.guestTitle}>Learn Kyrgyz through songs that stay with you.</h2>
-              <p className={styles.guestDescription}>
-                Set the language and theme in the header, then sign in when you&apos;re ready to
-                start.
-              </p>
+              <h2 className={styles.guestTitle}>
+                Preserve Kyrgyz through songs that stay with you.
+              </h2>
 
               <div className={styles.guestActionRow}>
                 <button

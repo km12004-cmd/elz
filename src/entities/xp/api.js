@@ -30,13 +30,18 @@ export async function openSong({ token, songId } = {}) {
   await apiRequest(`/api/songs/${encodeURIComponent(songId)}/open`, { method: 'POST', token });
 }
 
-export async function completeSong({ token, songId } = {}) {
+export async function completeSong({ token, songId, totalErrors } = {}) {
   if (!songId) throw new Error('songId is required');
+  const body = typeof totalErrors === 'number' ? { total_errors: totalErrors } : undefined;
   const data = await apiRequest(`/api/songs/${encodeURIComponent(songId)}/complete`, {
     method: 'POST',
     token,
+    body,
   });
   const source = asObject(data?.data) ?? asObject(data) ?? {};
+  const rawAchievements = Array.isArray(source.unlocked_achievements ?? source.unlockedAchievements)
+    ? (source.unlocked_achievements ?? source.unlockedAchievements)
+    : [];
   return {
     applied: normalizeBoolean(source.applied) === true,
     xpDelta: normalizeInteger(source.xp_delta ?? source.xpDelta) ?? 0,
@@ -44,5 +49,6 @@ export async function completeSong({ token, songId } = {}) {
     newLevel: normalizeInteger(source.new_level ?? source.newLevel) ?? null,
     nextLevelThreshold: normalizeInteger(source.next_level_threshold ?? source.nextLevelThreshold) ?? null,
     xpToNextLevel: normalizeInteger(source.xp_to_next_level ?? source.xpToNextLevel) ?? null,
+    unlockedAchievements: rawAchievements,
   };
 }

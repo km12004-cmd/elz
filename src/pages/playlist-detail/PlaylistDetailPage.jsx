@@ -8,6 +8,7 @@ import {
 import { fetchSongsCatalog } from '@/entities/song/api';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { extractErrorMessage } from '@/features/auth/lib/extractErrorMessage';
+import { useI18n } from '@/features/i18n/hooks/useI18n';
 import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import EmptyState from '@/shared/ui/EmptyState';
 import LoadingSpinner from '@/shared/ui/LoadingSpinner';
@@ -99,13 +100,13 @@ function formatDuration(seconds) {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
 }
 
-function formatDate(value) {
+function formatDate(value, locale = 'en-US') {
   if (!value) return null;
 
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -154,6 +155,7 @@ function enrichSong(song, fallbackSong) {
 
 function PlaylistDetailPage() {
   const { token } = useAuth();
+  const { locale } = useI18n();
   const navigate = useNavigate();
   const { playlistId } = useParams();
 
@@ -384,8 +386,8 @@ function PlaylistDetailPage() {
       }
     });
 
-    return latestDate ? formatDate(latestDate) : null;
-  }, [playlistSongs]);
+    return latestDate ? formatDate(latestDate, locale) : null;
+  }, [locale, playlistSongs]);
 
   const availableSongsCount = searchableAvailableSongs.length;
   const isSearchResultsCapped =
@@ -588,7 +590,7 @@ function PlaylistDetailPage() {
                 const isAdded = Boolean(songId && songsInPlaylist.has(songId));
                 const isAdding = Boolean(songId && addingSongId === songId);
                 const youtubeEmbedUrl = toYouTubeEmbedUrl(song.youtubeUrl);
-                const songAddedAt = formatDate(song.addedAt);
+                const songAddedAt = formatDate(song.addedAt, locale);
                 const songMeta = [
                   normalizeText(song.author) || 'Unknown artist',
                   formatDuration(song.durationSeconds),
