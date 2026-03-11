@@ -41,6 +41,14 @@ OPENAPI_TAGS = [
 SWAGGER_ASSETS_MOUNT_PATH = "/_docs_assets/swagger-ui"
 CORS_ALLOWED_ORIGINS = ["https://elzaman-lbcyb.ondigitalocean.app"]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 try:
     from swagger_ui_bundle import swagger_ui_path as _swagger_ui_path
 except ImportError:  # pragma: no cover - optional runtime fallback
