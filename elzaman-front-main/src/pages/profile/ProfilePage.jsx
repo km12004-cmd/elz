@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { fetchAchievements } from '@/entities/achievements/api';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useProgress } from '@/features/xp/hooks/useProgress';
 import { useI18n } from '@/features/i18n/hooks/useI18n';
@@ -85,11 +87,36 @@ function formatStreakDays(value, language) {
   return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
 }
 
+const CATEGORY_ORDER = ['starter', 'streak', 'vocabulary', 'xp', 'songs', 'perfect'];
+
+const CATEGORY_ICONS = {
+  starter: '\u{1F31F}',
+  streak: '\u{1F525}',
+  vocabulary: '\u{1F4DA}',
+  xp: '\u{26A1}',
+  songs: '\u{1F3B5}',
+  perfect: '\u{1F48E}',
+};
+
 function ProfilePage() {
-  const { isAuthenticated, user, signOut } = useAuth();
+  const { isAuthenticated, user, token, signOut } = useAuth();
   const { progress } = useProgress();
   const { language, locale, setLanguage, t } = useI18n();
   const navigate = useNavigate();
+
+  const [achievements, setAchievements] = useState([]);
+  const [achievementsLoaded, setAchievementsLoaded] = useState(false);
+  const achievementsLoading = Boolean(token) && !achievementsLoaded;
+
+  useEffect(() => {
+    if (!token) return undefined;
+    let cancelled = false;
+    fetchAchievements({ token })
+      .then((items) => { if (!cancelled) setAchievements(items); })
+      .catch(() => { if (!cancelled) setAchievements([]); })
+      .finally(() => { if (!cancelled) setAchievementsLoaded(true); });
+    return () => { cancelled = true; };
+  }, [token]);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -142,6 +169,17 @@ function ProfilePage() {
     setLanguage(event.target.value);
   };
 
+  const groupedAchievements = CATEGORY_ORDER.reduce((groups, category) => {
+    const items = achievements.filter((a) => a.category === category);
+    if (items.length > 0) {
+      groups.push({ category, items });
+    }
+    return groups;
+  }, []);
+
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const totalCount = achievements.length;
+
   return (
     <section className={styles.page}>
       <div className={styles.hero}>
@@ -151,7 +189,7 @@ function ProfilePage() {
               <img
                 className={styles.avatar}
                 src={user.avatarUrl}
-                alt={language === 'ru' ? `Аватар ${nickname}` : `${nickname} avatar`}
+                alt={language === 'ru' ? `\u0410\u0432\u0430\u0442\u0430\u0440 ${nickname}` : `${nickname} avatar`}
               />
             ) : (
               <span className={styles.avatarFallback}>{avatarLetter}</span>
@@ -201,7 +239,7 @@ function ProfilePage() {
           const isMaxLevel = xpToNextLevel === 0;
           const progressAriaLabel =
             language === 'ru'
-              ? `Уровень ${level}, ${xpToNextLevel} XP до следующего уровня`
+              ? `\u0423\u0440\u043E\u0432\u0435\u043D\u044C ${level}, ${xpToNextLevel} XP \u0434\u043E \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0433\u043E \u0443\u0440\u043E\u0432\u043D\u044F`
               : `Level ${level}, ${xpToNextLevel} XP to next level`;
           return (
             <>
@@ -210,7 +248,7 @@ function ProfilePage() {
                 {!isMaxLevel && (
                   <span className={styles.progressXpMeta}>
                     {language === 'ru'
-                      ? `${xpToNextLevel} XP до ур. ${level + 1}`
+                      ? `${xpToNextLevel} XP \u0434\u043E \u0443\u0440. ${level + 1}`
                       : `${xpToNextLevel} XP to Lv. ${level + 1}`}
                   </span>
                 )}
@@ -250,6 +288,67 @@ function ProfilePage() {
             </>
           );
         })()}
+      </div>
+
+      <div className={styles.achievementsSection}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>{t('Achievements')}</h3>
+          <p className={styles.subtitle}>
+            {t('Your progress and milestones.')}
+            {totalCount > 0 && (
+              <span className={styles.achievementsCount}>
+                {' '}{unlockedCount}/{totalCount}
+              </span>
+            )}
+          </p>
+        </div>
+
+        {achievementsLoading && (
+          <p className={styles.achievementsLoading}>...</p>
+        )}
+
+        {!achievementsLoading && groupedAchievements.length > 0 && (
+          <div className={styles.achievementCategories}>
+            {groupedAchievements.map(({ category, items }) => (
+              <div key={category} className={styles.achievementCategoryBlock}>
+                <h4 className={styles.achievementCategoryTitle}>
+                  <span className={styles.achievementCategoryIcon} aria-hidden="true">
+                    {CATEGORY_ICONS[category] ?? ''}
+                  </span>
+                  {t(category)}
+                </h4>
+                <div className={styles.achievementGrid}>
+                  {items.map((achievement) => {
+                    const title = language === 'ru' && achievement.titleRu
+                      ? achievement.titleRu
+                      : achievement.title;
+                    const description = language === 'ru' && achievement.descriptionRu
+                      ? achievement.descriptionRu
+                      : achievement.description;
+
+                    return (
+                      <article
+                        key={achievement.code}
+                        className={`${styles.achievementCard} ${achievement.unlocked ? styles.achievementUnlocked : styles.achievementLocked}`}
+                      >
+                        <div className={styles.achievementHeader}>
+                          <span className={styles.achievementTitle}>{title}</span>
+                          {achievement.unlocked && (
+                            <span className={styles.achievementCheckmark} aria-label={t('Unlocked')}>
+                              &#x2713;
+                            </span>
+                          )}
+                        </div>
+                        <p className={styles.achievementDescription}>{description}</p>
+                        <span className={styles.achievementXp}>+{achievement.xpReward} XP</span>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={styles.content}>

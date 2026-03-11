@@ -13,6 +13,7 @@ import {
   createFlashcardFolder,
   deleteFlashcardFolder,
 } from '@/entities/flashcard/api';
+import { fetchAchievements } from '@/entities/achievements/api';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { extractErrorMessage } from '@/features/auth/lib/extractErrorMessage';
 import ConfirmDialog from '@/shared/ui/ConfirmDialog';
@@ -75,6 +76,9 @@ function DashboardPage() {
   const [createFolderError, setCreateFolderError] = useState('');
   const [folderToDelete, setFolderToDelete] = useState(null);
   const [deletingFolderId, setDeletingFolderId] = useState(null);
+
+  // Achievements state
+  const [achievements, setAchievements] = useState([]);
 
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
@@ -226,6 +230,19 @@ function DashboardPage() {
   useEffect(() => {
     loadFolders();
   }, [loadFolders]);
+
+  // Load achievements
+  useEffect(() => {
+    let cancelled = false;
+    if (!isAuthenticated) {
+      setAchievements([]);
+      return undefined;
+    }
+    fetchAchievements({ token })
+      .then((items) => { if (!cancelled) setAchievements(items); })
+      .catch(() => { if (!cancelled) setAchievements([]); });
+    return () => { cancelled = true; };
+  }, [token, isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) return;
@@ -502,28 +519,47 @@ function DashboardPage() {
         </div>
 
         {isAuthenticated ? (
-          <>
-            <div className={styles.profileAuthRow}>
-              <XpWidget />
+          <div className={styles.profileSplitRow}>
+            <div className={styles.profileLeft}>
+              <div className={styles.profileAuthRow}>
+                <XpWidget />
+                <Link
+                  to="/profile"
+                  className={styles.streakPill}
+                  aria-label={`Current streak: ${streakLabel}`}
+                  title={`Current streak: ${streakLabel}`}>
+                  <span className={styles.streakFlame} aria-hidden="true" />
+                  <span className={styles.streakText}>{streakLabel}</span>
+                </Link>
+              </div>
+
               <Link
-                to="/profile"
-                className={styles.streakPill}
-                aria-label={`Current streak: ${streakLabel}`}
-                title={`Current streak: ${streakLabel}`}>
-                <span className={styles.streakFlame} aria-hidden="true" />
-                <span className={styles.streakText}>{streakLabel}</span>
+                to="/premium"
+                className={`${styles.premiumLink} ${styles.profilePremiumLink} ${
+                  isPremiumUser ? styles.premiumLinkOn : ''
+                }`}
+                title={premiumButtonTitle}>
+                {premiumButtonLabel}
               </Link>
             </div>
 
-            <Link
-              to="/premium"
-              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${
-                isPremiumUser ? styles.premiumLinkOn : ''
-              }`}
-              title={premiumButtonTitle}>
-              {premiumButtonLabel}
-            </Link>
-          </>
+            <div className={styles.profileDividerVertical} />
+
+            <div className={styles.profileRight}>
+              <div className={styles.achievementsPreviewHeader}>
+                <h3 className={styles.achievementsPreviewTitle}>Achievements</h3>
+                {achievements.length > 0 && (
+                  <span className={styles.achievementsPreviewCount}>
+                    {achievements.filter((a) => a.unlocked).length}/{achievements.length}
+                  </span>
+                )}
+              </div>
+
+              <Link to="/profile" className={styles.viewAllAchievements}>
+                View all achievements
+              </Link>
+            </div>
+          </div>
         ) : (
           <>
             <div className={styles.profileTopRow}>
