@@ -85,7 +85,7 @@ export async function loginUser({ email, password }) {
     throw err;
   }
 
-  if (typeof data === 'string') return { token: data, user: null, raw: data };
+  if (typeof data === 'string') return { token: data.trim() || null, user: null, raw: data };
   if (!data || typeof data !== 'object') {
     throw new Error('Unexpected login response');
   }
@@ -94,7 +94,7 @@ export async function loginUser({ email, password }) {
   const user = readUser(data);
 
   if (typeof token === 'string' || user || data.ok === true || data.user_id) {
-    return { token: typeof token === 'string' ? token : null, user, raw: data };
+    return { token: typeof token === 'string' ? token.trim() || null : null, user, raw: data };
   }
 
   throw new Error('Unexpected login response');
@@ -140,7 +140,7 @@ export async function refreshUser({ token } = {}) {
   });
 
   if (typeof data === 'string') {
-    return { token: data, user: null, raw: data };
+    return { token: data.trim() || null, user: null, raw: data };
   }
 
   if (!data || typeof data !== 'object') {
@@ -148,7 +148,7 @@ export async function refreshUser({ token } = {}) {
   }
 
   return {
-    token: typeof readToken(data) === 'string' ? readToken(data) : null,
+    token: typeof readToken(data) === 'string' ? readToken(data).trim() || null : null,
     user: readUser(data),
     raw: data,
   };

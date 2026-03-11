@@ -31,7 +31,7 @@ export async function apiRequest(
     headers.set('content-type', 'application/json');
   }
   if (token) {
-    headers.set('authorization', `Bearer ${token}`);
+    headers.set('authorization', `Bearer ${token.trim()}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
