@@ -1,0 +1,136 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  padding: 16px;
+  background: var(--color-overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  width: min(460px, 100%);
+  border-radius: 18px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-modal);
+  padding: 16px;
+}
+
+.title {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.input {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 11px;
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-border-accent);
+}
+
+.counter {
+  margin-top: -2px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.errorText {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.actions {
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+}
+
+.primaryButton,
+.ghostButton {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base), opacity var(--transition-base), transform var(--transition-base);
+}
+
+.primaryButton {
+  color: var(--color-text-on-accent);
+  background: var(--color-primary);
+}
+
+.primaryButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ghostButton {
+  border-color: var(--color-border-soft);
+  background: var(--color-bg-content);
+  color: var(--color-text-main);
+}
+
+.ghostButton:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+}
+
+.primaryButton:disabled,
+.ghostButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .ghostButton {
+    width: 100%;
+  }
+}

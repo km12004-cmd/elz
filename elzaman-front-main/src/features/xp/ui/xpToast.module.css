@@ -1,0 +1,106 @@
+.viewport {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 150;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  min-width: 180px;
+  max-width: 280px;
+  box-shadow: var(--shadow-soft);
+  animation: slideIn 0.3s ease forwards;
+}
+
+.toastAwarded {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-success-strong);
+  color: var(--color-success-text);
+}
+
+.toastDuplicate {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-soft);
+  color: var(--color-text-muted);
+}
+
+.icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.closeBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.6;
+  padding: 0 0 0 8px;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .viewport {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .toast {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .toast {
+    padding: 10px 12px;
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+}
