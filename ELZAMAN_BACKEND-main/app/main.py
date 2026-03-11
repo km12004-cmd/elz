@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
@@ -31,9 +32,14 @@ OPENAPI_TAGS = [
         "name": "Lyrics & Translations",
         "description": "Lyrics tokenization, word-by-word translations, and dictionary management.",
     },
+    {
+        "name": "Achievements",
+        "description": "User achievements and rewards.",
+    },
 ]
 
 SWAGGER_ASSETS_MOUNT_PATH = "/_docs_assets/swagger-ui"
+CORS_ALLOWED_ORIGINS = ["https://elzaman-lbcyb.ondigitalocean.app"]
 
 try:
     from swagger_ui_bundle import swagger_ui_path as _swagger_ui_path
@@ -89,6 +95,16 @@ def _register_openapi_schema(app: FastAPI) -> None:
     app.openapi = custom_openapi
 
 
+def _register_cors(app: FastAPI) -> None:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Elzaman API",
@@ -98,6 +114,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
+    _register_cors(app)
     app.include_router(api_router, prefix="/api")
 
     if STORAGE_BACKEND == "local":
