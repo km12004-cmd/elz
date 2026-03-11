@@ -14,7 +14,7 @@ import LoadingSpinner from '@/shared/ui/LoadingSpinner';
 import XpToast from '@/features/xp/ui/XpToast';
 import LevelUpModal from '@/features/xp/ui/LevelUpModal';
 import SiteIntro from '@/widgets/intro/SiteIntro';
-import styles from './styles/app.module.css';
+import styles from './styles/App.module.css';
 
 const ProfilePage = lazy(() => import('@/pages/profile'));
 const PlaylistDetailPage = lazy(() => import('@/pages/playlist-detail'));

@@ -276,7 +276,6 @@ const RU_TRANSLATIONS = Object.freeze({
   Correct: 'Верно',
   'Try again': 'Попробуйте снова',
   Linked: 'Связано',
-  Locked: 'Заблокировано',
   Used: 'Использовано',
   'No Exercise 2 pairs were returned for this track.':
     'Для этого трека не получены пары упражнения 2.',

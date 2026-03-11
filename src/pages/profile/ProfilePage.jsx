@@ -105,15 +105,17 @@ function ProfilePage() {
   const navigate = useNavigate();
 
   const [achievements, setAchievements] = useState([]);
-  const [achievementsLoading, setAchievementsLoading] = useState(false);
+  const [achievementsLoaded, setAchievementsLoaded] = useState(false);
+  const achievementsLoading = Boolean(token) && !achievementsLoaded;
 
   useEffect(() => {
-    if (!token) return;
-    setAchievementsLoading(true);
+    if (!token) return undefined;
+    let cancelled = false;
     fetchAchievements({ token })
-      .then((items) => setAchievements(items))
-      .catch(() => setAchievements([]))
-      .finally(() => setAchievementsLoading(false));
+      .then((items) => { if (!cancelled) setAchievements(items); })
+      .catch(() => { if (!cancelled) setAchievements([]); })
+      .finally(() => { if (!cancelled) setAchievementsLoaded(true); });
+    return () => { cancelled = true; };
   }, [token]);
 
   if (!isAuthenticated) {

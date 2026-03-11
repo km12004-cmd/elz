@@ -10,15 +10,17 @@ function normalizeAchievement(raw) {
   const code = typeof raw.code === 'string' ? raw.code : null;
   if (!code) return null;
 
+  const titleEn = raw.title_en ?? raw.titleEn ?? raw.title;
+  const titleRu = raw.title_ru ?? raw.titleRu;
+  const descEn = raw.description_en ?? raw.descriptionEn ?? raw.description;
+  const descRu = raw.description_ru ?? raw.descriptionRu;
+
   return {
     code,
-    title: typeof raw.title === 'string' ? raw.title : code,
-    titleRu: typeof (raw.title_ru ?? raw.titleRu) === 'string' ? (raw.title_ru ?? raw.titleRu) : null,
-    description: typeof raw.description === 'string' ? raw.description : '',
-    descriptionRu:
-      typeof (raw.description_ru ?? raw.descriptionRu) === 'string'
-        ? (raw.description_ru ?? raw.descriptionRu)
-        : null,
+    title: typeof titleEn === 'string' ? titleEn : code,
+    titleRu: typeof titleRu === 'string' ? titleRu : null,
+    description: typeof descEn === 'string' ? descEn : '',
+    descriptionRu: typeof descRu === 'string' ? descRu : null,
     category: typeof raw.category === 'string' ? raw.category : 'other',
     threshold: typeof raw.threshold === 'number' ? raw.threshold : 0,
     xpReward: typeof (raw.xp_reward ?? raw.xpReward) === 'number' ? (raw.xp_reward ?? raw.xpReward) : 25,
