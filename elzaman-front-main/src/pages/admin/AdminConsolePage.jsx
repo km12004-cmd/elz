@@ -22,6 +22,7 @@ import {
   formatDateTime,
   parseIntegerInput,
 } from './lib/adminHelpers';
+import { useI18n } from '@/features/i18n/hooks/useI18n';
 import styles from './adminConsolePage.module.css';
 
 const LIMIT_OPTIONS = [10, 20, 50, 100];
@@ -29,6 +30,7 @@ const ROLE_OPTIONS = ['user', 'admin'];
 
 function AdminConsolePage() {
   const { token, isAuthenticated, user, signOut } = useAuth();
+  const { locale } = useI18n();
   const navigate = useNavigate();
 
   const [searchInput, setSearchInput] = useState('');
@@ -198,9 +200,9 @@ function AdminConsolePage() {
       { label: 'XP', value: Number.isInteger(selectedUser?.experience) ? String(selectedUser.experience) : 'Not set' },
       { label: 'Level', value: Number.isInteger(selectedUser?.level) ? String(selectedUser.level) : 'Not set' },
       { label: 'Premium', value: selectedUser?.isPremium ? 'Active' : 'Inactive' },
-      { label: 'Premium until', value: formatDateTime(selectedUser?.premiumUntil) },
+      { label: 'Premium until', value: formatDateTime(selectedUser?.premiumUntil, locale) },
     ],
-    [selectedUser],
+    [locale, selectedUser],
   );
 
   const refreshCurrentUser = useCallback(async () => {

@@ -24,12 +24,12 @@ export function buildDisplayName(user) {
   return 'Unnamed user';
 }
 
-export function formatDateTime(value) {
+export function formatDateTime(value, locale = 'en-US') {
   if (typeof value !== 'string') return 'Not set';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
