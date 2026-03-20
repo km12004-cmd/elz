@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { createTrackPairsTemplates } from '@/entities/pairs-game/api';
-import { createTrackFlashcardTemplates } from '@/entities/song/api';
+import { createTrackPairsTemplates, deleteTrackPairsTemplates, deleteTrackPairsTemplatesByExercise } from '@/entities/pairs-game/api';
+import { createTrackFlashcardTemplates, deleteTrackFlashcardTemplates, deleteTrackLevelCards } from '@/entities/song/api';
 import { extractErrorMessage } from '@/features/auth/lib/extractErrorMessage';
 import { normalizeId } from '@/shared/lib/normalizeId';
 import SongPicker from './SongPicker';
@@ -41,8 +41,10 @@ function ExercisesTab({ token, songsCatalog, showToast, onUnauthorizedError }) {
 
   const [isSavingFlashcards, setIsSavingFlashcards] = useState(false);
   const [isSavingPairs, setIsSavingPairs] = useState(false);
+  const [isDeletingFlashcards, setIsDeletingFlashcards] = useState(false);
+  const [isDeletingPairs, setIsDeletingPairs] = useState(false);
 
-  const isMutating = isSavingFlashcards || isSavingPairs;
+  const isMutating = isSavingFlashcards || isSavingPairs || isDeletingFlashcards || isDeletingPairs;
 
   const onCreateFlashcards = async (event) => {
     event.preventDefault();
@@ -114,6 +116,74 @@ function ExercisesTab({ token, songsCatalog, showToast, onUnauthorizedError }) {
     }
   };
 
+  const onDeleteFlashcards = async () => {
+    const trackId = normalizeId(flashcardsForm.songId);
+    if (!trackId) {
+      setContentError('Please select a song.');
+      return;
+    }
+
+    const level = parseIntegerInput(flashcardsForm.level);
+    const deleteAll = !Number.isInteger(level) || level < 1;
+
+    const confirmMsg = deleteAll
+      ? 'Delete ALL flashcard templates for this song?'
+      : `Delete flashcard cards for level ${level}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsDeletingFlashcards(true);
+    setContentError('');
+
+    try {
+      let result;
+      if (deleteAll) {
+        result = await deleteTrackFlashcardTemplates({ token, trackId });
+      } else {
+        result = await deleteTrackLevelCards({ token, trackId, level });
+      }
+      showToast(`Deleted ${result?.deletedCount ?? 0} flashcard(s).`);
+    } catch (error) {
+      if (onUnauthorizedError(error)) return;
+      setContentError(extractErrorMessage(error, { context: 'admin' }));
+    } finally {
+      setIsDeletingFlashcards(false);
+    }
+  };
+
+  const onDeletePairs = async () => {
+    const trackId = normalizeId(pairsForm.songId);
+    if (!trackId) {
+      setContentError('Please select a song.');
+      return;
+    }
+
+    const exerciseIdx = parseIntegerInput(pairsForm.exerciseIdx);
+    const deleteAll = !Number.isInteger(exerciseIdx) || exerciseIdx < 2;
+
+    const confirmMsg = deleteAll
+      ? 'Delete ALL pairs templates for this song?'
+      : `Delete pairs templates for exercise ${exerciseIdx}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsDeletingPairs(true);
+    setContentError('');
+
+    try {
+      let result;
+      if (deleteAll) {
+        result = await deleteTrackPairsTemplates({ token, trackId });
+      } else {
+        result = await deleteTrackPairsTemplatesByExercise({ token, trackId, exerciseIdx });
+      }
+      showToast(`Deleted ${result?.deletedCount ?? 0} pairs template(s).`);
+    } catch (error) {
+      if (onUnauthorizedError(error)) return;
+      setContentError(extractErrorMessage(error, { context: 'admin' }));
+    } finally {
+      setIsDeletingPairs(false);
+    }
+  };
+
   return (
     <>
       {contentError ? <p className={styles.errorText}>{contentError}</p> : null}
@@ -171,9 +241,19 @@ function ExercisesTab({ token, songsCatalog, showToast, onUnauthorizedError }) {
               rows={6}
             />
 
-            <button type="submit" className={styles.actionButton} disabled={isMutating}>
-              {isSavingFlashcards ? 'Saving...' : 'Save flashcards'}
-            </button>
+            <div className={styles.buttonRow}>
+              <button type="submit" className={styles.actionButton} disabled={isMutating}>
+                {isSavingFlashcards ? 'Saving...' : 'Save flashcards'}
+              </button>
+              <button
+                type="button"
+                className={`${styles.mutedButton} ${styles.dangerButton}`}
+                onClick={onDeleteFlashcards}
+                disabled={isMutating}
+              >
+                {isDeletingFlashcards ? 'Deleting...' : 'Delete cards'}
+              </button>
+            </div>
           </form>
         </article>
 
@@ -229,9 +309,19 @@ function ExercisesTab({ token, songsCatalog, showToast, onUnauthorizedError }) {
               rows={6}
             />
 
-            <button type="submit" className={styles.actionButton} disabled={isMutating}>
-              {isSavingPairs ? 'Saving...' : 'Save pairs'}
-            </button>
+            <div className={styles.buttonRow}>
+              <button type="submit" className={styles.actionButton} disabled={isMutating}>
+                {isSavingPairs ? 'Saving...' : 'Save pairs'}
+              </button>
+              <button
+                type="button"
+                className={`${styles.mutedButton} ${styles.dangerButton}`}
+                onClick={onDeletePairs}
+                disabled={isMutating}
+              >
+                {isDeletingPairs ? 'Deleting...' : 'Delete templates'}
+              </button>
+            </div>
           </form>
         </article>
       </div>

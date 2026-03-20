@@ -350,6 +350,42 @@ export async function createTrackPairsTemplatesForTrack({
   return normalizeCreateTemplatesGenericResult(data, normalizedTrackId, normalizedExerciseIdx);
 }
 
+export async function deleteTrackPairsTemplates({ token, trackId } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+
+  const data = await apiRequest(
+    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/games/pairs/templates`,
+    { method: 'DELETE', token },
+  );
+
+  const source = asObject(data?.data) ?? asObject(data) ?? {};
+  return {
+    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? normalizedTrackId,
+    exercise: normalizeExerciseIdx(source.exercise ?? source.exercise_idx ?? source.exerciseIdx) ?? null,
+    deletedCount: normalizeInteger(source.deleted_count ?? source.deletedCount ?? source.count) ?? 0,
+  };
+}
+
+export async function deleteTrackPairsTemplatesByExercise({ token, trackId, exerciseIdx } = {}) {
+  const normalizedTrackId = normalizeId(trackId);
+  if (!normalizedTrackId) throw new Error('Track id is required');
+  const normalizedExerciseIdx = normalizeExerciseIdx(exerciseIdx);
+  if (!normalizedExerciseIdx) throw new Error('Exercise index is required');
+
+  const data = await apiRequest(
+    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/games/pairs/${encodeURIComponent(normalizedExerciseIdx)}/templates`,
+    { method: 'DELETE', token },
+  );
+
+  const source = asObject(data?.data) ?? asObject(data) ?? {};
+  return {
+    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? normalizedTrackId,
+    exercise: normalizeExerciseIdx(source.exercise ?? source.exercise_idx ?? source.exerciseIdx) ?? normalizedExerciseIdx,
+    deletedCount: normalizeInteger(source.deleted_count ?? source.deletedCount ?? source.count) ?? 0,
+  };
+}
+
 export async function startTrackPairsGame({ token, trackId, exerciseIdx } = {}) {
   const normalizedTrackId = normalizeId(trackId);
   if (!normalizedTrackId) throw new Error('Track id is required');
