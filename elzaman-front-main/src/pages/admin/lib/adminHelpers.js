@@ -62,15 +62,22 @@ export function parseTemplateRows(value) {
   const items = [];
 
   lines.forEach((line) => {
-    const delimiter =
-      line.includes('|') ? '|' : line.includes(';') ? ';' : line.includes('\t') ? '\t' : null;
+    const delimiter = line.includes(' - ')
+      ? ' - '
+      : line.includes('|')
+        ? '|'
+        : line.includes(';')
+          ? ';'
+          : line.includes('\t')
+            ? '\t'
+            : null;
     if (!delimiter) return;
 
     const delimiterIndex = line.indexOf(delimiter);
     if (delimiterIndex < 1) return;
 
     const kgText = line.slice(0, delimiterIndex).trim();
-    const ruText = line.slice(delimiterIndex + 1).trim();
+    const ruText = line.slice(delimiterIndex + delimiter.length).trim();
     if (!kgText || !ruText) return;
 
     items.push({
