@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
 from app.modules.exercise2.schemas import (
+    DeletePairTemplatesResponse,
     Game2AnswerRequest,
     Game2AnswerResponse,
     Game2FinishResponse,
@@ -15,6 +16,7 @@ from app.modules.exercise2.schemas import (
 )
 from app.modules.exercise2.service import (
     create_game2_pairs_templates,
+    delete_game2_pairs_templates,
     finish_pairs_session,
     get_pairs_session_status,
     list_game2_pairs_templates,
@@ -47,6 +49,33 @@ async def create_game2_pairs_templates_endpoint(
         track_id=track_id,
         exercise_idx=DEFAULT_EXERCISE_IDX,
         items=[item.model_dump() for item in payload.items],
+    )
+    await db.commit()
+    return result
+
+
+@router.delete("/tracks/{track_id}/games/pairs/templates", response_model=DeletePairTemplatesResponse)
+async def delete_game2_pairs_templates_endpoint(
+    track_id: int,
+    _: object = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await delete_game2_pairs_templates(
+        db, track_id=track_id, exercise_idx=DEFAULT_EXERCISE_IDX,
+    )
+    await db.commit()
+    return result
+
+
+@router.delete("/tracks/{track_id}/games/pairs/{exercise_idx}/templates", response_model=DeletePairTemplatesResponse)
+async def delete_game2_pairs_templates_by_exercise_endpoint(
+    track_id: int,
+    exercise_idx: int,
+    _: object = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await delete_game2_pairs_templates(
+        db, track_id=track_id, exercise_idx=exercise_idx,
     )
     await db.commit()
     return result

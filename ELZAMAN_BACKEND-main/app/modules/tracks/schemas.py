@@ -73,3 +73,8 @@ class TrackLevelCardsResponse(BaseModel):
     track_id: int
     level: int
     items: list[FlashcardTemplateItem]
+
+
+class DeleteTemplatesResponse(BaseModel):
+    track_id: int
+    deleted_count: int

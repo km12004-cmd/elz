@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
 from app.modules.tracks.schemas import (
+    DeleteTemplatesResponse,
     FlashcardTemplateBulkCreateRequest,
     FlashcardTemplateBulkCreateResponse,
     FlashcardTemplateItem,
@@ -15,6 +16,8 @@ from app.modules.tracks.schemas import (
 )
 from app.modules.tracks.service import (
     create_flashcard_templates,
+    delete_flashcard_templates,
+    delete_track_level_cards,
     get_learning_state,
     list_flashcard_templates,
     list_track_level_cards,
@@ -67,6 +70,29 @@ async def create_flashcard_templates_endpoint(
         track_id=track_id,
         items=[item.model_dump() for item in payload.items],
     )
+    await db.commit()
+    return result
+
+
+@router.delete("/{track_id}/flashcard-templates", response_model=DeleteTemplatesResponse)
+async def delete_flashcard_templates_endpoint(
+    track_id: int,
+    _: object = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await delete_flashcard_templates(db, track_id=track_id)
+    await db.commit()
+    return result
+
+
+@router.delete("/{track_id}/levels/{level}/cards", response_model=DeleteTemplatesResponse)
+async def delete_track_level_cards_endpoint(
+    track_id: int,
+    level: int,
+    _: object = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await delete_track_level_cards(db, track_id=track_id, level=level)
     await db.commit()
     return result
 

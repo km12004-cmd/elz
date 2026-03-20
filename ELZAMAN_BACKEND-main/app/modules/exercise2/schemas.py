@@ -92,3 +92,9 @@ class Game2SessionStatusResponse(BaseModel):
     total: int
     remaining: int
     answers: list[Game2SessionAnswer]
+
+
+class DeletePairTemplatesResponse(BaseModel):
+    track_id: int
+    exercise: int
+    deleted_count: int
