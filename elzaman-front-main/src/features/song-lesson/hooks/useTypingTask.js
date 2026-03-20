@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { normalizeId } from '@/shared/lib/normalizeId';
 import { areEquivalentText } from '@/features/song-lesson/lib/typingLogic';
 
@@ -7,6 +7,8 @@ export function useTypingTask() {
   const [rows, setRows] = useState([]);
   const [inputs, setInputs] = useState({});
   const [results, setResults] = useState({});
+  const [stats, setStats] = useState({ checks: 0, errors: 0 });
+  const wrongRowsRef = useRef(new Set());
 
   const correctCount = useMemo(
     () =>
@@ -39,6 +41,8 @@ export function useTypingTask() {
     setRows(newRows);
     setInputs({});
     setResults({});
+    setStats({ checks: 0, errors: 0 });
+    wrongRowsRef.current = new Set();
   }, []);
 
   const resetState = useCallback(() => {
@@ -46,9 +50,11 @@ export function useTypingTask() {
     setRows([]);
     setInputs({});
     setResults({});
+    setStats({ checks: 0, errors: 0 });
+    wrongRowsRef.current = new Set();
   }, []);
 
-  // Check all answers, returns { nextResults, allCorrect }
+  // Check all answers, returns { nextResults, allCorrect, newErrors, nextStats }
   const checkAllAnswers = useCallback(() => {
     const nextResults = rows.reduce((accumulator, row) => {
       const rowId = normalizeId(row?.rowId);
@@ -60,13 +66,29 @@ export function useTypingTask() {
 
     setResults(nextResults);
 
+    let newErrors = 0;
+    for (const row of rows) {
+      const rowId = normalizeId(row?.rowId);
+      if (!rowId) continue;
+      if (nextResults[rowId] === false && !wrongRowsRef.current.has(rowId)) {
+        wrongRowsRef.current.add(rowId);
+        newErrors += 1;
+      }
+    }
+
+    const nextStats = {
+      checks: stats.checks + 1,
+      errors: stats.errors + newErrors,
+    };
+    setStats(nextStats);
+
     const allCorrect = rows.every((row) => {
       const rowId = normalizeId(row?.rowId);
       return rowId ? nextResults[rowId] === true : false;
     });
 
-    return { nextResults, allCorrect };
-  }, [inputs, rows]);
+    return { nextResults, allCorrect, newErrors, nextStats };
+  }, [inputs, rows, stats]);
 
   return {
     sessionId,
@@ -74,6 +96,7 @@ export function useTypingTask() {
     inputs,
     results,
     correctCount,
+    stats,
     onInputChange,
     initSession,
     resetState,

@@ -108,6 +108,7 @@ function SongLessonPage() {
   const lyricsContainerRef = useRef(null);
   const lyricsWordPopoverRef = useRef(null);
   const lessonErrorsRef = useRef(0);
+  const lessonStatsRef = useRef({ correct: 0, total: 0, errors: 0, checks: 0 });
 
   const isTaskOneStage = activeStage === LESSON_STAGE.TASK_1;
   const isTaskTwoStage = activeStage === LESSON_STAGE.TASK_2;
@@ -135,6 +136,7 @@ function SongLessonPage() {
     setIsLoading(true);
     setLoadError('');
     lessonErrorsRef.current = 0;
+    lessonStatsRef.current = { correct: 0, total: 0, errors: 0, checks: 0 };
 
     try {
       const detail = await fetchSongDetail({ token, songId: normalizedSongId });
@@ -837,6 +839,12 @@ function SongLessonPage() {
 
       if (allResolved) {
         lessonErrorsRef.current += nextStats.errors;
+        lessonStatsRef.current = {
+          correct: lessonStatsRef.current.correct + taskTwo.items.length,
+          total: lessonStatsRef.current.total + taskTwo.items.length,
+          errors: lessonStatsRef.current.errors + nextStats.errors,
+          checks: lessonStatsRef.current.checks + nextStats.checks,
+        };
         setIsFinishingPairs(true);
 
         let task2FinishResult = null;
@@ -915,12 +923,19 @@ function SongLessonPage() {
   const completeTaskFour = async () => {
     if (typingFour.rows.length === 0) return;
 
-    const { nextResults, allCorrect } = typingFour.checkAllAnswers();
+    const { allCorrect, newErrors } = typingFour.checkAllAnswers();
     if (!allCorrect) {
-      const wrongCount = Object.values(nextResults).filter((v) => v === false).length;
-      lessonErrorsRef.current += wrongCount;
+      lessonErrorsRef.current += newErrors;
       return;
     }
+
+    lessonErrorsRef.current += typingFour.stats.errors;
+    lessonStatsRef.current = {
+      correct: lessonStatsRef.current.correct + typingFour.rows.length,
+      total: lessonStatsRef.current.total + typingFour.rows.length,
+      errors: lessonStatsRef.current.errors + typingFour.stats.errors,
+      checks: lessonStatsRef.current.checks + typingFour.stats.checks,
+    };
 
     setIsCompletingTaskFour(true);
     setTaskError('');
@@ -967,12 +982,19 @@ function SongLessonPage() {
   const completeTaskFive = async () => {
     if (typingFive.rows.length === 0) return;
 
-    const { nextResults, allCorrect } = typingFive.checkAllAnswers();
+    const { allCorrect, newErrors } = typingFive.checkAllAnswers();
     if (!allCorrect) {
-      const wrongCount = Object.values(nextResults).filter((v) => v === false).length;
-      lessonErrorsRef.current += wrongCount;
+      lessonErrorsRef.current += newErrors;
       return;
     }
+
+    lessonErrorsRef.current += typingFive.stats.errors;
+    lessonStatsRef.current = {
+      correct: lessonStatsRef.current.correct + typingFive.rows.length,
+      total: lessonStatsRef.current.total + typingFive.rows.length,
+      errors: lessonStatsRef.current.errors + typingFive.stats.errors,
+      checks: lessonStatsRef.current.checks + typingFive.stats.checks,
+    };
 
     setIsCompletingTaskFive(true);
     setTaskError('');
@@ -1054,9 +1076,10 @@ function SongLessonPage() {
         };
       });
 
-      const finalCorrect = finishResult?.correct ?? typingFive.rows.length;
-      const finalTotal = finishResult?.total ?? typingFive.rows.length;
-      const finalErrors = Math.max(finalTotal - finalCorrect, 0);
+      const agg = lessonStatsRef.current;
+      const finalTotal = agg.total;
+      const finalErrors = agg.errors;
+      const finalCorrect = finalTotal - finalErrors;
       const finalAccuracy = finalTotal > 0 ? Math.round((finalCorrect / finalTotal) * 100) : 100;
 
       setCompletionModal({
@@ -1065,7 +1088,7 @@ function SongLessonPage() {
         correct: finalCorrect,
         total: finalTotal,
         errors: finalErrors,
-        checks: 1,
+        checks: agg.checks,
         accuracy: finalAccuracy,
         nextCta: 'Open flashcards',
       });
@@ -1112,6 +1135,12 @@ function SongLessonPage() {
 
       if (allResolved) {
         lessonErrorsRef.current += nextStats.errors;
+        lessonStatsRef.current = {
+          correct: lessonStatsRef.current.correct + taskThree.items.length,
+          total: lessonStatsRef.current.total + taskThree.items.length,
+          errors: lessonStatsRef.current.errors + nextStats.errors,
+          checks: lessonStatsRef.current.checks + nextStats.checks,
+        };
         setIsFinishingPairs(true);
 
         let task3FinishResult = null;
