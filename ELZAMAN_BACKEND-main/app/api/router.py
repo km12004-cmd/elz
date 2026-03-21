@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.modules.achievements.router import router as achievements_router
 from app.modules.admin.router import router as admin_router
 from app.modules.artists.router import router as artists_router
 from app.modules.auth.router import router as auth_router
@@ -15,6 +16,7 @@ from app.modules.tracks.router import router as tracks_router
 from app.modules.xp.router import router as xp_router
 
 api_router = APIRouter()
+api_router.include_router(achievements_router)
 api_router.include_router(general_router)
 api_router.include_router(auth_router)
 api_router.include_router(profile_router)

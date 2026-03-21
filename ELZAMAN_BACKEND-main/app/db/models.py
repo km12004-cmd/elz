@@ -422,3 +422,16 @@ class SongTranslation(Base):
     dst_lang: Mapped[str] = mapped_column(String(10), nullable=False)
     src: Mapped[str] = mapped_column(String(255), nullable=False)
     dst_text: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class UserAchievement(Base):
+    __tablename__ = "user_achievements"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    achievement_code: Mapped[str] = mapped_column(String(50), primary_key=True)
+    unlocked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utcnow,
+        server_default=text("now()"),
+        nullable=False,
+    )
