@@ -1197,6 +1197,175 @@ function SongLessonPage() {
     }
   };
 
+  const lessonActionButtons = (
+    <>
+      {isTaskOneStage ? (
+        <>
+          <button
+            type="button"
+            className={styles.primaryActionButton}
+            onClick={completeTaskOne}
+            disabled={isCompletingTask || isPreparingPairs || isPreparingTask}>
+            {isCompletingTask || isPreparingPairs ? 'Подготовка...' : 'ОК'}
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryActionButton}
+            onClick={() => setActiveStage(LESSON_STAGE.SONG)}
+            disabled={isCompletingTask || isPreparingPairs}>
+            Вернуться к песне
+          </button>
+        </>
+      ) : null}
+
+      {isTaskTwoStage ? (
+        <>
+          {taskTwo.items.length > 0 && taskTwo.options.length > 0 ? (
+            <button
+              type="button"
+              className={styles.primaryActionButton}
+              onClick={
+                taskTwo.allCorrect ? startTaskThreeFromTaskTwo : checkTaskTwoAnswers
+              }
+              disabled={
+                taskTwo.allCorrect
+                  ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                  : !taskTwo.readyToCheck ||
+                    isPreparingPairs ||
+                    isSubmittingPairsAnswer ||
+                    isFinishingPairs
+              }>
+              {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                ? 'Проверка...'
+                : taskTwo.allCorrect
+                ? 'Начать задание 3'
+                : 'Проверить'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.primaryActionButton}
+              onClick={startTaskThreeFromTaskTwo}
+              disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
+              {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                ? 'Подготовка...'
+                : 'Открыть задание 3'}
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={styles.secondaryActionButton}
+            onClick={() => setActiveStage(LESSON_STAGE.TASK_1)}
+            disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
+            К заданию 1
+          </button>
+        </>
+      ) : null}
+
+      {isTaskThreeStage ? (
+        <>
+          {taskThree.items.length > 0 && taskThree.options.length > 0 ? (
+            <button
+              type="button"
+              className={styles.primaryActionButton}
+              onClick={
+                taskThree.allCorrect ? startTaskFourFromTaskThree : checkTaskThreeAnswers
+              }
+              disabled={
+                taskThree.allCorrect
+                  ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                  : !taskThree.readyToCheck ||
+                    isPreparingPairs ||
+                    isSubmittingPairsAnswer ||
+                    isFinishingPairs
+              }>
+              {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                ? 'Проверка...'
+                : taskThree.allCorrect
+                ? 'Начать задание 4'
+                : 'Проверить'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.primaryActionButton}
+              onClick={startTaskFourFromTaskThree}
+              disabled={isPreparingPairs || isFinishingPairs || isSubmittingPairsAnswer}>
+              Открыть задание 4
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={styles.secondaryActionButton}
+            onClick={() => setActiveStage(LESSON_STAGE.TASK_2)}
+            disabled={isFinishingPairs || isSubmittingPairsAnswer || isPreparingPairs}>
+            К заданию 2
+          </button>
+        </>
+      ) : null}
+
+      {isTaskFourStage ? (
+        <>
+          <button
+            type="button"
+            className={styles.primaryActionButton}
+            onClick={completeTaskFour}
+            disabled={
+              isCompletingTaskFour || isPreparingPairs || typingFour.rows.length === 0
+            }>
+            {isCompletingTaskFour || isPreparingPairs
+              ? 'Подготовка...'
+              : 'Проверить и начать задание 5'}
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryActionButton}
+            onClick={() => setActiveStage(LESSON_STAGE.TASK_3)}
+            disabled={isCompletingTaskFour || isPreparingPairs}>
+            К заданию 3
+          </button>
+        </>
+      ) : null}
+
+      {isTaskFiveStage ? (
+        <>
+          <button
+            type="button"
+            className={styles.primaryActionButton}
+            onClick={completeTaskFive}
+            disabled={
+              isCompletingTaskFive || isPreparingPairs || typingFive.rows.length === 0
+            }>
+            {isCompletingTaskFive || isPreparingPairs ? 'Завершение...' : 'Завершить урок'}
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryActionButton}
+            onClick={() => setActiveStage(LESSON_STAGE.TASK_4)}
+            disabled={isCompletingTaskFive || isPreparingPairs}>
+            К заданию 4
+          </button>
+        </>
+      ) : null}
+
+      {!isTaskOneStage &&
+      !isTaskTwoStage &&
+      !isTaskThreeStage &&
+      !isTaskFourStage &&
+      !isTaskFiveStage ? (
+        <button
+          type="button"
+          className={styles.primaryActionButton}
+          onClick={openTaskOne}
+          disabled={isPreparingTask}>
+          {isPreparingTask ? 'Подготовка...' : 'Начать обучение'}
+        </button>
+      ) : null}
+    </>
+  );
+
   return (
     <section className={styles.page}>
       <header className={styles.header}>
@@ -1542,172 +1711,7 @@ function SongLessonPage() {
                 </a>
               ) : null}
 
-              <div className={styles.lessonActions}>
-                {isTaskOneStage ? (
-                  <>
-                    <button
-                      type="button"
-                      className={styles.primaryActionButton}
-                      onClick={completeTaskOne}
-                      disabled={isCompletingTask || isPreparingPairs || isPreparingTask}>
-                      {isCompletingTask || isPreparingPairs ? 'Подготовка...' : 'ОК'}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.secondaryActionButton}
-                      onClick={() => setActiveStage(LESSON_STAGE.SONG)}
-                      disabled={isCompletingTask || isPreparingPairs}>
-                      Вернуться к песне
-                    </button>
-                  </>
-                ) : null}
-
-                {isTaskTwoStage ? (
-                  <>
-                    {taskTwo.items.length > 0 && taskTwo.options.length > 0 ? (
-                      <button
-                        type="button"
-                        className={styles.primaryActionButton}
-                        onClick={
-                          taskTwo.allCorrect ? startTaskThreeFromTaskTwo : checkTaskTwoAnswers
-                        }
-                        disabled={
-                          taskTwo.allCorrect
-                            ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                            : !taskTwo.readyToCheck ||
-                              isPreparingPairs ||
-                              isSubmittingPairsAnswer ||
-                              isFinishingPairs
-                        }>
-                        {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                          ? 'Проверка...'
-                          : taskTwo.allCorrect
-                          ? 'Начать задание 3'
-                          : 'Проверить'}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className={styles.primaryActionButton}
-                        onClick={startTaskThreeFromTaskTwo}
-                        disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
-                        {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                          ? 'Подготовка...'
-                          : 'Открыть задание 3'}
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      className={styles.secondaryActionButton}
-                      onClick={() => setActiveStage(LESSON_STAGE.TASK_1)}
-                      disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
-                      К заданию 1
-                    </button>
-                  </>
-                ) : null}
-
-                {isTaskThreeStage ? (
-                  <>
-                    {taskThree.items.length > 0 && taskThree.options.length > 0 ? (
-                      <button
-                        type="button"
-                        className={styles.primaryActionButton}
-                        onClick={
-                          taskThree.allCorrect ? startTaskFourFromTaskThree : checkTaskThreeAnswers
-                        }
-                        disabled={
-                          taskThree.allCorrect
-                            ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                            : !taskThree.readyToCheck ||
-                              isPreparingPairs ||
-                              isSubmittingPairsAnswer ||
-                              isFinishingPairs
-                        }>
-                        {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
-                          ? 'Проверка...'
-                          : taskThree.allCorrect
-                          ? 'Начать задание 4'
-                          : 'Проверить'}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className={styles.primaryActionButton}
-                        onClick={startTaskFourFromTaskThree}
-                        disabled={isPreparingPairs || isFinishingPairs || isSubmittingPairsAnswer}>
-                        Открыть задание 4
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      className={styles.secondaryActionButton}
-                      onClick={() => setActiveStage(LESSON_STAGE.TASK_2)}
-                      disabled={isFinishingPairs || isSubmittingPairsAnswer || isPreparingPairs}>
-                      К заданию 2
-                    </button>
-                  </>
-                ) : null}
-
-                {isTaskFourStage ? (
-                  <>
-                    <button
-                      type="button"
-                      className={styles.primaryActionButton}
-                      onClick={completeTaskFour}
-                      disabled={
-                        isCompletingTaskFour || isPreparingPairs || typingFour.rows.length === 0
-                      }>
-                      {isCompletingTaskFour || isPreparingPairs
-                        ? 'Подготовка...'
-                        : 'Проверить и начать задание 5'}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.secondaryActionButton}
-                      onClick={() => setActiveStage(LESSON_STAGE.TASK_3)}
-                      disabled={isCompletingTaskFour || isPreparingPairs}>
-                      К заданию 3
-                    </button>
-                  </>
-                ) : null}
-
-                {isTaskFiveStage ? (
-                  <>
-                    <button
-                      type="button"
-                      className={styles.primaryActionButton}
-                      onClick={completeTaskFive}
-                      disabled={
-                        isCompletingTaskFive || isPreparingPairs || typingFive.rows.length === 0
-                      }>
-                      {isCompletingTaskFive || isPreparingPairs ? 'Завершение...' : 'Завершить урок'}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.secondaryActionButton}
-                      onClick={() => setActiveStage(LESSON_STAGE.TASK_4)}
-                      disabled={isCompletingTaskFive || isPreparingPairs}>
-                      К заданию 4
-                    </button>
-                  </>
-                ) : null}
-
-                {!isTaskOneStage &&
-                !isTaskTwoStage &&
-                !isTaskThreeStage &&
-                !isTaskFourStage &&
-                !isTaskFiveStage ? (
-                  <button
-                    type="button"
-                    className={styles.primaryActionButton}
-                    onClick={openTaskOne}
-                    disabled={isPreparingTask}>
-                    {isPreparingTask ? 'Подготовка...' : 'Начать обучение'}
-                  </button>
-                ) : null}
-              </div>
+              <div className={styles.lessonActions}>{lessonActionButtons}</div>
 
               <span className={styles.trackBadge}>
                 {isTaskFiveStage
@@ -1746,6 +1750,8 @@ function SongLessonPage() {
               </dl>
             </article>
           </aside>
+
+          <div className={styles.lessonActionsMobile}>{lessonActionButtons}</div>
         </div>
       ) : null}
 

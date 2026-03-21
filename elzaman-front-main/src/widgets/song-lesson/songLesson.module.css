@@ -543,6 +543,10 @@
   gap: 8px;
 }
 
+.lessonActionsMobile {
+  display: none;
+}
+
 .primaryActionButton,
 .secondaryActionButton {
   border-radius: 12px;
@@ -1195,21 +1199,17 @@
   }
 
   .lessonActions {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 90;
-    margin-top: 0;
-    padding: 12px 16px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    background: var(--color-bg-card);
-    border-top: 1px solid var(--color-border-soft);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
   }
 
-  .page {
-    padding-bottom: 90px;
+  .lessonActionsMobile {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--color-border-soft);
+    background: var(--color-bg-card);
+    box-shadow: var(--shadow-card);
   }
 
   .title {
