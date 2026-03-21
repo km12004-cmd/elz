@@ -1,0 +1,114 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.input,
+.select {
+  width: 100%;
+  background: var(--color-bg-content);
+  border: 1px solid var(--color-border-soft);
+  color: var(--color-text-main);
+  padding: 11px 13px;
+  border-radius: 11px;
+  outline: none;
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+.input:focus,
+.select:focus {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-accent);
+}
+
+.select {
+  cursor: pointer;
+}
+
+.error {
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.submitButton {
+  width: 100%;
+  padding: 11px 13px;
+  border: none;
+  border-radius: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--color-text-on-accent);
+  background: var(--color-primary);
+  transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.switchRow {
+  margin-top: 2px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 6px;
+  color: var(--color-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--color-primary-link-hover);
+}
+
+@media (max-width: 640px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .input,
+  .select {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .submitButton {
+    padding: 10px 12px;
+  }
+}

@@ -1,0 +1,88 @@
+.emptyState {
+  border-radius: 18px;
+  border: 1px solid var(--color-border-soft);
+  background:
+    radial-gradient(circle at 10% -24%, var(--color-accent-soft), transparent 62%),
+    var(--gradient-dashboard-item);
+  padding: 28px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: 1px solid var(--color-accent-border-soft);
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  color: var(--color-text-main);
+  font-size: clamp(24px, 3.2vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.description {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 560px;
+}
+
+.actionButton {
+  margin-top: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-accent);
+  background: var(--color-primary);
+  color: var(--color-text-on-accent);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lifted);
+}
+
+.actionButton:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .emptyState {
+    padding: 22px 14px;
+    gap: 7px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .description {
+    font-size: 14px;
+  }
+
+  .actionButton {
+    width: 100%;
+    max-width: 280px;
+  }
+}

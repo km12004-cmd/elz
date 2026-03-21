@@ -1,0 +1,26 @@
+.env
+.env.*
+.serena/
+schema.sql
+*.sql
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.log
+.idea/
+.vscode/
+app/media/
+# local documentation
+PROJECT_CONTEXT.md
+# local backups
+.local_backup/
+backup-pre-rewrite-2026-02-03.bundle
