@@ -82,6 +82,8 @@ function shouldRetryWithFallbackBody(error) {
       ? error.status
       : null;
 
+  if (status !== null && status >= 500) return false;
+
   return error instanceof ApiError || status === 400 || status === 422;
 }
 
