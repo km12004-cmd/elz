@@ -1047,6 +1047,23 @@ async def _apply_lyrics_tables_backfill(conn) -> None:
         return
 
 
+async def _apply_drop_songs_difficulty_level(conn) -> None:
+    if conn.dialect.name == "postgresql":
+        await conn.execute(
+            text(
+                """
+                ALTER TABLE public.songs
+                  DROP COLUMN IF EXISTS difficulty_level
+                """
+            )
+        )
+    elif conn.dialect.name == "sqlite":
+        result = await conn.execute(text("PRAGMA table_info(songs)"))
+        columns = {str(row[1]) for row in result.fetchall()}
+        if "difficulty_level" in columns:
+            await conn.execute(text("ALTER TABLE songs DROP COLUMN difficulty_level"))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     try:
@@ -1061,6 +1078,7 @@ async def lifespan(_: FastAPI):
             await _apply_admin_role_backfill(conn)
             await _apply_songs_ru_lyrics_backfill(conn)
             await _apply_lyrics_tables_backfill(conn)
+            await _apply_drop_songs_difficulty_level(conn)
     except Exception as exc:  # pragma: no cover - startup resilience
         print("DB is not available, startup skipped:", exc)
     yield
