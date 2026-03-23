@@ -9,10 +9,12 @@ class SongCreateRequest(BaseModel):
     lyrics_text: str
     lyrics_text_ru: str | None = None
     youtube_url: str | None = None
+    audio_url: str | None = None
     original_language: str = "und"
     release_year: int | None = None
     duration_seconds: int | None = None
     is_published: bool = True
+    artist_id: int | None = None
 
 
 class SongPatchRequest(BaseModel):
