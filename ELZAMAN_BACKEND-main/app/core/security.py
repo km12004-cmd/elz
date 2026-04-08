@@ -13,6 +13,7 @@ from app.core.config import get_settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 JWT_PATTERN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
+PASSWORD_MIN_LENGTH = 8
 
 
 def _settings():
@@ -41,19 +42,19 @@ def verify_password(password: str, password_hash: str) -> bool:
 def validate_password(password: str) -> tuple[bool, str]:
     if len(password.encode("utf-8")) > 72:
         return False, "password too long (bcrypt limit is 72 bytes)"
-    if len(password) < 5:
-        return False, "password must be at least 5 characters"
+    if len(password) < PASSWORD_MIN_LENGTH:
+        return False, f"Password must be at least {PASSWORD_MIN_LENGTH} characters long."
 
     has_letter = bool(re.search(r"[A-Za-z\u0400-\u04FF]", password))
-    digits = re.findall(r"\d", password)
+    has_digit = bool(re.search(r"\d", password))
     has_special = bool(re.search(r"[^A-Za-z0-9\u0400-\u04FF]", password))
 
     if not has_letter:
-        return False, "password must include letters"
-    if len(digits) < 2:
-        return False, "password must include at least 2 digits"
+        return False, "Password must include at least one letter."
+    if not has_digit:
+        return False, "Password must include at least one digit."
     if not has_special:
-        return False, "password must include at least 1 special char"
+        return False, "Password must include at least one special character."
 
     return True, ""
 
