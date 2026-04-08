@@ -253,3 +253,13 @@ export async function updateArtist({ token, artistId, name, bio, avatarUrl } = {
 
   return readArtistFromResponse(data, normalizedArtistId);
 }
+
+export async function deleteArtist({ token, artistId } = {}) {
+  const normalizedArtistId = normalizeId(artistId);
+  if (!normalizedArtistId) throw new Error('Artist id is required');
+
+  return apiRequest(`${ARTISTS_BASE_PATH}/${encodeURIComponent(normalizedArtistId)}`, {
+    method: 'DELETE',
+    token,
+  });
+}

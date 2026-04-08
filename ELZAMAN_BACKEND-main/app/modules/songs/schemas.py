@@ -69,3 +69,6 @@ class SongLyricsResponse(BaseModel):
     lyrics_text_ru: str | None = None
 
 
+class OkResponse(BaseModel):
+    ok: bool = True
+

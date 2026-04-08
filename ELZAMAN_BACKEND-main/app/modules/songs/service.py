@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -320,6 +320,15 @@ async def update_song_for_user(
 
     author_name = await _get_artist_name(db, song.artist_id)
     return _serialize_song(song, author_name, audio_url, audio_provider)
+
+
+async def delete_song(db: AsyncSession, song_id: int) -> None:
+    song = await db.get(Song, song_id)
+    if not song:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
+
+    await db.execute(delete(Song).where(Song.id == song_id))
+    await db.flush()
 
 
 async def get_song_detail(db: AsyncSession, song_id: int) -> dict[str, object]:

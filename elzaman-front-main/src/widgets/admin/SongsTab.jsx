@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
-import { createArtist, updateArtist } from '@/entities/artist/api';
+import { createArtist, deleteArtist, updateArtist } from '@/entities/artist/api';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import {
   createSongRecord,
+  deleteSongRecord,
   fetchSongDetail,
   fetchSongLyrics,
   updateSongRecord,
@@ -16,36 +18,58 @@ import {
 } from '../../pages/admin/lib/adminHelpers';
 import styles from '../../pages/admin/adminConsolePage.module.css';
 
+const INITIAL_ARTIST_FORM = {
+  artistId: '',
+  name: '',
+  bio: '',
+  avatarUrl: '',
+};
+
+const INITIAL_SONG_FORM = {
+  songId: '',
+  title: '',
+  author: '',
+  artistId: '',
+  releaseYear: '',
+  durationSeconds: '',
+  originalLanguage: '',
+  youtubeUrl: '',
+  audioUrl: '',
+  lyricsText: '',
+  lyricsTextRu: '',
+  isPublished: true,
+};
+
+function formatArtistOptionLabel(artist) {
+  const name = artist?.name ?? 'Unknown artist';
+  return artist?.id ? `${name} (ID: ${artist.id})` : name;
+}
+
+function formatSongOptionLabel(song) {
+  const title = song?.title ?? 'Untitled';
+  return song?.id ? `${title} (ID: ${song.id})` : title;
+}
+
 function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthorizedError, onCatalogChange }) {
   const [contentError, setContentError] = useState('');
   const [isLoadingSongDetail, setIsLoadingSongDetail] = useState(false);
   const [helpGuide, setHelpGuide] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
-  const [artistForm, setArtistForm] = useState({
-    artistId: '',
-    name: '',
-    bio: '',
-    avatarUrl: '',
-  });
-  const [songForm, setSongForm] = useState({
-    songId: '',
-    title: '',
-    author: '',
-    artistId: '',
-    releaseYear: '',
-    durationSeconds: '',
-    originalLanguage: '',
-    youtubeUrl: '',
-    audioUrl: '',
-    lyricsText: '',
-    lyricsTextRu: '',
-    isPublished: true,
-  });
+  const [artistForm, setArtistForm] = useState(INITIAL_ARTIST_FORM);
+  const [songForm, setSongForm] = useState(INITIAL_SONG_FORM);
 
   const [isSavingArtist, setIsSavingArtist] = useState(false);
   const [isSavingSong, setIsSavingSong] = useState(false);
+  const [isDeletingArtist, setIsDeletingArtist] = useState(false);
+  const [isDeletingSong, setIsDeletingSong] = useState(false);
 
-  const isMutating = isSavingArtist || isSavingSong || isLoadingSongDetail;
+  const isMutating =
+    isSavingArtist ||
+    isSavingSong ||
+    isDeletingArtist ||
+    isDeletingSong ||
+    isLoadingSongDetail;
 
   const onArtistFieldChange = (field, value) => {
     setArtistForm((prev) => ({ ...prev, [field]: value }));
@@ -54,6 +78,13 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
   const onSongFieldChange = (field, value) => {
     setSongForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  const selectedArtist = artistsCatalog.find(
+    (artist) => normalizeId(artist?.id) === normalizeId(artistForm.artistId),
+  );
+  const selectedSong = songsCatalog.find(
+    (song) => normalizeId(song?.id) === normalizeId(songForm.songId),
+  );
 
   const fillSongFormFromDetail = useCallback((detail, lyricsPayload) => {
     const fallbackLyricsText =
@@ -162,6 +193,26 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
     }
   };
 
+  const onRequestArtistDelete = () => {
+    const artistId = normalizeId(artistForm.artistId);
+    if (!artistId) {
+      setContentError('Select an artist to delete.');
+      return;
+    }
+
+    setContentError('');
+    setPendingDelete({
+      type: 'artist',
+      id: artistId,
+      label: formatArtistOptionLabel(
+        selectedArtist ?? {
+          id: artistId,
+          name: normalizeString(artistForm.name) ?? 'Unknown artist',
+        },
+      ),
+    });
+  };
+
   const onCreateSong = async (event) => {
     event.preventDefault();
     const releaseYearInput = parseOptionalIntegerInput(songForm.releaseYear);
@@ -205,6 +256,26 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
     } finally {
       setIsSavingSong(false);
     }
+  };
+
+  const onRequestSongDelete = () => {
+    const songId = normalizeId(songForm.songId);
+    if (!songId) {
+      setContentError('Select a song to delete.');
+      return;
+    }
+
+    setContentError('');
+    setPendingDelete({
+      type: 'song',
+      id: songId,
+      label: formatSongOptionLabel(
+        selectedSong ?? {
+          id: songId,
+          title: normalizeString(songForm.title) ?? 'Untitled',
+        },
+      ),
+    });
   };
 
   const onUpdateSong = async (event) => {
@@ -257,6 +328,50 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
     }
   };
 
+  const onConfirmDelete = async () => {
+    if (!pendingDelete?.id || !pendingDelete?.type) return;
+
+    if (pendingDelete.type === 'artist') {
+      setIsDeletingArtist(true);
+      setContentError('');
+
+      try {
+        await deleteArtist({ token, artistId: pendingDelete.id });
+        await onCatalogChange();
+        setArtistForm(INITIAL_ARTIST_FORM);
+        setSongForm((prev) =>
+          normalizeId(prev.artistId) === pendingDelete.id
+            ? { ...prev, artistId: '' }
+            : prev,
+        );
+        setPendingDelete(null);
+        showToast('Artist deleted.');
+      } catch (error) {
+        if (onUnauthorizedError(error)) return;
+        setContentError(extractErrorMessage(error, { context: 'admin' }));
+      } finally {
+        setIsDeletingArtist(false);
+      }
+      return;
+    }
+
+    setIsDeletingSong(true);
+    setContentError('');
+
+    try {
+      await deleteSongRecord({ token, songId: pendingDelete.id });
+      await onCatalogChange();
+      setSongForm(INITIAL_SONG_FORM);
+      setPendingDelete(null);
+      showToast('Song deleted.');
+    } catch (error) {
+      if (onUnauthorizedError(error)) return;
+      setContentError(extractErrorMessage(error, { context: 'admin' }));
+    } finally {
+      setIsDeletingSong(false);
+    }
+  };
+
   return (
     <>
       <div className={styles.contentGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
@@ -279,7 +394,7 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
 
           <form className={styles.formRow} onSubmit={onCreateArtist}>
             <label className={styles.fieldLabel} htmlFor="artist-select">
-              Select existing artist (for update)
+              Select existing artist (for update or delete)
             </label>
             <select
               id="artist-select"
@@ -291,7 +406,7 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
               <option value="">Not selected</option>
               {artistsCatalog.map((artist, i) => (
                 <option key={artist.id ?? `a-${i}`} value={artist.id ?? ''}>
-                  {(artist.name ?? 'Unknown') + (artist.id ? ` (#${artist.id})` : '')}
+                  {formatArtistOptionLabel(artist)}
                 </option>
               ))}
             </select>
@@ -333,6 +448,14 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
               >
                 {isSavingArtist ? 'Saving...' : 'Update artist'}
               </button>
+              <button
+                type="button"
+                className={`${styles.mutedButton} ${styles.dangerButton}`}
+                onClick={onRequestArtistDelete}
+                disabled={isMutating}
+              >
+                {isDeletingArtist ? 'Deleting...' : 'Delete artist'}
+              </button>
             </div>
           </form>
         </article>
@@ -353,7 +476,9 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
           <p className={styles.actionDescription}>Create or update songs in the catalog.</p>
 
           <form className={styles.formRow} onSubmit={onCreateSong}>
-            <label className={styles.fieldLabel} htmlFor="song-select">Select existing song</label>
+            <label className={styles.fieldLabel} htmlFor="song-select">
+              Select existing song (title + ID)
+            </label>
             <select
               id="song-select"
               className={styles.select}
@@ -364,7 +489,7 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
               <option value="">Not selected</option>
               {songsCatalog.map((song, i) => (
                 <option key={song.id ?? `s-${i}`} value={song.id ?? ''}>
-                  {(song.title ?? 'Untitled') + (song.id ? ` (#${song.id})` : '')}
+                  {formatSongOptionLabel(song)}
                 </option>
               ))}
             </select>
@@ -425,12 +550,36 @@ function SongsTab({ token, artistsCatalog, songsCatalog, showToast, onUnauthoriz
               <button type="button" className={styles.mutedButton} onClick={onUpdateSong} disabled={isMutating}>
                 {isSavingSong ? 'Saving...' : 'Update song'}
               </button>
+              <button
+                type="button"
+                className={`${styles.mutedButton} ${styles.dangerButton}`}
+                onClick={onRequestSongDelete}
+                disabled={isMutating}
+              >
+                {isDeletingSong ? 'Deleting...' : 'Delete song'}
+              </button>
             </div>
           </form>
         </article>
       </div>
 
       <HelpGuideModal isOpen={Boolean(helpGuide)} onClose={() => setHelpGuide(null)} guide={helpGuide} />
+      <ConfirmDialog
+        isOpen={Boolean(pendingDelete)}
+        title={pendingDelete?.type === 'artist' ? 'Delete artist' : 'Delete song'}
+        description={
+          pendingDelete?.type === 'artist'
+            ? `Delete ${pendingDelete?.label ?? 'this artist'}? If the artist still has songs, deletion will be rejected.`
+            : `Delete ${pendingDelete?.label ?? 'this song'}? This action cannot be undone.`
+        }
+        confirmLabel={pendingDelete?.type === 'artist' ? 'Delete artist' : 'Delete song'}
+        isProcessing={isDeletingArtist || isDeletingSong}
+        onCancel={() => {
+          if (isDeletingArtist || isDeletingSong) return;
+          setPendingDelete(null);
+        }}
+        onConfirm={onConfirmDelete}
+      />
     </>
   );
 }

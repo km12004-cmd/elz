@@ -426,6 +426,16 @@ export async function fetchSongLyrics({ token, songId } = {}) {
   return { lyricsText, lyricsTextRu };
 }
 
+export async function deleteSongRecord({ token, songId } = {}) {
+  const normalizedSongId = normalizeId(songId);
+  if (!normalizedSongId) throw new Error('Song id is required');
+
+  return apiRequest(`${SONGS_BASE_PATH}/${encodeURIComponent(normalizedSongId)}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
 export async function fetchTrackLearningState({ token, trackId } = {}) {
   const normalizedTrackId = normalizeId(trackId);
   if (!normalizedTrackId) throw new Error('Track id is required');

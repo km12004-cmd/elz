@@ -37,7 +37,7 @@ def test_required_api_routes_present():
         "/api/playlists/{playlist_id}/songs": {"GET", "POST"},
         "/api/playlists/{playlist_id}/songs/{song_id}": {"DELETE"},
         "/api/songs": {"GET", "POST"},
-        "/api/songs/{song_id}": {"GET", "PATCH"},
+        "/api/songs/{song_id}": {"GET", "PATCH", "DELETE"},
         "/api/songs/{song_id}/lyrics": {"GET"},
         "/api/artists": {"GET", "POST"},
         "/api/artists/{artist_id}": {"GET", "PATCH", "DELETE"},

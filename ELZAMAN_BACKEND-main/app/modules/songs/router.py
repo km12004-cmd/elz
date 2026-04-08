@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
 from app.modules.songs.schemas import (
+    OkResponse,
     SongCreateRequest,
     SongCreateResponse,
     SongDetailResponse,
@@ -13,6 +14,7 @@ from app.modules.songs.schemas import (
 )
 from app.modules.songs.service import (
     create_song_for_user,
+    delete_song,
     get_song_detail,
     get_song_lyrics_for_user,
     list_songs,
@@ -78,6 +80,17 @@ async def song_patch_endpoint(
     )
     await db.commit()
     return {"ok": True, "song": song}
+
+
+@router.delete("/{song_id}", response_model=OkResponse)
+async def song_delete_endpoint(
+    song_id: int,
+    _: object = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await delete_song(db, song_id)
+    await db.commit()
+    return OkResponse()
 
 
 @router.get("/{song_id}/lyrics", response_model=SongLyricsResponse)
