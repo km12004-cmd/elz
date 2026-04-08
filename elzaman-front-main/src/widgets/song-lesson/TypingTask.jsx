@@ -7,8 +7,7 @@ function TypingTask({
   subtitle,
   rows,
   inputs,
-  results,
-  correctCount,
+  hasReviewedAnswers,
   onInputChange,
   isDisabled,
   emptyMessage,
@@ -19,20 +18,14 @@ function TypingTask({
       <h3 className={styles.taskTitle}>{title}</h3>
       <p className={styles.taskSubtitle}>{subtitle}</p>
 
-      <p className={styles.pairsProgress}>
-        {correctCount}/{rows.length || 0} верно
-      </p>
-
       {rows.length > 0 ? (
         <ol className={styles.typingList}>
           {rows.map((row, index) => {
             const rowId = normalizeId(row?.rowId) ?? `typing-row-${index + 1}`;
             const rowValue = inputs[rowId] ?? '';
-            const rowResult = results[rowId];
             const inputClassName = [
               styles.typingInput,
-              rowResult === true ? styles.typingInputCorrect : '',
-              rowResult === false ? styles.typingInputWrong : '',
+              hasReviewedAnswers ? styles.typingInputReviewed : '',
             ]
               .filter(Boolean)
               .join(' ');
@@ -48,8 +41,11 @@ function TypingTask({
                   onChange={(event) => onInputChange(rowId, event.target.value)}
                   disabled={isDisabled}
                 />
-                {rowResult === true ? <p className={styles.typingRowState}>Верно</p> : null}
-                {rowResult === false ? <p className={styles.typingRowState}>Попробуй ещё</p> : null}
+                {hasReviewedAnswers ? (
+                  <p className={styles.typingAnswer}>
+                    Правильный ответ: {row.expectedKg || '—'}
+                  </p>
+                ) : null}
               </li>
             );
           })}

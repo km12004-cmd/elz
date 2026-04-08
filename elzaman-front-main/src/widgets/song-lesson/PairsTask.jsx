@@ -7,17 +7,12 @@ function PairsTask({
   title,
   items,
   options,
-  resolvedCount,
   linkedCount,
-  allCorrect,
-  accuracy,
-  stats,
+  hasRevealedSolutions,
   selectedPairId,
   assignments,
   optionOwners,
-  wrongPairs,
   connectorPaths,
-  confirmedAnswers,
   onSelectPairItem,
   onAssignOption,
   boardRef,
@@ -46,18 +41,17 @@ function PairsTask({
       <h3 className={styles.taskTitle}>{title}</h3>
 
       <p className={styles.pairsProgress}>
-        {resolvedCount}/{items.length || 0} верно · {linkedCount}/{items.length || 0} связано
+        {hasRevealedSolutions
+          ? 'Правильные ответы показаны'
+          : `Связано: ${linkedCount}/${items.length || 0}`}
       </p>
 
       <p className={styles.pairsHint}>
-        {allCorrect
+        {hasRevealedSolutions
           ? successMessage
           : selectedPairId
-          ? 'Выбери правильный вариант, затем нажми «Проверить».'
+          ? 'Выбери вариант справа, чтобы увидеть связь.'
           : 'Выбери слово слева, чтобы соединить с переводом справа.'}
-      </p>
-      <p className={styles.pairsMeta}>
-        Точность: {accuracy}% · Ошибки: {stats.errors} · Проверки: {stats.checks}
       </p>
 
       <div className={styles.pairsBoardWrap} ref={boardRef}>
@@ -80,7 +74,7 @@ function PairsTask({
               d={connector.d}
               markerEnd={`url(#${arrowMarkerId})`}
               className={`${styles.pairsConnector} ${
-                confirmedAnswers[connector.pairId]?.correct ? styles.pairsConnectorConfirmed : ''
+                hasRevealedSolutions ? styles.pairsConnectorConfirmed : ''
               }`}
             />
           ))}
@@ -93,16 +87,12 @@ function PairsTask({
               {items.map((item, index) => {
                 const pairId = normalizeId(item?.pairId);
                 const isSelected = Boolean(pairId && selectedPairId === pairId);
-                const isCorrect = Boolean(pairId && confirmedAnswers[pairId]?.correct);
-                const isWrong = Boolean(pairId && wrongPairs[pairId]);
-                const isLinked = Boolean(pairId && assignments[pairId] && !isCorrect);
+                const isLinked = Boolean(pairId && assignments[pairId]);
 
                 const pairClassName = [
                   styles.pairsButton,
                   styles.pairsLeftButton,
                   isSelected ? styles.pairsLeftButtonSelected : '',
-                  isCorrect ? styles.pairsLeftButtonCorrect : '',
-                  isWrong ? styles.pairsLeftButtonWrong : '',
                   isLinked ? styles.pairsLeftButtonLinked : '',
                 ]
                   .filter(Boolean)
@@ -115,11 +105,12 @@ function PairsTask({
                       type="button"
                       className={pairClassName}
                       onClick={() => onSelectPairItem(pairId)}
-                      disabled={!pairId || isCorrect || isDisabled}>
+                      disabled={!pairId || hasRevealedSolutions || isDisabled}>
                       <span className={styles.pairsMainText}>{item.leftText || '—'}</span>
-                      {isCorrect ? <span className={styles.pairsStateText}>Верно</span> : null}
-                      {isWrong ? <span className={styles.pairsStateText}>Ещё раз</span> : null}
-                      {!isCorrect && !isWrong && isLinked ? (
+                      {hasRevealedSolutions && isLinked ? (
+                        <span className={styles.pairsStateText}>Ответ</span>
+                      ) : null}
+                      {!hasRevealedSolutions && isLinked ? (
                         <span className={styles.pairsStateText}>Связано</span>
                       ) : null}
                     </button>
@@ -135,11 +126,11 @@ function PairsTask({
               {options.map((option, index) => {
                 const optionId = normalizeId(option?.optionId);
                 const ownerPairId = optionId ? optionOwners.get(optionId) ?? null : null;
-                const { isUsed, isUsedBySelectedPair, isLocked, isLockedByAnotherPair } =
+                const { isUsed, isUsedBySelectedPair, isLockedByAnotherPair } =
                   getOptionUsageState({
                     ownerPairId,
                     selectedPairId,
-                    confirmedAnswers,
+                    confirmedAnswers: assignments,
                   });
 
                 const optionClassName = [
@@ -148,7 +139,6 @@ function PairsTask({
                   selectedPairId ? styles.pairsOptionButtonReady : '',
                   isUsed ? styles.pairsOptionButtonUsed : '',
                   isUsedBySelectedPair ? styles.pairsOptionButtonSelected : '',
-                  isLocked ? styles.pairsOptionButtonLocked : '',
                 ]
                   .filter(Boolean)
                   .join(' ');
@@ -160,11 +150,17 @@ function PairsTask({
                       type="button"
                       className={optionClassName}
                       onClick={() => onAssignOption(optionId)}
-                      disabled={!optionId || !selectedPairId || isLockedByAnotherPair || isDisabled}>
+                      disabled={
+                        !optionId ||
+                        !selectedPairId ||
+                        hasRevealedSolutions ||
+                        isLockedByAnotherPair ||
+                        isDisabled
+                      }>
                       <span className={styles.pairsMainText}>{option.text || '—'}</span>
                       {isUsed ? (
                         <span className={styles.pairsStateText}>
-                          {isLocked ? 'Locked' : isUsedBySelectedPair ? 'Linked' : 'Used'}
+                          {hasRevealedSolutions ? 'Ответ' : isUsedBySelectedPair ? 'Связано' : 'Занято'}
                         </span>
                       ) : null}
                     </button>

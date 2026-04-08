@@ -10,15 +10,12 @@ import {
   buildConnectorPaths,
 } from '@/features/song-lesson/lib/pairsLogic';
 
-const INITIAL_STATS = { checks: 0, attempts: 0, errors: 0 };
-
 export function usePairsTask({ isActive }) {
   const [session, setSession] = useState(null);
   const [answers, setAnswers] = useState({});
   const [draftMatches, setDraftMatches] = useState({});
-  const [wrongPairs, setWrongPairs] = useState({});
   const [selectedPairId, setSelectedPairId] = useState(null);
-  const [stats, setStats] = useState(INITIAL_STATS);
+  const [hasRevealedSolutions, setHasRevealedSolutions] = useState(false);
   const [connectorPaths, setConnectorPaths] = useState([]);
 
   const boardRef = useRef(null);
@@ -51,26 +48,10 @@ export function usePairsTask({ isActive }) {
       }, 0),
     [assignments, items],
   );
-  const pendingCount = useMemo(
-    () =>
-      items.reduce((count, item) => {
-        const pairId = normalizeId(item?.pairId);
-        if (!pairId || answers[pairId]?.correct) return count;
-        return draftMatches[pairId] ? count + 1 : count;
-      }, 0),
-    [answers, draftMatches, items],
-  );
   const optionOwners = useMemo(
     () => toOptionOwnersFromAssignments(assignments),
     [assignments],
   );
-  const readyToCheck =
-    items.length > 0 && linkedCount === items.length && pendingCount > 0;
-  const allCorrect = items.length > 0 && resolvedCount === items.length;
-  const accuracy =
-    stats.attempts > 0
-      ? Math.round(((stats.attempts - stats.errors) / stats.attempts) * 100)
-      : 100;
 
   const recomputeConnectors = useCallback(() => {
     const nextPaths = buildConnectorPaths(
@@ -111,10 +92,11 @@ export function usePairsTask({ isActive }) {
       const normalizedPairId = normalizeId(pairId);
       if (!normalizedPairId) return;
       if (isBusy) return;
+      if (hasRevealedSolutions) return;
       if (answers[normalizedPairId]?.correct) return;
       setSelectedPairId(normalizedPairId);
     },
-    [answers],
+    [answers, hasRevealedSolutions],
   );
 
   const assignOption = useCallback(
@@ -124,6 +106,7 @@ export function usePairsTask({ isActive }) {
       if (!normalizedPairId || !normalizedOptionId) return;
       if (answers[normalizedPairId]?.correct) return;
       if (isBusy) return;
+      if (hasRevealedSolutions) return;
 
       const currentOptionOwner = optionOwners.get(normalizedOptionId);
       setDraftMatches((previous) => {
@@ -135,14 +118,8 @@ export function usePairsTask({ isActive }) {
           confirmedAnswers: answers,
         });
       });
-      setWrongPairs((previous) => {
-        if (!previous[normalizedPairId]) return previous;
-        const next = { ...previous };
-        delete next[normalizedPairId];
-        return next;
-      });
     },
-    [answers, optionOwners, selectedPairId],
+    [answers, hasRevealedSolutions, optionOwners, selectedPairId],
   );
 
   const onBoardScroll = useCallback(() => {
@@ -170,12 +147,17 @@ export function usePairsTask({ isActive }) {
   }, []);
 
   const initSession = useCallback((sessionData) => {
+    const normalizedAnswers = toOnlyCorrectPairsAnswers(toPairsAnswersMap(sessionData?.answers));
+    const sessionItems = Array.isArray(sessionData?.items) ? sessionData.items : [];
+
     setSession(sessionData);
-    setAnswers(toOnlyCorrectPairsAnswers(toPairsAnswersMap(sessionData?.answers)));
+    setAnswers(normalizedAnswers);
     setDraftMatches({});
-    setWrongPairs({});
     setSelectedPairId(null);
-    setStats(INITIAL_STATS);
+    setHasRevealedSolutions(
+      countResolvedPairs(sessionItems, normalizedAnswers) === sessionItems.length &&
+        sessionItems.length > 0,
+    );
     setConnectorPaths([]);
   }, []);
 
@@ -183,65 +165,30 @@ export function usePairsTask({ isActive }) {
     setSession(null);
     setAnswers({});
     setDraftMatches({});
-    setWrongPairs({});
     setSelectedPairId(null);
-    setStats(INITIAL_STATS);
+    setHasRevealedSolutions(false);
     setConnectorPaths([]);
   }, []);
 
-  // Process check results and update state. Returns { nextStats, allResolved }.
-  const applyCheckResults = useCallback(
-    (checkResults) => {
-      const nextConfirmedAnswers = { ...answers };
-      const nextDraft = { ...draftMatches };
-      const nextWrongPairs = {};
-      let errorsInThisCheck = 0;
+  const revealSolutions = useCallback(() => {
+    const nextAnswers = items.reduce((accumulator, item) => {
+      const pairId = normalizeId(item?.pairId);
+      if (!pairId) return accumulator;
 
-      for (const result of checkResults) {
-        if (result.isCorrect) {
-          nextConfirmedAnswers[result.pairId] = {
-            optionId: result.optionId,
-            correct: true,
-          };
-          delete nextDraft[result.pairId];
-        } else {
-          delete nextDraft[result.pairId];
-          nextWrongPairs[result.pairId] = true;
-          errorsInThisCheck += 1;
-        }
-      }
-
-      const nextStats = {
-        checks: stats.checks + 1,
-        attempts: stats.attempts + checkResults.length,
-        errors: stats.errors + errorsInThisCheck,
+      return {
+        ...accumulator,
+        [pairId]: {
+          optionId: pairId,
+          correct: true,
+        },
       };
-      const nextResolvedCount = countResolvedPairs(items, nextConfirmedAnswers);
-      const allResolved = nextResolvedCount === items.length && items.length > 0;
+    }, {});
 
-      setAnswers(nextConfirmedAnswers);
-      setDraftMatches(nextDraft);
-      setWrongPairs(nextWrongPairs);
-      setStats(nextStats);
-      setSelectedPairId(null);
-
-      return { nextStats, allResolved };
-    },
-    [answers, draftMatches, items, stats],
-  );
-
-  // Get pending pairs for checking
-  const getPendingPairs = useCallback(() => {
-    return items
-      .map((item) => normalizeId(item?.pairId))
-      .filter(Boolean)
-      .filter((pairId) => !answers[pairId]?.correct)
-      .map((pairId) => ({
-        pairId,
-        optionId: normalizeId(draftMatches[pairId]),
-      }))
-      .filter((entry) => entry.optionId);
-  }, [answers, draftMatches, items]);
+    setAnswers(nextAnswers);
+    setDraftMatches({});
+    setSelectedPairId(null);
+    setHasRevealedSolutions(true);
+  }, [items]);
 
   return {
     sessionId,
@@ -249,15 +196,10 @@ export function usePairsTask({ isActive }) {
     options,
     resolvedCount,
     linkedCount,
-    pendingCount,
-    allCorrect,
-    readyToCheck,
-    accuracy,
-    stats,
     selectedPairId,
     assignments,
     optionOwners,
-    wrongPairs,
+    hasRevealedSolutions,
     connectorPaths: activeConnectorPaths,
     answers,
     draftMatches,
@@ -270,7 +212,6 @@ export function usePairsTask({ isActive }) {
     registerRightNode,
     initSession,
     resetState,
-    applyCheckResults,
-    getPendingPairs,
+    revealSolutions,
   };
 }
