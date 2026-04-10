@@ -26,7 +26,12 @@ function PremiumPage() {
   const isPremiumUser = Boolean(user?.isPremium ?? user?.is_premium);
 
   async function handleTelegramCheckout() {
-    if (!isAuthenticated || !token || isRedirectingToTelegram || isPremiumUser) return;
+    if (isRedirectingToTelegram || isPremiumUser) return;
+
+    if (!isAuthenticated || !token) {
+      setCheckoutError('Please sign in to continue.');
+      return;
+    }
 
     setCheckoutError('');
     setIsRedirectingToTelegram(true);
@@ -51,37 +56,20 @@ function PremiumPage() {
   }
 
   const premiumButtonLabel = isPremiumUser
-    ? 'Premium already active'
+    ? 'Subscription Active'
     : isRedirectingToTelegram
       ? 'Opening Telegram...'
-      : 'Buy in Telegram / Купить в Telegram';
-
-  const premiumActionHint = isPremiumUser
-    ? 'Your premium subscription is already active.'
-    : isAuthenticated
-      ? 'Оплата проходит в Telegram по QR-коду, активация может занять до 24 часов.'
-      : 'Sign in on the website first, then open Telegram checkout.';
+      : 'Buy Subscription';
 
   return (
     <section className={styles.page}>
       <div className={styles.hero}>
         <p className={styles.heroBadge}>el zaman premium</p>
         <h2 className={styles.heroTitle}>Choose the plan that matches your learning goals</h2>
-        <p className={styles.heroText}>
-          Premium checkout is handled in Telegram with a QR payment flow and manual review.
-        </p>
         <div className={styles.heroActions}>
           <Link to="/" className={styles.backButton}>
             Back to Home
           </Link>
-          <a
-            href="https://www.instagram.com/elzaman.kg"
-            target="_blank"
-            rel="noreferrer"
-            className={styles.supportLink}
-          >
-            Support / Поддержка
-          </a>
         </div>
       </div>
 
@@ -119,23 +107,14 @@ function PremiumPage() {
           </ul>
 
           <div className={styles.purchasePanel}>
-            <p className={styles.purchaseLead}>
-              After opening the bot, the user confirms the rules, receives the QR code, sends the
-              website email, and uploads the payment screenshot.
-            </p>
             <button
               type="button"
               className={styles.purchaseButton}
               onClick={handleTelegramCheckout}
-              disabled={!isAuthenticated || isRedirectingToTelegram || isPremiumUser}
+              disabled={isRedirectingToTelegram || isPremiumUser}
             >
               {premiumButtonLabel}
             </button>
-            <p className={styles.purchaseHint}>{premiumActionHint}</p>
-            <p className={styles.purchaseHint}>
-              Warning / Предупреждение: payment verification and premium activation can take up to
-              24 hours.
-            </p>
             {checkoutError ? <p className={styles.errorMessage}>{checkoutError}</p> : null}
           </div>
 

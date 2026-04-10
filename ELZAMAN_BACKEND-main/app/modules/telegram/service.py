@@ -28,29 +28,50 @@ from app.modules.subscriptions.service import (
 )
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+CALLBACK_MENU_BUY = "menu:buy"
+CALLBACK_MENU_SUPPORT = "menu:support"
+CALLBACK_DONE = "purchase:done"
 CALLBACK_ACCEPT_PREFIX = "purchase:accept:"
 CALLBACK_ADMIN_APPROVE_PREFIX = "admin:approve:"
 CALLBACK_ADMIN_REJECT_PREFIX = "admin:reject:"
 
 
-def _support_keyboard() -> dict[str, list[list[dict[str, str]]]]:
+def _main_menu_keyboard() -> dict[str, list[list[dict[str, str]]]]:
     return {
         "inline_keyboard": [
-            [{"text": "Техподдержка / Support", "url": get_settings().telegram_support_url}],
+            [{"text": "Купить подписку", "callback_data": CALLBACK_MENU_BUY}],
+            [{"text": "Техподдержка", "callback_data": CALLBACK_MENU_SUPPORT}],
         ]
     }
 
 
-def _checkout_keyboard(request_id: int) -> dict[str, list[list[dict[str, str]]]]:
+def _support_keyboard() -> dict[str, list[list[dict[str, str]]]]:
+    return {
+        "inline_keyboard": [
+            [{"text": "Instagram Direct", "url": get_settings().telegram_support_url}],
+            [{"text": "Купить подписку", "callback_data": CALLBACK_MENU_BUY}],
+        ]
+    }
+
+
+def _agreement_keyboard(request_id: int) -> dict[str, list[list[dict[str, str]]]]:
     return {
         "inline_keyboard": [
             [
                 {
-                    "text": "Я принимаю условия / I accept the terms",
+                    "text": "Я соглашаюсь",
                     "callback_data": f"{CALLBACK_ACCEPT_PREFIX}{request_id}",
                 }
-            ],
-            [{"text": "Техподдержка / Support", "url": get_settings().telegram_support_url}],
+            ]
+        ]
+    }
+
+
+def _receipt_keyboard() -> dict[str, list[list[dict[str, str]]]]:
+    return {
+        "inline_keyboard": [
+            [{"text": "Готово", "callback_data": CALLBACK_DONE}],
+            [{"text": "Техподдержка", "callback_data": CALLBACK_MENU_SUPPORT}],
         ]
     }
 
@@ -80,21 +101,49 @@ def _format_identity(request: SubscriptionPurchaseRequest) -> str:
 def _warning_text() -> str:
     price_label = get_settings().telegram_premium_price_label
     return (
-        "Оплата подписки происходит переводом по QR-коду.\n"
-        f"Стоимость: {price_label}.\n"
-        "После оплаты отправьте email, на который зарегистрирован аккаунт на сайте, и скриншот перевода.\n"
-        "Проверка оплаты и выдача подписки могут занять до 24 часов.\n\n"
-        "Payment is made by transfer using the QR code.\n"
-        f"Price: {price_label}.\n"
-        "After payment, send the email used on the website and the transfer screenshot.\n"
-        "Payment review and subscription activation can take up to 24 hours."
+        "Оформление подписки выполняется вручную после подтверждения оплаты.\n"
+        f"Стоимость подписки: {price_label}.\n\n"
+        "Продолжая оплату, вы подтверждаете, что переводите средства добровольно и по собственной инициативе.\n"
+        "Со своей стороны мы гарантируем, что после проверки перевода подписка будет выдана на аккаунт, "
+        "который зарегистрирован на указанный вами email.\n"
+        "Проверка платежа и активация подписки могут занять до 24 часов.\n\n"
+        "Subscription activation is completed manually after payment verification.\n"
+        f"Subscription price: {price_label}.\n\n"
+        "By proceeding, you confirm that you are making the transfer voluntarily and at your own discretion.\n"
+        "We guarantee that once the transfer is verified, the subscription will be activated for the account "
+        "registered under the email you provide.\n"
+        "Payment review and subscription activation may take up to 24 hours."
     )
 
 
-def _generic_start_text() -> str:
+def _main_menu_text(linked_purchase: bool) -> str:
+    if linked_purchase:
+        return (
+            "Ваш аккаунт распознан. Выберите действие ниже.\n\n"
+            "Your account has been recognized. Choose an action below."
+        )
+
     return (
-        "Откройте бота по кнопке покупки на сайте, чтобы привязать оплату к вашему аккаунту.\n\n"
-        "Open this bot from the purchase button on the website so the payment can be linked to your account."
+        "Выберите действие ниже.\n"
+        "Чтобы оформить подписку, откройте бота по кнопке покупки на сайте, тогда заявка будет привязана к вашему аккаунту.\n\n"
+        "Choose an action below.\n"
+        "To purchase a subscription, open the bot from the website purchase button so the request can be linked to your account."
+    )
+
+
+def _support_text() -> str:
+    return (
+        "Если возникла проблема с оплатой или активацией подписки, пожалуйста, напишите нам в Direct в Instagram "
+        "и кратко опишите ситуацию.\n\n"
+        "If you have any issue with payment or subscription activation, please send us a direct message on Instagram "
+        "and briefly describe the problem."
+    )
+
+
+def _buy_requires_website_text() -> str:
+    return (
+        "Чтобы оформить подписку, сначала нажмите кнопку покупки на сайте. Это привяжет заявку к вашему аккаунту.\n\n"
+        "To purchase a subscription, first use the purchase button on the website. This links the request to your account."
     )
 
 
@@ -110,17 +159,32 @@ def _payment_caption() -> str:
 
 def _email_prompt_text(site_email: str) -> str:
     return (
-        "Отправьте email, на который зарегистрирован аккаунт на сайте.\n"
-        f"Ожидаемый email: {site_email}\n\n"
+        "Отправьте email, на который зарегистрирован ваш аккаунт на сайте.\n"
+        f"Email вашего аккаунта: {site_email}\n\n"
         "Send the email used for your website account.\n"
-        f"Expected email: {site_email}"
+        f"Your account email: {site_email}"
     )
 
 
-def _receipt_prompt_text() -> str:
+def _payment_guide_text() -> str:
     return (
-        "Теперь отправьте скриншот перевода в этот чат.\n\n"
-        "Now send the payment screenshot in this chat."
+        "1. Оплатите подписку по QR-коду.\n"
+        "2. Сделайте скриншот подтверждения перевода.\n"
+        "3. Отправьте скриншот в этот чат.\n"
+        "4. После загрузки скриншота нажмите кнопку «Готово».\n\n"
+        "1. Pay for the subscription using the QR code.\n"
+        "2. Take a screenshot of the payment confirmation.\n"
+        "3. Send the screenshot in this chat.\n"
+        "4. After uploading the screenshot, press “Done”."
+    )
+
+
+def _receipt_received_text() -> str:
+    return (
+        "Скриншот получен. Если всё верно, нажмите «Готово», чтобы отправить заявку администратору.\n"
+        "Если нужно заменить скриншот, просто отправьте новый файл в чат.\n\n"
+        "Your screenshot has been received. If everything is correct, press “Done” to send the request to the administrator.\n"
+        "If you need to replace the screenshot, simply send a new file in the chat."
     )
 
 
@@ -182,13 +246,18 @@ def _need_screenshot_text() -> str:
     )
 
 
+def _done_requires_screenshot_text() -> str:
+    return (
+        "Сначала отправьте скриншот перевода, затем нажмите «Готово».\n\n"
+        "Please send the payment screenshot first, then press “Done”."
+    )
+
+
 def _admin_notification_text(request: SubscriptionPurchaseRequest) -> str:
     return (
         "New premium payment request\n"
         f"Request ID: {request.id}\n"
-        f"Site user ID: {request.user_id}\n"
-        f"Site email: {request.site_email}\n"
-        f"Provided email: {request.provided_email or '-'}\n"
+        f"Email: {request.provided_email or request.site_email}\n"
         f"Telegram: {_format_identity(request)}\n"
         f"Telegram user ID: {request.telegram_user_id or '-'}"
     )
@@ -301,7 +370,7 @@ async def _answer_callback_query(callback_query_id: str, text: str) -> None:
 async def _send_payment_qr(chat_id: int) -> None:
     qr_url = get_settings().telegram_payment_qr_url
     if qr_url:
-        await _send_photo(chat_id, qr_url, caption=_payment_caption(), reply_markup=_support_keyboard())
+        await _send_photo(chat_id, qr_url, caption=_payment_caption())
         return
 
     await _send_message(
@@ -310,7 +379,7 @@ async def _send_payment_qr(chat_id: int) -> None:
             "QR-код для оплаты не настроен. Напишите в поддержку.\n\n"
             "Payment QR code is not configured yet. Please contact support."
         ),
-        reply_markup=_support_keyboard(),
+        reply_markup=_receipt_keyboard(),
     )
 
 
@@ -341,7 +410,40 @@ async def _notify_admins_about_submission(request: SubscriptionPurchaseRequest) 
     return delivered
 
 
-async def _resume_purchase_flow(request: SubscriptionPurchaseRequest) -> None:
+async def _send_main_menu(chat_id: int, *, linked_purchase: bool) -> None:
+    await _send_message(
+        chat_id,
+        _main_menu_text(linked_purchase),
+        reply_markup=_main_menu_keyboard(),
+    )
+
+
+async def _send_support_message(chat_id: int) -> None:
+    await _send_message(
+        chat_id,
+        _support_text(),
+        reply_markup=_support_keyboard(),
+    )
+
+
+async def _send_receipt_step(chat_id: int, *, has_receipt: bool) -> None:
+    if not has_receipt:
+        await _send_payment_qr(chat_id)
+        await _send_message(
+            chat_id,
+            _payment_guide_text(),
+            reply_markup=_receipt_keyboard(),
+        )
+        return
+
+    await _send_message(
+        chat_id,
+        _receipt_received_text(),
+        reply_markup=_receipt_keyboard(),
+    )
+
+
+async def _send_buy_flow_entry(request: SubscriptionPurchaseRequest) -> None:
     if not request.telegram_chat_id:
         return
 
@@ -349,24 +451,21 @@ async def _resume_purchase_flow(request: SubscriptionPurchaseRequest) -> None:
         await _send_message(
             request.telegram_chat_id,
             _warning_text(),
-            reply_markup=_checkout_keyboard(request.id),
+            reply_markup=_agreement_keyboard(request.id),
         )
         return
 
     if request.status == PURCHASE_STATUS_AWAITING_EMAIL:
-        await _send_payment_qr(request.telegram_chat_id)
         await _send_message(
             request.telegram_chat_id,
             _email_prompt_text(request.site_email),
-            reply_markup=_support_keyboard(),
         )
         return
 
     if request.status == PURCHASE_STATUS_AWAITING_RECEIPT:
-        await _send_message(
+        await _send_receipt_step(
             request.telegram_chat_id,
-            _receipt_prompt_text(),
-            reply_markup=_support_keyboard(),
+            has_receipt=bool(request.receipt_file_id),
         )
         return
 
@@ -374,7 +473,6 @@ async def _resume_purchase_flow(request: SubscriptionPurchaseRequest) -> None:
         await _send_message(
             request.telegram_chat_id,
             _submitted_text(),
-            reply_markup=_support_keyboard(),
         )
         return
 
@@ -382,7 +480,6 @@ async def _resume_purchase_flow(request: SubscriptionPurchaseRequest) -> None:
         await _send_message(
             request.telegram_chat_id,
             _approved_text(),
-            reply_markup=_support_keyboard(),
         )
         return
 
@@ -390,7 +487,6 @@ async def _resume_purchase_flow(request: SubscriptionPurchaseRequest) -> None:
         await _send_message(
             request.telegram_chat_id,
             _rejected_text() if request.status == PURCHASE_STATUS_REJECTED else _expired_text(),
-            reply_markup=_support_keyboard(),
         )
 
 
@@ -410,12 +506,14 @@ async def _handle_start_command(
         telegram_user_id = None
 
     if not start_token:
-        await _send_message(chat_id, _generic_start_text(), reply_markup=_support_keyboard())
+        request = await get_latest_chat_purchase_request(db, chat_id)
+        await _send_main_menu(chat_id, linked_purchase=bool(request))
         return
 
     request = await get_purchase_request_by_start_token(db, start_token)
     if not request:
-        await _send_message(chat_id, _expired_text(), reply_markup=_support_keyboard())
+        await _send_message(chat_id, _expired_text())
+        await _send_main_menu(chat_id, linked_purchase=False)
         return
 
     if request.telegram_user_id and telegram_user_id and request.telegram_user_id != telegram_user_id:
@@ -425,7 +523,6 @@ async def _handle_start_command(
                 "Эта ссылка привязана к другому пользователю Telegram.\n\n"
                 "This link is already attached to another Telegram user."
             ),
-            reply_markup=_support_keyboard(),
         )
         return
 
@@ -438,7 +535,7 @@ async def _handle_start_command(
         request.status = PURCHASE_STATUS_AWAITING_ACCEPTANCE
     request.updated_at = datetime.utcnow()
     await db.commit()
-    await _resume_purchase_flow(request)
+    await _send_main_menu(chat_id, linked_purchase=True)
 
 
 async def _handle_accept_callback(
@@ -462,6 +559,11 @@ async def _handle_accept_callback(
         await _answer_callback_query(callback_query_id, "Unauthorized")
         return
 
+    if request.status not in {PURCHASE_STATUS_AWAITING_START, PURCHASE_STATUS_AWAITING_ACCEPTANCE}:
+        await _answer_callback_query(callback_query_id, "Already confirmed")
+        await _send_buy_flow_entry(request)
+        return
+
     if isinstance(chat_id, int):
         request.telegram_chat_id = chat_id
     if isinstance(telegram_user_id, int):
@@ -475,12 +577,94 @@ async def _handle_accept_callback(
 
     await _answer_callback_query(callback_query_id, "Accepted")
     if request.telegram_chat_id:
-        await _send_payment_qr(request.telegram_chat_id)
-        await _send_message(
-            request.telegram_chat_id,
-            _email_prompt_text(request.site_email),
-            reply_markup=_support_keyboard(),
-        )
+        await _send_message(request.telegram_chat_id, _email_prompt_text(request.site_email))
+
+
+async def _handle_menu_buy_callback(
+    db: AsyncSession,
+    callback_query: dict[str, Any],
+) -> None:
+    callback_query_id = str(callback_query.get("id") or "")
+    message = callback_query.get("message") or {}
+    chat = message.get("chat") or {}
+    chat_id = chat.get("id")
+
+    if not isinstance(chat_id, int):
+        if callback_query_id:
+            await _answer_callback_query(callback_query_id, "Chat not found")
+        return
+
+    request = await get_latest_chat_purchase_request(db, chat_id)
+    if not request:
+        await _answer_callback_query(callback_query_id, "Open from website first")
+        await _send_message(chat_id, _buy_requires_website_text(), reply_markup=_main_menu_keyboard())
+        return
+
+    await _answer_callback_query(callback_query_id, "Opening purchase flow")
+    await _send_buy_flow_entry(request)
+
+
+async def _handle_menu_support_callback(callback_query: dict[str, Any]) -> None:
+    callback_query_id = str(callback_query.get("id") or "")
+    message = callback_query.get("message") or {}
+    chat = message.get("chat") or {}
+    chat_id = chat.get("id")
+
+    if callback_query_id:
+        await _answer_callback_query(callback_query_id, "Support")
+    if isinstance(chat_id, int):
+        await _send_support_message(chat_id)
+
+
+async def _handle_done_callback(
+    db: AsyncSession,
+    callback_query: dict[str, Any],
+) -> None:
+    callback_query_id = str(callback_query.get("id") or "")
+    message = callback_query.get("message") or {}
+    chat = message.get("chat") or {}
+    chat_id = chat.get("id")
+
+    if not isinstance(chat_id, int):
+        if callback_query_id:
+            await _answer_callback_query(callback_query_id, "Chat not found")
+        return
+
+    request = await get_latest_chat_purchase_request(db, chat_id)
+    if not request:
+        await _answer_callback_query(callback_query_id, "Open from website first")
+        await _send_message(chat_id, _buy_requires_website_text(), reply_markup=_main_menu_keyboard())
+        return
+
+    if request.status == PURCHASE_STATUS_AWAITING_EMAIL:
+        await _answer_callback_query(callback_query_id, "Email required")
+        await _send_message(chat_id, _email_prompt_text(request.site_email))
+        return
+
+    if request.status != PURCHASE_STATUS_AWAITING_RECEIPT:
+        await _answer_callback_query(callback_query_id, "Already submitted")
+        await _send_buy_flow_entry(request)
+        return
+
+    if not request.receipt_file_id:
+        await _answer_callback_query(callback_query_id, "Screenshot required")
+        await _send_message(chat_id, _done_requires_screenshot_text(), reply_markup=_receipt_keyboard())
+        return
+
+    now = datetime.utcnow()
+    request.submitted_at = now
+    request.status = PURCHASE_STATUS_SUBMITTED
+    request.updated_at = now
+    await db.commit()
+
+    delivered = await _notify_admins_about_submission(request)
+    if delivered:
+        request.admin_notified_at = datetime.utcnow()
+        request.updated_at = request.admin_notified_at
+        await db.commit()
+
+    await _answer_callback_query(callback_query_id, "Sent to admin")
+    await _send_message(chat_id, _submitted_text())
 
 
 async def _handle_admin_approval(
@@ -571,6 +755,18 @@ async def _handle_admin_rejection(
 
 async def handle_callback_query(db: AsyncSession, callback_query: dict[str, Any]) -> None:
     data = str(callback_query.get("data") or "")
+    if data == CALLBACK_MENU_BUY:
+        await _handle_menu_buy_callback(db, callback_query)
+        return
+
+    if data == CALLBACK_MENU_SUPPORT:
+        await _handle_menu_support_callback(callback_query)
+        return
+
+    if data == CALLBACK_DONE:
+        await _handle_done_callback(db, callback_query)
+        return
+
     accept_request_id = _extract_request_id(data, CALLBACK_ACCEPT_PREFIX)
     if accept_request_id is not None:
         await _handle_accept_callback(db, callback_query, accept_request_id)
@@ -608,20 +804,19 @@ async def handle_message(db: AsyncSession, message: dict[str, Any]) -> None:
 
     request = await get_latest_chat_purchase_request(db, chat_id)
     if not request:
-        await _send_message(chat_id, _generic_start_text(), reply_markup=_support_keyboard())
+        await _send_main_menu(chat_id, linked_purchase=False)
         return
 
     if request.status == PURCHASE_STATUS_AWAITING_EMAIL and isinstance(text, str):
         normalized = _normalize_message_email(text)
         if not normalized:
-            await _send_message(chat_id, _invalid_email_text(), reply_markup=_support_keyboard())
+            await _send_message(chat_id, _invalid_email_text())
             return
 
         if normalized != normalize_email(request.site_email):
             await _send_message(
                 chat_id,
                 _email_mismatch_text(request.site_email),
-                reply_markup=_support_keyboard(),
             )
             return
 
@@ -629,70 +824,66 @@ async def handle_message(db: AsyncSession, message: dict[str, Any]) -> None:
         request.status = PURCHASE_STATUS_AWAITING_RECEIPT
         request.updated_at = datetime.utcnow()
         await db.commit()
-        await _send_message(chat_id, _receipt_prompt_text(), reply_markup=_support_keyboard())
+        await _send_receipt_step(chat_id, has_receipt=False)
         return
 
     photos = message.get("photo") or []
     document = message.get("document")
     if request.status == PURCHASE_STATUS_AWAITING_EMAIL and (photos or _is_image_document(document)):
-        await _send_message(chat_id, _need_email_first_text(), reply_markup=_support_keyboard())
+        await _send_message(chat_id, _need_email_first_text())
         return
 
     if request.status == PURCHASE_STATUS_AWAITING_RECEIPT:
-        file_id: str | None = None
-        file_unique_id: str | None = None
-        if photos:
-            largest = photos[-1]
-            file_id = largest.get("file_id")
-            file_unique_id = largest.get("file_unique_id")
-        elif _is_image_document(document):
-            file_id = document.get("file_id")
-            file_unique_id = document.get("file_unique_id")
+        if photos or _is_image_document(document):
+            file_id: str | None = None
+            file_unique_id: str | None = None
+            if photos:
+                largest = photos[-1]
+                file_id = largest.get("file_id")
+                file_unique_id = largest.get("file_unique_id")
+            elif _is_image_document(document):
+                file_id = document.get("file_id")
+                file_unique_id = document.get("file_unique_id")
 
-        if not file_id:
-            await _send_message(chat_id, _need_screenshot_text(), reply_markup=_support_keyboard())
+            if not file_id:
+                await _send_message(chat_id, _need_screenshot_text(), reply_markup=_receipt_keyboard())
+                return
+
+            now = datetime.utcnow()
+            request.receipt_file_id = str(file_id)
+            request.receipt_file_unique_id = str(file_unique_id) if file_unique_id else None
+            request.receipt_submitted_at = now
+            request.updated_at = now
+            await db.commit()
+            await _send_receipt_step(chat_id, has_receipt=True)
             return
 
-        now = datetime.utcnow()
-        request.receipt_file_id = str(file_id)
-        request.receipt_file_unique_id = str(file_unique_id) if file_unique_id else None
-        request.receipt_submitted_at = now
-        request.submitted_at = now
-        request.status = PURCHASE_STATUS_SUBMITTED
-        request.updated_at = now
-        await db.commit()
-
-        delivered = await _notify_admins_about_submission(request)
-        if delivered:
-            request.admin_notified_at = datetime.utcnow()
-            request.updated_at = request.admin_notified_at
-            await db.commit()
-        await _send_message(chat_id, _submitted_text(), reply_markup=_support_keyboard())
+        await _send_receipt_step(chat_id, has_receipt=bool(request.receipt_file_id))
         return
 
     if request.status == PURCHASE_STATUS_SUBMITTED:
-        if not request.admin_notified_at:
+        if not request.admin_notified_at and request.receipt_file_id:
             delivered = await _notify_admins_about_submission(request)
             if delivered:
                 request.admin_notified_at = datetime.utcnow()
                 request.updated_at = request.admin_notified_at
                 await db.commit()
-        await _send_message(chat_id, _submitted_text(), reply_markup=_support_keyboard())
+        await _send_message(chat_id, _submitted_text())
         return
 
     if request.status == PURCHASE_STATUS_APPROVED:
-        await _send_message(chat_id, _approved_text(), reply_markup=_support_keyboard())
+        await _send_message(chat_id, _approved_text())
         return
 
     if request.status == PURCHASE_STATUS_REJECTED:
-        await _send_message(chat_id, _rejected_text(), reply_markup=_support_keyboard())
+        await _send_message(chat_id, _rejected_text())
         return
 
     if request.status == PURCHASE_STATUS_EXPIRED:
-        await _send_message(chat_id, _expired_text(), reply_markup=_support_keyboard())
+        await _send_message(chat_id, _expired_text())
         return
 
-    await _resume_purchase_flow(request)
+    await _send_main_menu(chat_id, linked_purchase=True)
 
 
 async def process_update(db: AsyncSession, update: dict[str, Any]) -> None:

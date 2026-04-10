@@ -7,13 +7,14 @@ import { normalizeRole } from '@/shared/lib/roles';
 import styles from './header.module.css';
 
 const LANGUAGE_OPTIONS = Object.freeze([
-  { value: 'ru', code: 'RU', title: 'Russian' },
-  { value: 'en', code: 'EN', title: 'English' },
+  { value: 'ru', code: 'RU', titleKey: 'Russian' },
+  { value: 'en', code: 'EN', titleKey: 'English' },
+  { value: 'ky', code: 'KY', titleKey: 'Kyrgyz' },
 ]);
 
 function Header() {
   const { isAuthenticated, user, signOut } = useAuth();
-  const { language, setLanguage } = useI18n();
+  const { language, setLanguage, t } = useI18n();
   const { isDarkTheme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
@@ -63,6 +64,7 @@ function Header() {
             <div className={styles.languageSwitch} role="group" aria-label="Interface language">
               {LANGUAGE_OPTIONS.map((option) => {
                 const isActive = language === option.value;
+                const title = t(option.titleKey);
 
                 return (
                   <button
@@ -73,8 +75,8 @@ function Header() {
                     }`}
                     onClick={() => setLanguage(option.value)}
                     aria-pressed={isActive}
-                    aria-label={option.title}
-                    title={option.title}>
+                    aria-label={title}
+                    title={title}>
                     <span className={styles.languageButtonText} data-i18n-skip="true">
                       {option.code}
                     </span>

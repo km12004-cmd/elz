@@ -68,23 +68,9 @@ function normalizeStreak(value, fallback = 0) {
   return Math.max(0, Math.trunc(parsed));
 }
 
-function pluralRu(value, one, few, many) {
-  const count = Math.abs(Number(value) || 0);
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-  return many;
-}
-
-function formatStreakDays(value, language) {
+function formatStreakDays(value, t) {
   const safeValue = normalizeStreak(value);
-  if (language === 'ru') {
-    return `${safeValue} ${pluralRu(safeValue, 'день', 'дня', 'дней')}`;
-  }
-
-  return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
+  return t(`${safeValue} day${safeValue === 1 ? '' : 's'}`);
 }
 
 const CATEGORY_ORDER = ['starter', 'streak', 'vocabulary', 'xp', 'songs', 'perfect'];
@@ -189,7 +175,7 @@ function ProfilePage() {
               <img
                 className={styles.avatar}
                 src={user.avatarUrl}
-                alt={language === 'ru' ? `\u0410\u0432\u0430\u0442\u0430\u0440 ${nickname}` : `${nickname} avatar`}
+                alt={t(`${nickname} avatar`)}
               />
             ) : (
               <span className={styles.avatarFallback}>{avatarLetter}</span>
@@ -207,11 +193,11 @@ function ProfilePage() {
               <span className={styles.streakPill}>
                 <span className={styles.streakIcon} aria-hidden="true" />
                 <span className={styles.streakLabel}>{t('Current streak')}</span>
-                <span className={styles.streakValue}>{formatStreakDays(currentStreak, language)}</span>
+                <span className={styles.streakValue}>{formatStreakDays(currentStreak, t)}</span>
               </span>
               <span className={`${styles.streakPill} ${styles.streakPillMuted}`}>
                 <span className={styles.streakLabel}>{t('Best')}</span>
-                <span className={styles.streakValue}>{formatStreakDays(bestStreak, language)}</span>
+                <span className={styles.streakValue}>{formatStreakDays(bestStreak, t)}</span>
               </span>
             </div>
           </div>
@@ -237,19 +223,14 @@ function ProfilePage() {
           const { level, xpTotal, nextLevelThreshold, xpToNextLevel } = progress;
           const fillPercent = xpFillPercent(level, xpTotal);
           const isMaxLevel = xpToNextLevel === 0;
-          const progressAriaLabel =
-            language === 'ru'
-              ? `\u0423\u0440\u043E\u0432\u0435\u043D\u044C ${level}, ${xpToNextLevel} XP \u0434\u043E \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0433\u043E \u0443\u0440\u043E\u0432\u043D\u044F`
-              : `Level ${level}, ${xpToNextLevel} XP to next level`;
+          const progressAriaLabel = t(`Level ${level}, ${xpToNextLevel} XP to next level`);
           return (
             <>
               <div className={styles.progressHeader}>
                 <span className={styles.progressLevel}>{`${t('Level')} ${level}`}</span>
                 {!isMaxLevel && (
                   <span className={styles.progressXpMeta}>
-                    {language === 'ru'
-                      ? `${xpToNextLevel} XP \u0434\u043E \u0443\u0440. ${level + 1}`
-                      : `${xpToNextLevel} XP to Lv. ${level + 1}`}
+                    {t(`${xpToNextLevel} XP to Lv. ${level + 1}`)}
                   </span>
                 )}
                 {isMaxLevel && (
@@ -321,10 +302,10 @@ function ProfilePage() {
                   {items.map((achievement) => {
                     const title = language === 'ru' && achievement.titleRu
                       ? achievement.titleRu
-                      : achievement.title;
+                      : t(achievement.title);
                     const description = language === 'ru' && achievement.descriptionRu
                       ? achievement.descriptionRu
-                      : achievement.description;
+                      : t(achievement.description);
 
                     return (
                       <article
@@ -369,6 +350,7 @@ function ProfilePage() {
           >
             <option value="ru">{t('Russian')}</option>
             <option value="en">{t('English')}</option>
+            <option value="ky">{t('Kyrgyz')}</option>
           </select>
         </div>
 

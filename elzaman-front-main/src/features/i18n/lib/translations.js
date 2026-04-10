@@ -1,3 +1,5 @@
+import { KY_TRANSLATIONS_SOURCE } from './kyTranslations';
+
 const RU_TRANSLATIONS = Object.freeze({
   Achievements: 'Достижения',
   'Your progress and milestones.': 'Ваш прогресс и вехи.',
@@ -17,7 +19,6 @@ const RU_TRANSLATIONS = Object.freeze({
   'We preserve the Kyrgyz language': 'Мы сохраняем кыргызский язык',
   'through songs, cards, and daily practice.': 'через песни, карточки и ежедневную практику.',
   Connect: 'Контакты',
-  'Developed by Kim Eduard': 'Разработал Kim Eduard',
   'Back to top': 'Наверх',
   Profile: 'Профиль',
   'Full name': 'Полное имя',
@@ -690,6 +691,21 @@ const EN_TRANSLATIONS = Object.freeze(
   }, { ...EN_TRANSLATION_OVERRIDES }),
 );
 
+const KY_TRANSLATIONS = Object.freeze(
+  Object.entries(KY_TRANSLATIONS_SOURCE).reduce((result, [source, translated]) => {
+    if (typeof translated !== 'string' || !translated) return result;
+
+    result[source] = translated;
+
+    const russianSource = RU_TRANSLATIONS[source];
+    if (typeof russianSource === 'string' && russianSource && !(russianSource in result)) {
+      result[russianSource] = translated;
+    }
+
+    return result;
+  }, {}),
+);
+
 function pluralRu(value, one, few, many) {
   const count = Math.abs(Number(value) || 0);
   const mod10 = count % 10;
@@ -1039,6 +1055,173 @@ function translateDynamicEn(value) {
   return null;
 }
 
+function translateDynamicKy(value) {
+  const normalizedFromRussian =
+    EN_TRANSLATIONS[value] ??
+    translateDynamicEn(value);
+
+  if (normalizedFromRussian && normalizedFromRussian !== value) {
+    return translateDynamicKy(normalizedFromRussian);
+  }
+
+  let match;
+
+  match = /^(\d+)\s+day(s)?$/i.exec(value);
+  if (match) return `${match[1]} күн`;
+
+  match = /^(\d+)\s+songs$/i.exec(value);
+  if (match) return `${match[1]} ыр`;
+
+  match = /^(\d+)\s+cards$/i.exec(value);
+  if (match) return `${match[1]} карточка`;
+
+  match = /^(\d+)\s+folders$/i.exec(value);
+  if (match) return `${match[1]} папка`;
+
+  match = /^(\d+)\s+lines$/i.exec(value);
+  if (match) return `${match[1]} сап`;
+
+  match = /^lyrics lines$/i.exec(value);
+  if (match) return 'ыр саптары';
+
+  match = /^(\d+)\s+tokens$/i.exec(value);
+  if (match) return `${match[1]} токен`;
+
+  match = /^tokens$/i.exec(value);
+  if (match) return 'токендер';
+
+  match = /^(\d+)\s+total$/i.exec(value);
+  if (match) return `${match[1]} жалпы`;
+
+  match = /^(\d+)\s+loaded$/i.exec(value);
+  if (match) return `${match[1]} жүктөлдү`;
+
+  match = /^Title must be\s+(\d+)\s+characters or less$/i.exec(value);
+  if (match) return `Аталышы ${match[1]} символдон ашпашы керек`;
+
+  match = /^Description must be\s+(\d+)\s+characters or less$/i.exec(value);
+  if (match) return `Сыпаттама ${match[1]} символдон ашпашы керек`;
+
+  match = /^Folder name must be\s+(\d+)\s+characters or less$/i.exec(value);
+  if (match) return `Папканын аталышы ${match[1]} символдон ашпашы керек`;
+
+  match = /^Level\s+(\d+)$/i.exec(value);
+  if (match) return `Деңгээл ${match[1]}`;
+
+  match = /^Lv\.\s*(\d+)$/i.exec(value);
+  if (match) return `Дең. ${match[1]}`;
+
+  match = /^Task\s+(\d+)$/i.exec(value);
+  if (match) return `Тапшырма ${match[1]}`;
+
+  match = /^Task\s+(\d+):\s+flashcards$/i.exec(value);
+  if (match) return `Тапшырма ${match[1]}: карточкалар`;
+
+  match = /^Task\s+(\d+):\s+matching$/i.exec(value);
+  if (match) return `Тапшырма ${match[1]}: дал келтирүү`;
+
+  match = /^Task\s+(\d+):\s+typing text$/i.exec(value);
+  if (match) return `Тапшырма ${match[1]}: текст жазуу`;
+
+  match = /^To task\s+(\d+)$/i.exec(value);
+  if (match) return `${match[1]}-тапшырмага өт`;
+
+  match = /^Start task\s+(\d+)$/i.exec(value);
+  if (match) return `${match[1]}-тапшырманы башта`;
+
+  match = /^Open task\s+(\d+)$/i.exec(value);
+  if (match) return `${match[1]}-тапшырманы ач`;
+
+  match = /^Year:\s*(.+)$/i.exec(value);
+  if (match) return `Жыл: ${match[1]}`;
+
+  match = /^Duration:\s*(.+)$/i.exec(value);
+  if (match) return `Узактыгы: ${match[1]}`;
+
+  match = /^Added:\s*(.+)$/i.exec(value);
+  if (match) return `Кошулду: ${match[1]}`;
+
+  match = /^Member since\s+(.+)$/i.exec(value);
+  if (match) return `Кошулгандан бери ${match[1]}`;
+
+  match = /^Current streak:\s*(.+)$/i.exec(value);
+  if (match) return `Учурдагы серия: ${match[1]}`;
+
+  match = /^Showing\s+(\d+)(\+?)\s+cards$/i.exec(value);
+  if (match) return `Көрсөтүлгөн карточкалар: ${match[1]}${match[2]}`;
+
+  match = /^Page\s+(\d+)$/i.exec(value);
+  if (match) return `Барак ${match[1]}`;
+
+  match = /^Level\s+(\d+),\s*(\d+)\s+XP to next level$/i.exec(value);
+  if (match) return `Деңгээл ${match[1]}, кийинки деңгээлге ${match[2]} XP`;
+
+  match = /^(\d+)\s+XP to Lv\.\s+(\d+)$/i.exec(value);
+  if (match) return `${match[2]}-деңгээлге чейин ${match[1]} XP`;
+
+  match = /^Premium:\s*(On|Off)$/i.exec(value);
+  if (match) return `Премиум: ${match[1] === 'On' ? 'Активдүү' : 'Өчүк'}`;
+
+  match = /^YouTube player for\s+(.+)$/i.exec(value);
+  if (match) return `${match[1]} үчүн YouTube плеер`;
+
+  match = /^YouTube player:\s+(.+)$/i.exec(value);
+  if (match) return `YouTube плеер: ${match[1]}`;
+
+  match = /^Open actions for\s+(.+)$/i.exec(value);
+  if (match) return `${match[1]} үчүн аракеттерди ач`;
+
+  match = /^(.+)\s+avatar$/i.exec(value);
+  if (match) return `${match[1]} аватары`;
+
+  match = /^Add\s+"(.+)"\s+to playlist$/i.exec(value);
+  if (match) return `"${match[1]}" плейлистке кош`;
+
+  match = /^Add\s+(.+)\s+to playlist$/i.exec(value);
+  if (match) return `${match[1]} плейлистке кош`;
+
+  match = /^Song\s+(.+)\s+is already added$/i.exec(value);
+  if (match) return `${match[1]} ыры мурда эле кошулган`;
+
+  match = /^Adding\s+(.+)$/i.exec(value);
+  if (match) return `${match[1]} кошулууда`;
+
+  match = /^Role updated to\s+(.+)\.$/i.exec(value);
+  if (match) return `Роль жаңыртылды: ${match[1]}.`;
+
+  match = /^Tokenization complete:\s*(.+),\s*(.+)\.$/i.exec(value);
+  if (match) return `Токенизация аяктады: ${match[1]}, ${match[2]}.`;
+
+  match = /^Flashcard templates created:\s*(\d+)\.$/i.exec(value);
+  if (match) return `Карточка шаблондору түзүлдү: ${match[1]}.`;
+
+  match = /^Pairs templates created:\s*(\d+)\.$/i.exec(value);
+  if (match) return `Жуп шаблондору түзүлдү: ${match[1]}.`;
+
+  match = /^Dictionary rows saved:\s*(\d+)\.$/i.exec(value);
+  if (match) return `Сөздүк саптары сакталды: ${match[1]}.`;
+
+  match = /^Remove\s+"(.+)"\s+from this playlist\?$/i.exec(value);
+  if (match) return `Бул плейлисттен "${match[1]}" өчүрүлсүнбү?`;
+
+  match = /^This will remove\s+"(.+)"\s+from your library\.$/i.exec(value);
+  if (match) return `Бул "${match[1]}"ти китепканаңыздан өчүрөт.`;
+
+  match = /^This will remove\s+"(.+)"\s+and all cards inside it\.$/i.exec(value);
+  if (match) return `Бул "${match[1]}"ти жана ичиндеги бардык карточкаларды өчүрөт.`;
+
+  match = /^Accuracy:\s*(.+)\s+·\s+Errors:\s*(.+)\s+·\s+Checks:\s*(.+)$/i.exec(value);
+  if (match) return `Тактык: ${match[1]} · Ката: ${match[2]} · Текшерүү: ${match[3]}`;
+
+  match = /^(\d+)\/(\d+)\s+correct\s+·\s+(\d+)\/(\d+)\s+connected$/i.exec(value);
+  if (match) return `${match[1]}/${match[2]} туура · ${match[3]}/${match[4]} байланышкан`;
+
+  match = /^(\d+)\/(\d+)\s+correct$/i.exec(value);
+  if (match) return `${match[1]}/${match[2]} туура`;
+
+  return null;
+}
+
 function interpolate(template, values) {
   if (!values || typeof values !== 'object') return template;
 
@@ -1057,6 +1240,16 @@ export function translateLiteral(value, language = 'en', values) {
     if (direct) return interpolate(direct, values);
 
     const dynamic = translateDynamicRu(normalizedValue);
+    if (dynamic) return interpolate(dynamic, values);
+
+    return interpolate(value, values);
+  }
+
+  if (language === 'ky') {
+    const direct = KY_TRANSLATIONS[value] ?? KY_TRANSLATIONS[normalizedValue];
+    if (direct) return interpolate(direct, values);
+
+    const dynamic = translateDynamicKy(normalizedValue);
     if (dynamic) return interpolate(dynamic, values);
 
     return interpolate(value, values);
