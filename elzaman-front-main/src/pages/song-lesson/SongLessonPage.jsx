@@ -432,6 +432,8 @@ function SongLessonPage() {
   }, [lyricsWordActionError, lyricsWordActionSuccess]);
 
   const pairsBusy = { isBusy: isPreparingPairs || isSubmittingPairsAnswer };
+  const taskTwoHasPairs = taskTwo.items.length > 0 && taskTwo.options.length > 0;
+  const taskThreeHasPairs = taskThree.items.length > 0 && taskThree.options.length > 0;
 
   const goHome = useCallback(() => {
     setCompletionModal(null);
@@ -451,12 +453,23 @@ function SongLessonPage() {
         const pairId = normalizeId(entry?.pairId);
         if (!pairId) continue;
 
-        await submitPairsGameAnswer({
-          token,
-          sessionId: normalizedSessionId,
-          pairId,
-          optionId: pairId,
-        });
+        try {
+          await submitPairsGameAnswer({
+            token,
+            sessionId: normalizedSessionId,
+            pairId,
+            optionId: pairId,
+          });
+        } catch (error) {
+          const detail =
+            typeof error?.data?.detail === 'string' ? error.data.detail.trim() : '';
+
+          if (error?.status === 409 && detail === 'session is not in progress') {
+            break;
+          }
+
+          throw error;
+        }
       }
 
       const finishResult = await finishPairsGame({
@@ -619,6 +632,26 @@ function SongLessonPage() {
     setTaskError('');
 
     try {
+      let templates = [];
+      try {
+        templates = await fetchTrackPairsTemplates({
+          token,
+          trackId: normalizedSongId,
+          exerciseIdx: THIRD_TASK_LEVEL,
+        });
+      } catch (error) {
+        if (!isRetriableRouteError(error)) throw error;
+      }
+
+      if (templates.length === 0) {
+        taskThree.resetState();
+        typingFour.resetState();
+        typingFive.resetState();
+        setCompletionModal(null);
+        setActiveStage(LESSON_STAGE.TASK_3);
+        return;
+      }
+
       const session = await startTrackPairsGame({
         token,
         trackId: normalizedSongId,
@@ -859,7 +892,7 @@ function SongLessonPage() {
   const startTaskThreeFromTaskTwo = async () => {
     if (isPreparingPairs || isSubmittingPairsAnswer) return;
 
-    if (!taskTwo.hasRevealedSolutions) {
+    if (taskTwoHasPairs && !taskTwo.hasRevealedSolutions) {
       taskTwo.revealSolutions();
       return;
     }
@@ -893,7 +926,7 @@ function SongLessonPage() {
   const startTaskFourFromTaskThree = async () => {
     if (isPreparingPairs || isSubmittingPairsAnswer) return;
 
-    if (!taskThree.hasRevealedSolutions) {
+    if (taskThreeHasPairs && !taskThree.hasRevealedSolutions) {
       taskThree.revealSolutions();
       return;
     }

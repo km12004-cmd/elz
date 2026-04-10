@@ -87,7 +87,7 @@ function shouldRetryWithFallbackBody(error) {
       ? error.status
       : null;
 
-  return error instanceof ApiError || status === 400 || status === 422;
+  return error instanceof ApiError && (status === 400 || status === 422);
 }
 
 async function requestWithFallbackBodies(requestFactory, bodies) {
