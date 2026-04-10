@@ -1,7 +1,37 @@
+import secrets
+from datetime import datetime
+
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import UserSubscription
+from app.core.config import get_settings
+from app.db.models import SubscriptionPurchaseRequest, User, UserSubscription
+
+PURCHASE_STATUS_AWAITING_START = "awaiting_start"
+PURCHASE_STATUS_AWAITING_ACCEPTANCE = "awaiting_acceptance"
+PURCHASE_STATUS_AWAITING_EMAIL = "awaiting_email"
+PURCHASE_STATUS_AWAITING_RECEIPT = "awaiting_receipt"
+PURCHASE_STATUS_SUBMITTED = "submitted"
+PURCHASE_STATUS_APPROVED = "approved"
+PURCHASE_STATUS_REJECTED = "rejected"
+PURCHASE_STATUS_EXPIRED = "expired"
+
+OPEN_PURCHASE_STATUSES = {
+    PURCHASE_STATUS_AWAITING_START,
+    PURCHASE_STATUS_AWAITING_ACCEPTANCE,
+    PURCHASE_STATUS_AWAITING_EMAIL,
+    PURCHASE_STATUS_AWAITING_RECEIPT,
+}
+
+
+def normalize_email(value: str) -> str:
+    return value.strip().lower()
+
+
+def is_telegram_checkout_enabled() -> bool:
+    settings = get_settings()
+    return bool(settings.telegram_bot_token and settings.telegram_bot_username)
 
 
 async def is_premium_user(db: AsyncSession, user_id: int) -> bool:
@@ -14,3 +44,75 @@ async def is_premium_user(db: AsyncSession, user_id: int) -> bool:
         )
     )
     return result.scalar_one_or_none() is not None
+
+
+async def create_telegram_checkout_link(db: AsyncSession, user: User) -> dict[str, int | str]:
+    settings = get_settings()
+    if not is_telegram_checkout_enabled():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="telegram checkout is not configured",
+        )
+
+    if await is_premium_user(db, user.id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="premium subscription is already active",
+        )
+
+    now = datetime.utcnow()
+    result = await db.execute(
+        select(SubscriptionPurchaseRequest).where(
+            SubscriptionPurchaseRequest.user_id == user.id,
+            SubscriptionPurchaseRequest.status.in_(OPEN_PURCHASE_STATUSES),
+        )
+    )
+    for request in result.scalars().all():
+        request.status = PURCHASE_STATUS_EXPIRED
+        request.updated_at = now
+
+    purchase_request = SubscriptionPurchaseRequest(
+        user_id=user.id,
+        start_token=secrets.token_urlsafe(24),
+        site_email=normalize_email(user.email),
+        status=PURCHASE_STATUS_AWAITING_START,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(purchase_request)
+    await db.flush()
+
+    return {
+        "request_id": purchase_request.id,
+        "url": f"https://t.me/{settings.telegram_bot_username}?start={purchase_request.start_token}",
+    }
+
+
+async def get_purchase_request_by_start_token(
+    db: AsyncSession,
+    start_token: str,
+) -> SubscriptionPurchaseRequest | None:
+    result = await db.execute(
+        select(SubscriptionPurchaseRequest).where(SubscriptionPurchaseRequest.start_token == start_token)
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_purchase_request_by_id(
+    db: AsyncSession,
+    request_id: int,
+) -> SubscriptionPurchaseRequest | None:
+    return await db.get(SubscriptionPurchaseRequest, request_id)
+
+
+async def get_latest_chat_purchase_request(
+    db: AsyncSession,
+    telegram_chat_id: int,
+) -> SubscriptionPurchaseRequest | None:
+    result = await db.execute(
+        select(SubscriptionPurchaseRequest)
+        .where(SubscriptionPurchaseRequest.telegram_chat_id == telegram_chat_id)
+        .order_by(SubscriptionPurchaseRequest.updated_at.desc(), SubscriptionPurchaseRequest.id.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()

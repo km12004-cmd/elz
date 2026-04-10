@@ -26,6 +26,8 @@ def test_required_api_routes_present():
         "/api/profile/nickname": {"POST"},
         "/api/profile/timezone": {"POST"},
         "/api/profile/delete/request": {"POST"},
+        "/api/subscriptions/telegram-link": {"POST"},
+        "/api/telegram/webhook": {"POST"},
         "/api/flashcards/due": {"GET"},
         "/api/flashcards/{flashcard_id}/review": {"POST"},
         "/api/flashcards/folders": {"GET", "POST"},

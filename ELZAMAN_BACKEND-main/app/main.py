@@ -15,6 +15,8 @@ OPENAPI_TAGS = [
     {"name": "General", "description": "Service metadata and capabilities."},
     {"name": "Auth", "description": "Registration, login, token refresh, and auth identity."},
     {"name": "Profile", "description": "Profile data and account settings."},
+    {"name": "Subscriptions", "description": "Subscription purchase entry points and checkout links."},
+    {"name": "Telegram", "description": "Telegram bot webhook and manual QR purchase flow."},
     {"name": "Flashcards", "description": "Flashcard review and spaced repetition."},
     {"name": "Playlists", "description": "Playlist operations."},
     {"name": "Songs", "description": "Song media and lyrics operations."},
@@ -39,7 +41,9 @@ OPENAPI_TAGS = [
 ]
 
 SWAGGER_ASSETS_MOUNT_PATH = "/_docs_assets/swagger-ui"
+PUBLIC_ASSETS_MOUNT_PATH = "/static"
 CORS_ALLOWED_ORIGINS = ["https://elzaman-lbcyb.ondigitalocean.app"]
+PUBLIC_ASSETS_ROOT = Path(__file__).resolve().parent / "static"
 
 try:
     from swagger_ui_bundle import swagger_ui_path as _swagger_ui_path
@@ -119,6 +123,8 @@ def create_app() -> FastAPI:
 
     if STORAGE_BACKEND == "local":
         app.mount(MEDIA_URL_PREFIX, StaticFiles(directory=str(MEDIA_ROOT), check_dir=False), name="media")
+
+    app.mount(PUBLIC_ASSETS_MOUNT_PATH, StaticFiles(directory=str(PUBLIC_ASSETS_ROOT), check_dir=False), name="static")
 
     register_exception_handlers(app)
     _register_openapi_schema(app)
