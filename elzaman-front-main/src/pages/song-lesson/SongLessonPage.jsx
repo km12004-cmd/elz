@@ -892,16 +892,6 @@ function SongLessonPage() {
   const startTaskThreeFromTaskTwo = async () => {
     if (isPreparingPairs || isSubmittingPairsAnswer) return;
 
-    if (taskTwo.canCheckAnswers) {
-      taskTwo.checkAnswers();
-      return;
-    }
-
-    if (taskTwo.canRetryIncorrectAnswers) {
-      taskTwo.retryIncorrectAnswers();
-      return;
-    }
-
     if (!taskTwo.canContinue) {
       return;
     }
@@ -934,16 +924,6 @@ function SongLessonPage() {
 
   const startTaskFourFromTaskThree = async () => {
     if (isPreparingPairs || isSubmittingPairsAnswer) return;
-
-    if (taskThree.canCheckAnswers) {
-      taskThree.checkAnswers();
-      return;
-    }
-
-    if (taskThree.canRetryIncorrectAnswers) {
-      taskThree.retryIncorrectAnswers();
-      return;
-    }
 
     if (!taskThree.canContinue) {
       return;
@@ -1106,17 +1086,11 @@ function SongLessonPage() {
               disabled={
                 isPreparingPairs ||
                 isSubmittingPairsAnswer ||
-                (!taskTwo.canContinue &&
-                  !taskTwo.canCheckAnswers &&
-                  !taskTwo.canRetryIncorrectAnswers)
+                !taskTwo.canContinue
               }>
               {isPreparingPairs || isSubmittingPairsAnswer
                 ? 'Подготовка...'
-                : taskTwo.canContinue
-                ? 'Начать задание 3'
-                : taskTwo.canRetryIncorrectAnswers
-                ? 'Попробовать еще раз'
-                : 'Проверить ответы'}
+                : 'Начать задание 3'}
             </button>
           ) : (
             <button
@@ -1136,7 +1110,7 @@ function SongLessonPage() {
               className={styles.secondaryActionButton}
               onClick={() => taskTwo.revealSolutions()}
               disabled={isPreparingPairs || isSubmittingPairsAnswer || taskTwo.hasRevealedSolutions}>
-              {taskTwo.hasRevealedSolutions ? 'Ответы показаны' : 'Показать правильные ответы'}
+              {taskTwo.hasRevealedSolutions ? 'Ответы показаны' : 'Показать ответы'}
             </button>
           ) : null}
 
@@ -1160,17 +1134,11 @@ function SongLessonPage() {
               disabled={
                 isPreparingPairs ||
                 isSubmittingPairsAnswer ||
-                (!taskThree.canContinue &&
-                  !taskThree.canCheckAnswers &&
-                  !taskThree.canRetryIncorrectAnswers)
+                !taskThree.canContinue
               }>
               {isPreparingPairs || isSubmittingPairsAnswer
                 ? 'Подготовка...'
-                : taskThree.canContinue
-                ? 'Начать задание 4'
-                : taskThree.canRetryIncorrectAnswers
-                ? 'Попробовать еще раз'
-                : 'Проверить ответы'}
+                : 'Начать задание 4'}
             </button>
           ) : (
             <button
@@ -1190,7 +1158,7 @@ function SongLessonPage() {
               disabled={
                 isPreparingPairs || isSubmittingPairsAnswer || taskThree.hasRevealedSolutions
               }>
-              {taskThree.hasRevealedSolutions ? 'Ответы показаны' : 'Показать правильные ответы'}
+              {taskThree.hasRevealedSolutions ? 'Ответы показаны' : 'Показать ответы'}
             </button>
           ) : null}
 
@@ -1308,17 +1276,12 @@ function SongLessonPage() {
                 taskNumber={2}
                 title="Соедини слова из задания 1"
                 items={taskTwo.items}
-                resolvedCount={taskTwo.resolvedCount}
                 options={taskTwo.options}
                 linkedCount={taskTwo.linkedCount}
-                incorrectCount={taskTwo.incorrectCount}
-                hasCheckedAnswers={taskTwo.hasCheckedAnswers}
-                hasIncorrectAnswers={taskTwo.hasIncorrectAnswers}
                 hasRevealedSolutions={taskTwo.hasRevealedSolutions}
                 selectedPairId={taskTwo.selectedPairId}
                 assignments={taskTwo.assignments}
                 confirmedAnswers={taskTwo.answers}
-                reviewResults={taskTwo.reviewResults}
                 optionOwners={taskTwo.optionOwners}
                 connectorPaths={taskTwo.connectorPaths}
                 onSelectPairItem={(pairId) => taskTwo.selectPairItem(pairId, pairsBusy)}
@@ -1338,17 +1301,12 @@ function SongLessonPage() {
                 taskNumber={3}
                 title="Соедини фразы из базы данных"
                 items={taskThree.items}
-                resolvedCount={taskThree.resolvedCount}
                 options={taskThree.options}
                 linkedCount={taskThree.linkedCount}
-                incorrectCount={taskThree.incorrectCount}
-                hasCheckedAnswers={taskThree.hasCheckedAnswers}
-                hasIncorrectAnswers={taskThree.hasIncorrectAnswers}
                 hasRevealedSolutions={taskThree.hasRevealedSolutions}
                 selectedPairId={taskThree.selectedPairId}
                 assignments={taskThree.assignments}
                 confirmedAnswers={taskThree.answers}
-                reviewResults={taskThree.reviewResults}
                 optionOwners={taskThree.optionOwners}
                 connectorPaths={taskThree.connectorPaths}
                 onSelectPairItem={(pairId) => taskThree.selectPairItem(pairId, pairsBusy)}

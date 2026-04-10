@@ -121,12 +121,10 @@ export function getOptionUsageState({
   ownerPairId,
   selectedPairId,
   confirmedAnswers,
-  reviewResults,
 }) {
   const isUsed = Boolean(ownerPairId);
   const isUsedBySelectedPair = Boolean(ownerPairId) && ownerPairId === selectedPairId;
   const isCorrect = Boolean(ownerPairId && confirmedAnswers?.[ownerPairId]?.correct);
-  const isWrong = Boolean(ownerPairId && reviewResults?.[ownerPairId]?.correct === false);
   const isLocked = isCorrect;
   const isLockedByAnotherPair = Boolean(ownerPairId) && ownerPairId !== selectedPairId && isLocked;
 
@@ -134,7 +132,6 @@ export function getOptionUsageState({
     isUsed,
     isUsedBySelectedPair,
     isCorrect,
-    isWrong,
     isLocked,
     isLockedByAnotherPair,
   };
