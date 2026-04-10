@@ -914,6 +914,11 @@
   background: var(--color-success-soft);
 }
 
+.pairsOptionButtonWrong {
+  border-color: var(--color-danger-border-stronger);
+  background: var(--color-danger-soft);
+}
+
 .pairsMainText {
   font-size: 14px;
   font-weight: 700;

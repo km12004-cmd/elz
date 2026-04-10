@@ -117,15 +117,24 @@ export function nextDraftMatchesWithReassignedOption({
   return next;
 }
 
-export function getOptionUsageState({ ownerPairId, selectedPairId, confirmedAnswers }) {
+export function getOptionUsageState({
+  ownerPairId,
+  selectedPairId,
+  confirmedAnswers,
+  reviewResults,
+}) {
   const isUsed = Boolean(ownerPairId);
   const isUsedBySelectedPair = Boolean(ownerPairId) && ownerPairId === selectedPairId;
-  const isLocked = Boolean(ownerPairId && confirmedAnswers?.[ownerPairId]?.correct);
+  const isCorrect = Boolean(ownerPairId && confirmedAnswers?.[ownerPairId]?.correct);
+  const isWrong = Boolean(ownerPairId && reviewResults?.[ownerPairId]?.correct === false);
+  const isLocked = isCorrect;
   const isLockedByAnotherPair = Boolean(ownerPairId) && ownerPairId !== selectedPairId && isLocked;
 
   return {
     isUsed,
     isUsedBySelectedPair,
+    isCorrect,
+    isWrong,
     isLocked,
     isLockedByAnotherPair,
   };

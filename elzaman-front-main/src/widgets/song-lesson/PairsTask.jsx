@@ -6,11 +6,17 @@ function PairsTask({
   taskNumber,
   title,
   items,
+  resolvedCount,
   options,
   linkedCount,
+  incorrectCount,
+  hasCheckedAnswers,
+  hasIncorrectAnswers,
   hasRevealedSolutions,
   selectedPairId,
   assignments,
+  confirmedAnswers,
+  reviewResults,
   optionOwners,
   connectorPaths,
   onSelectPairItem,
@@ -43,12 +49,20 @@ function PairsTask({
       <p className={styles.pairsProgress}>
         {hasRevealedSolutions
           ? 'Правильные ответы показаны'
+          : hasCheckedAnswers
+          ? hasIncorrectAnswers
+            ? `Верно: ${resolvedCount}/${items.length || 0}. Ошибок: ${incorrectCount}`
+            : `Все верно: ${resolvedCount}/${items.length || 0}`
           : `Связано: ${linkedCount}/${items.length || 0}`}
       </p>
 
       <p className={styles.pairsHint}>
         {hasRevealedSolutions
           ? successMessage
+          : hasCheckedAnswers
+          ? hasIncorrectAnswers
+            ? 'Правильные связи сохранены. Нажми "Попробовать еще раз", чтобы исправить ошибки.'
+            : 'Все ответы верные. Можно переходить дальше.'
           : selectedPairId
           ? 'Выбери вариант справа, чтобы увидеть связь.'
           : 'Выбери слово слева, чтобы соединить с переводом справа.'}
@@ -88,12 +102,16 @@ function PairsTask({
                 const pairId = normalizeId(item?.pairId);
                 const isSelected = Boolean(pairId && selectedPairId === pairId);
                 const isLinked = Boolean(pairId && assignments[pairId]);
+                const isCorrect = Boolean(pairId && confirmedAnswers[pairId]?.correct);
+                const isWrong = Boolean(pairId && reviewResults[pairId]?.correct === false);
 
                 const pairClassName = [
                   styles.pairsButton,
                   styles.pairsLeftButton,
                   isSelected ? styles.pairsLeftButtonSelected : '',
-                  isLinked ? styles.pairsLeftButtonLinked : '',
+                  isCorrect ? styles.pairsLeftButtonCorrect : '',
+                  isWrong ? styles.pairsLeftButtonWrong : '',
+                  isLinked && !isCorrect && !isWrong ? styles.pairsLeftButtonLinked : '',
                 ]
                   .filter(Boolean)
                   .join(' ');
@@ -105,12 +123,16 @@ function PairsTask({
                       type="button"
                       className={pairClassName}
                       onClick={() => onSelectPairItem(pairId)}
-                      disabled={!pairId || hasRevealedSolutions || isDisabled}>
+                      disabled={!pairId || hasRevealedSolutions || hasCheckedAnswers || isDisabled}>
                       <span className={styles.pairsMainText}>{item.leftText || '—'}</span>
                       {hasRevealedSolutions && isLinked ? (
                         <span className={styles.pairsStateText}>Ответ</span>
+                      ) : isCorrect ? (
+                        <span className={styles.pairsStateText}>Верно</span>
+                      ) : isWrong ? (
+                        <span className={styles.pairsStateText}>Ошибка</span>
                       ) : null}
-                      {!hasRevealedSolutions && isLinked ? (
+                      {!hasRevealedSolutions && !isCorrect && !isWrong && isLinked ? (
                         <span className={styles.pairsStateText}>Связано</span>
                       ) : null}
                     </button>
@@ -126,19 +148,28 @@ function PairsTask({
               {options.map((option, index) => {
                 const optionId = normalizeId(option?.optionId);
                 const ownerPairId = optionId ? optionOwners.get(optionId) ?? null : null;
-                const { isUsed, isUsedBySelectedPair, isLockedByAnotherPair } =
+                const {
+                  isUsed,
+                  isUsedBySelectedPair,
+                  isLockedByAnotherPair,
+                  isCorrect,
+                  isWrong,
+                } =
                   getOptionUsageState({
                     ownerPairId,
                     selectedPairId,
-                    confirmedAnswers: assignments,
+                    confirmedAnswers,
+                    reviewResults,
                   });
 
                 const optionClassName = [
                   styles.pairsButton,
                   styles.pairsOptionButton,
-                  selectedPairId ? styles.pairsOptionButtonReady : '',
-                  isUsed ? styles.pairsOptionButtonUsed : '',
+                  selectedPairId && !hasCheckedAnswers ? styles.pairsOptionButtonReady : '',
+                  isUsed && !isCorrect && !isWrong ? styles.pairsOptionButtonUsed : '',
                   isUsedBySelectedPair ? styles.pairsOptionButtonSelected : '',
+                  isCorrect ? styles.pairsOptionButtonLocked : '',
+                  isWrong ? styles.pairsOptionButtonWrong : '',
                 ]
                   .filter(Boolean)
                   .join(' ');
@@ -154,13 +185,20 @@ function PairsTask({
                         !optionId ||
                         !selectedPairId ||
                         hasRevealedSolutions ||
+                        hasCheckedAnswers ||
                         isLockedByAnotherPair ||
                         isDisabled
                       }>
                       <span className={styles.pairsMainText}>{option.text || '—'}</span>
-                      {isUsed ? (
+                      {hasRevealedSolutions && isUsed ? (
+                        <span className={styles.pairsStateText}>Ответ</span>
+                      ) : isCorrect ? (
+                        <span className={styles.pairsStateText}>Верно</span>
+                      ) : isWrong ? (
+                        <span className={styles.pairsStateText}>Ошибка</span>
+                      ) : isUsed ? (
                         <span className={styles.pairsStateText}>
-                          {hasRevealedSolutions ? 'Ответ' : isUsedBySelectedPair ? 'Связано' : 'Занято'}
+                          {isUsedBySelectedPair ? 'Связано' : 'Занято'}
                         </span>
                       ) : null}
                     </button>
