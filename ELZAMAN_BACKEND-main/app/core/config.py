@@ -89,7 +89,7 @@ def get_settings() -> Settings:
         jwt_issuer=os.getenv("JWT_ISSUER", "elzaman"),
         jwt_access_audience=os.getenv("JWT_ACCESS_AUDIENCE", "elzaman-api"),
         jwt_refresh_audience=os.getenv("JWT_REFRESH_AUDIENCE", "elzaman-refresh"),
-        access_token_ttl_minutes=_positive_int_env("ACCESS_TOKEN_TTL_MINUTES", 15),
+        access_token_ttl_minutes=_positive_int_env("ACCESS_TOKEN_TTL_MINUTES", 4320),
         refresh_token_ttl_days=_positive_int_env("REFRESH_TOKEN_TTL_DAYS", 14),
         telegram_bot_token=_string_env_or_none("TELEGRAM_BOT_TOKEN"),
         telegram_bot_username=_string_env_or_none("TELEGRAM_BOT_USERNAME"),
