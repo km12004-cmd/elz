@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchArtists } from '@/entities/artist/api';
 import { fetchSongsCatalog } from '@/entities/song/api';
@@ -28,6 +28,7 @@ import GuestScreen from '@/widgets/dashboard/GuestScreen';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import CreateFolderModal from './CreateFolderModal';
 import { normalizeId } from '@/shared/lib/normalizeId';
+import { getPremiumLockedSongIds } from '@/shared/lib/premiumSongs';
 import {
   getArtistInitials,
   normalizeText,
@@ -90,6 +91,7 @@ function DashboardPage() {
   const isPremiumUser = hasPremiumAccess(user?.isPremium ?? user?.is_premium);
   const premiumButtonLabel = isPremiumUser ? 'Premium on' : 'Buy Premium';
   const premiumButtonTitle = isPremiumUser ? 'Premium is active' : 'Go to premium plans';
+  const lockedSongIds = useMemo(() => getPremiumLockedSongIds(songs), [songs]);
   const closeAuth = () => setAuthView(null);
 
   const showToast = (message, type = 'success') => {
@@ -390,6 +392,9 @@ function DashboardPage() {
         <div className={styles.blockHeader}>
           <div>
             <h2 className={styles.blockTitle}>Songs</h2>
+            {!isPremiumUser ? (
+              <p className={styles.blockSubtitle}>The latest 4 songs are available with Premium.</p>
+            ) : null}
           </div>
         </div>
         {isLoadingSongs && (
@@ -406,15 +411,29 @@ function DashboardPage() {
           <div className={`${styles.itemGrid} ${styles.songsGrid}`}>
             {songs.map((song, index) => {
               const id = normalizeId(song.id);
+              const isSongLocked = Boolean(id) && !isPremiumUser && lockedSongIds.has(id);
               return (
-                <article key={id ?? `song-${index}`} className={styles.itemCard}>
+                <article
+                  key={id ?? `song-${index}`}
+                  className={`${styles.itemCard} ${isSongLocked ? styles.songCardLocked : ''}`}>
                   <button
                     type="button"
                     className={styles.itemMainButton}
-                    onClick={() => id && navigate(`/songs/${id}`)}
-                    disabled={!id}>
+                    onClick={() => {
+                      if (!id) return;
+                      if (isSongLocked) {
+                        navigate('/premium');
+                        return;
+                      }
+                      navigate(`/songs/${id}`);
+                    }}
+                    disabled={!id}
+                    title={isSongLocked ? 'Premium subscription is required to study this song.' : undefined}>
                     <p className={styles.itemTitle}>{song.title}</p>
                     {song.author && <p className={styles.itemMeta}>{song.author}</p>}
+                    {isSongLocked ? (
+                      <span className={styles.songPremiumBadge}>Available with Premium</span>
+                    ) : null}
                   </button>
                 </article>
               );

@@ -20,6 +20,7 @@ from app.modules.songs.service import (
     list_songs,
     update_song_for_user,
 )
+from app.modules.subscriptions.service import ensure_song_study_access
 
 router = APIRouter(prefix="/songs", tags=["Songs"])
 
@@ -61,7 +62,12 @@ async def list_songs_endpoint(
 
 
 @router.get("/{song_id}", response_model=SongDetailResponse)
-async def song_detail_endpoint(song_id: int, _: object = Depends(require_current_user), db: AsyncSession = Depends(get_db)):
+async def song_detail_endpoint(
+    song_id: int,
+    user=Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await ensure_song_study_access(db, user, song_id)
     song = await get_song_detail(db, song_id)
     return {"ok": True, "song": song}
 
@@ -95,5 +101,6 @@ async def song_delete_endpoint(
 
 @router.get("/{song_id}/lyrics", response_model=SongLyricsResponse)
 async def song_lyrics_endpoint(song_id: int, user=Depends(require_current_user), db: AsyncSession = Depends(get_db)):
+    await ensure_song_study_access(db, user, song_id)
     current_song_id, lyrics_text, lyrics_text_ru = await get_song_lyrics_for_user(db, user_id=user.id, song_id=song_id)
     return {"ok": True, "song_id": current_song_id, "lyrics_text": lyrics_text, "lyrics_text_ru": lyrics_text_ru}

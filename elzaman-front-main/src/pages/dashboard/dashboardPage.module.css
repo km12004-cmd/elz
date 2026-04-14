@@ -204,6 +204,32 @@
   letter-spacing: 0.01em;
 }
 
+.songCardLocked {
+  opacity: 0.94;
+}
+
+.songCardLocked::after {
+  opacity: 0.46;
+}
+
+.songPremiumBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(11, 18, 32, 0.24);
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
 .playlistsSection,
 .profileSection {
   grid-column: 7 / -1;

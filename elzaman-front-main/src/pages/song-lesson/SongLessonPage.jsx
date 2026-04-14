@@ -77,6 +77,7 @@ function SongLessonPage() {
   const [learningState, setLearningState] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [isPremiumLocked, setIsPremiumLocked] = useState(false);
   const [taskError, setTaskError] = useState('');
 
   const [taskCards, setTaskCards] = useState([]);
@@ -126,12 +127,14 @@ function SongLessonPage() {
       setShowTranslation(false);
       setLearningState(null);
       setExerciseOneFolderId(null);
+      setIsPremiumLocked(false);
       setLoadError('Invalid song id');
       return;
     }
 
     setIsLoading(true);
     setLoadError('');
+    setIsPremiumLocked(false);
 
     try {
       const detail = await fetchSongDetail({ token, songId: normalizedSongId });
@@ -157,12 +160,22 @@ function SongLessonPage() {
       setLearningState(nextLearningState);
       setExerciseOneFolderId(normalizeId(nextLearningState?.folderId));
     } catch (error) {
+      const premiumLockedError =
+        error?.status === 403 &&
+        typeof error?.data?.detail === 'string' &&
+        error.data.detail === 'premium subscription is required to study this song';
+
       setSong(null);
       setLyrics(null);
       setLyricsRu(null);
       setLearningState(null);
       setExerciseOneFolderId(null);
-      setLoadError(extractErrorMessage(error, { context: 'songLesson' }));
+      setIsPremiumLocked(premiumLockedError);
+      setLoadError(
+        premiumLockedError
+          ? 'Premium subscription is required to study this song.'
+          : extractErrorMessage(error, { context: 'songLesson' }),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -212,6 +225,7 @@ function SongLessonPage() {
   useEffect(() => {
     setTaskCards([]);
     setTaskError('');
+    setIsPremiumLocked(false);
     setRevealedCards({});
     setExerciseOneFolderId(null);
     taskTwo.resetState();
@@ -1256,6 +1270,16 @@ function SongLessonPage() {
       </header>
 
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
+      {!isLoading && !song && isPremiumLocked ? (
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.primaryActionButton}
+            onClick={() => navigate('/premium')}>
+            Buy Premium
+          </button>
+        </div>
+      ) : null}
       {taskError ? <p className={styles.errorText}>{taskError}</p> : null}
 
       {isLoading ? <LessonSkeleton /> : null}

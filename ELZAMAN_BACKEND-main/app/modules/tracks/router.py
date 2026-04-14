@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
+from app.modules.subscriptions.service import ensure_song_study_access
 from app.modules.tracks.schemas import (
     DeleteTemplatesResponse,
     FlashcardTemplateBulkCreateRequest,
@@ -34,6 +35,7 @@ async def start_learning_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     payload = await start_learning(db, user_id=user.id, track_id=track_id)
     await db.commit()
     return payload
@@ -45,6 +47,7 @@ async def learning_state_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     return await get_learning_state(db, user_id=user.id, track_id=track_id)
 
 
@@ -52,9 +55,10 @@ async def learning_state_endpoint(
 async def flashcard_templates_endpoint(
     track_id: int,
     level: int | None = Query(default=None, ge=1),
-    _: object = Depends(require_current_user),
+    user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     return await list_flashcard_templates(db, track_id=track_id, level=level)
 
 
@@ -101,9 +105,10 @@ async def delete_track_level_cards_endpoint(
 async def track_level_cards_endpoint(
     track_id: int,
     level: int,
-    _: object = Depends(require_current_user),
+    user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     return await list_track_level_cards(db, track_id=track_id, level=level)
 
 
@@ -114,6 +119,7 @@ async def track_listened_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     result = await mark_listened(
         db,
         user_id=user.id,

@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.db.models import SubscriptionPurchaseRequest, User, UserSubscription
+from app.db.models import Song, SubscriptionPurchaseRequest, User, UserSubscription
 
 PURCHASE_STATUS_AWAITING_START = "awaiting_start"
 PURCHASE_STATUS_AWAITING_ACCEPTANCE = "awaiting_acceptance"
@@ -23,6 +23,8 @@ OPEN_PURCHASE_STATUSES = {
     PURCHASE_STATUS_AWAITING_EMAIL,
     PURCHASE_STATUS_AWAITING_RECEIPT,
 }
+PREMIUM_LOCKED_SONGS_COUNT = 4
+PREMIUM_STUDY_ACCESS_REQUIRED_DETAIL = "premium subscription is required to study this song"
 
 
 def normalize_email(value: str) -> str:
@@ -44,6 +46,26 @@ async def is_premium_user(db: AsyncSession, user_id: int) -> bool:
         )
     )
     return result.scalar_one_or_none() is not None
+
+
+async def ensure_song_study_access(db: AsyncSession, user: User, song_id: int) -> None:
+    if user.is_admin():
+        return
+
+    if await is_premium_user(db, user.id):
+        return
+
+    locked_result = await db.execute(
+        select(Song.id)
+        .order_by(Song.created_at.desc(), Song.id.desc())
+        .limit(PREMIUM_LOCKED_SONGS_COUNT)
+    )
+    locked_song_ids = {int(row[0]) for row in locked_result.all() if row and row[0] is not None}
+    if int(song_id) in locked_song_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=PREMIUM_STUDY_ACCESS_REQUIRED_DETAIL,
+        )
 
 
 async def create_telegram_checkout_link(db: AsyncSession, user: User) -> dict[str, int | str]:

@@ -73,8 +73,13 @@ const RU_TRANSLATIONS = Object.freeze({
   Premium: 'Премиум',
   'Premium on': 'Премиум активен',
   'Buy Premium': 'Купить Премиум',
+  'Available with Premium': 'Доступно с премиумом',
   'Premium is active': 'Премиум активен',
   'Go to premium plans': 'Перейти к тарифам',
+  'The latest 4 songs are available with Premium.':
+    'Последние 4 песни доступны только с премиумом.',
+  'Premium subscription is required to study this song.':
+    'Для изучения этой песни нужна премиум-подписка.',
   'Switch to light theme': 'Переключить на светлую тему',
   'Switch to dark theme': 'Переключить на темную тему',
   'Sign in to save playlists, flashcards, streak, and account progress.':

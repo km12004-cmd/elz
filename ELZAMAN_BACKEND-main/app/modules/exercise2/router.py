@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
+from app.modules.subscriptions.service import ensure_song_study_access
 from app.modules.exercise2.schemas import (
     DeletePairTemplatesResponse,
     Game2AnswerRequest,
@@ -31,9 +32,10 @@ DEFAULT_EXERCISE_IDX = 2
 @router.get("/tracks/{track_id}/games/pairs/templates", response_model=list[Game2PairTemplateItem])
 async def game2_pairs_templates_endpoint(
     track_id: int,
-    _: object = Depends(require_current_user),
+    user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     return await list_game2_pairs_templates(db, track_id=track_id, exercise_idx=DEFAULT_EXERCISE_IDX)
 
 
@@ -85,9 +87,10 @@ async def delete_game2_pairs_templates_by_exercise_endpoint(
 async def game_pairs_templates_by_exercise_endpoint(
     track_id: int,
     exercise_idx: int,
-    _: object = Depends(require_current_user),
+    user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     return await list_game2_pairs_templates(db, track_id=track_id, exercise_idx=exercise_idx)
 
 
@@ -115,6 +118,7 @@ async def start_pairs_session_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     payload = await start_pairs_session(db, user_id=user.id, track_id=track_id, exercise_idx=DEFAULT_EXERCISE_IDX)
     await db.commit()
     return payload
@@ -127,6 +131,7 @@ async def start_pairs_session_by_exercise_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_song_study_access(db, user, track_id)
     payload = await start_pairs_session(
         db,
         user_id=user.id,
