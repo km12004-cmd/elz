@@ -1,8 +1,4 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createTelegramCheckoutLink } from '@/entities/subscription/api';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ApiError } from '@/shared/api/client';
 import styles from './premiumPage.module.css';
 
 const FREE_FEATURES = [
@@ -20,47 +16,6 @@ const PREMIUM_FEATURES = [
 ];
 
 function PremiumPage() {
-  const { token, isAuthenticated, user } = useAuth();
-  const [isRedirectingToTelegram, setIsRedirectingToTelegram] = useState(false);
-  const [checkoutError, setCheckoutError] = useState('');
-  const isPremiumUser = Boolean(user?.isPremium ?? user?.is_premium);
-
-  async function handleTelegramCheckout() {
-    if (isRedirectingToTelegram || isPremiumUser) return;
-
-    if (!isAuthenticated || !token) {
-      setCheckoutError('Please sign in to continue.');
-      return;
-    }
-
-    setCheckoutError('');
-    setIsRedirectingToTelegram(true);
-
-    try {
-      const payload = await createTelegramCheckoutLink({ token });
-      const checkoutUrl = typeof payload?.url === 'string' ? payload.url.trim() : '';
-      if (!checkoutUrl) {
-        throw new Error('Telegram checkout link is missing.');
-      }
-      window.location.assign(checkoutUrl);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setCheckoutError(error.message || 'Unable to open Telegram checkout right now.');
-      } else if (error instanceof Error) {
-        setCheckoutError(error.message);
-      } else {
-        setCheckoutError('Unable to open Telegram checkout right now.');
-      }
-      setIsRedirectingToTelegram(false);
-    }
-  }
-
-  const premiumButtonLabel = isPremiumUser
-    ? 'Subscription Active'
-    : isRedirectingToTelegram
-      ? 'Opening Telegram...'
-      : 'Buy Subscription';
-
   return (
     <section className={styles.page}>
       <div className={styles.hero}>
@@ -105,19 +60,6 @@ function PremiumPage() {
               </li>
             ))}
           </ul>
-
-          <div className={styles.purchasePanel}>
-            <button
-              type="button"
-              className={styles.purchaseButton}
-              onClick={handleTelegramCheckout}
-              disabled={isRedirectingToTelegram || isPremiumUser}
-            >
-              {premiumButtonLabel}
-            </button>
-            {checkoutError ? <p className={styles.errorMessage}>{checkoutError}</p> : null}
-          </div>
-
           <p className={styles.planNote}>
             Best for focused learners who want full access and depth.
           </p>

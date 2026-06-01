@@ -82,8 +82,6 @@ function shouldRetryWithFallbackBody(error) {
       ? error.status
       : null;
 
-  if (status !== null && status >= 500) return false;
-
   return error instanceof ApiError || status === 400 || status === 422;
 }
 
@@ -426,16 +424,6 @@ export async function fetchSongLyrics({ token, songId } = {}) {
   return { lyricsText, lyricsTextRu };
 }
 
-export async function deleteSongRecord({ token, songId } = {}) {
-  const normalizedSongId = normalizeId(songId);
-  if (!normalizedSongId) throw new Error('Song id is required');
-
-  return apiRequest(`${SONGS_BASE_PATH}/${encodeURIComponent(normalizedSongId)}`, {
-    method: 'DELETE',
-    token,
-  });
-}
-
 export async function fetchTrackLearningState({ token, trackId } = {}) {
   const normalizedTrackId = normalizeId(trackId);
   if (!normalizedTrackId) throw new Error('Track id is required');
@@ -618,39 +606,4 @@ export async function createTrackFlashcardTemplates({ token, trackId, level = 1,
   );
 
   return normalizeCreatedTemplatesResult(data, normalizedTrackId, normalizedLevel);
-}
-
-export async function deleteTrackFlashcardTemplates({ token, trackId } = {}) {
-  const normalizedTrackId = normalizeId(trackId);
-  if (!normalizedTrackId) throw new Error('Track id is required');
-
-  const data = await apiRequest(
-    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/flashcard-templates`,
-    { method: 'DELETE', token },
-  );
-
-  const source = asObject(data?.data) ?? asObject(data) ?? {};
-  return {
-    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? normalizedTrackId,
-    deletedCount: normalizeInteger(source.deleted_count ?? source.deletedCount ?? source.count) ?? 0,
-  };
-}
-
-export async function deleteTrackLevelCards({ token, trackId, level } = {}) {
-  const normalizedTrackId = normalizeId(trackId);
-  if (!normalizedTrackId) throw new Error('Track id is required');
-
-  const normalizedLevel = normalizeTrackLevel(level);
-  if (!normalizedLevel) throw new Error('Level must be greater than or equal to 1');
-
-  const data = await apiRequest(
-    `${TRACKS_BASE_PATH}/${encodeURIComponent(normalizedTrackId)}/levels/${encodeURIComponent(normalizedLevel)}/cards`,
-    { method: 'DELETE', token },
-  );
-
-  const source = asObject(data?.data) ?? asObject(data) ?? {};
-  return {
-    trackId: pickFirstId(source, ['track_id', 'trackId', 'id']) ?? normalizedTrackId,
-    deletedCount: normalizeInteger(source.deleted_count ?? source.deletedCount ?? source.count) ?? 0,
-  };
 }

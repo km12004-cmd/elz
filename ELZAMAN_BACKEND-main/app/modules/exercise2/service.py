@@ -5,7 +5,7 @@ from math import ceil
 from uuid import uuid4
 
 from fastapi import HTTPException, status
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
@@ -489,26 +489,4 @@ async def get_pairs_session_status(db: AsyncSession, *, user_id: int, session_id
             }
             for answer in answers
         ],
-    }
-
-
-async def delete_game2_pairs_templates(
-    db: AsyncSession,
-    *,
-    track_id: int,
-    exercise_idx: int,
-) -> dict[str, object]:
-    exercise_idx = _validate_exercise_idx(exercise_idx)
-    await _get_track_or_404(db, track_id)
-    result = await db.execute(
-        delete(TrackGame2Pair).where(
-            TrackGame2Pair.track_id == track_id,
-            TrackGame2Pair.exercise_idx == exercise_idx,
-        )
-    )
-    await db.flush()
-    return {
-        "track_id": int(track_id),
-        "exercise": int(exercise_idx),
-        "deleted_count": int(result.rowcount or 0),
     }

@@ -24,12 +24,12 @@ export function buildDisplayName(user) {
   return 'Unnamed user';
 }
 
-export function formatDateTime(value, locale = 'en-US') {
+export function formatDateTime(value) {
   if (typeof value !== 'string') return 'Not set';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
 
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -62,22 +62,15 @@ export function parseTemplateRows(value) {
   const items = [];
 
   lines.forEach((line) => {
-    const delimiter = line.includes(' - ')
-      ? ' - '
-      : line.includes('|')
-        ? '|'
-        : line.includes(';')
-          ? ';'
-          : line.includes('\t')
-            ? '\t'
-            : null;
+    const delimiter =
+      line.includes('|') ? '|' : line.includes(';') ? ';' : line.includes('\t') ? '\t' : null;
     if (!delimiter) return;
 
     const delimiterIndex = line.indexOf(delimiter);
     if (delimiterIndex < 1) return;
 
     const kgText = line.slice(0, delimiterIndex).trim();
-    const ruText = line.slice(delimiterIndex + delimiter.length).trim();
+    const ruText = line.slice(delimiterIndex + 1).trim();
     if (!kgText || !ruText) return;
 
     items.push({

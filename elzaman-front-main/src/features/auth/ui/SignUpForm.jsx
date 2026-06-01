@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { extractErrorMessage } from '@/features/auth/lib/extractErrorMessage';
-import {
-  getPasswordRequirements,
-  getPasswordValidationMessage,
-  PASSWORD_MIN_LENGTH,
-} from '@/features/auth/lib/passwordRules';
 import styles from './authForm.module.css';
 
 function SignUpForm({ onSuccess, onSwitchToSignIn }) {
@@ -19,18 +14,10 @@ function SignUpForm({ onSuccess, onSwitchToSignIn }) {
   const [birthDate, setBirthDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const passwordRequirements = getPasswordRequirements(password);
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    const passwordError = getPasswordValidationMessage(password);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -132,31 +119,9 @@ function SignUpForm({ onSuccess, onSwitchToSignIn }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Create a password"
-          minLength={PASSWORD_MIN_LENGTH}
           required
           autoComplete="new-password"
-          aria-describedby="signup-password-requirements"
         />
-        <div id="signup-password-requirements" className={styles.passwordRequirements}>
-          <p className={styles.passwordRequirementsTitle}>Minimum password requirements</p>
-          <ul className={styles.passwordRequirementsList}>
-            {passwordRequirements.map((requirement) => (
-              <li
-                key={requirement.id}
-                className={
-                  requirement.met
-                    ? `${styles.passwordRequirementItem} ${styles.passwordRequirementMet}`
-                    : styles.passwordRequirementItem
-                }
-              >
-                <span className={styles.passwordRequirementMarker}>
-                  {requirement.met ? 'OK' : '--'}
-                </span>
-                <span>{requirement.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
 
       <div className={styles.grid2}>

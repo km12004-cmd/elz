@@ -1,8 +1,7 @@
 from urllib.parse import urlparse
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, delete, func, or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Artist, Song, SongAudioSource, UserUnlockedSong
@@ -58,21 +57,10 @@ async def _get_or_create_artist(db: AsyncSession, author_name: str) -> Artist:
     if artist:
         return artist
 
-    try:
-        async with db.begin_nested():
-            artist = Artist(name=author_name)
-            db.add(artist)
-            await db.flush()
-            return artist
-    except IntegrityError:
-        result = await db.execute(select(Artist).where(Artist.name == author_name))
-        artist = result.scalar_one_or_none()
-        if artist:
-            return artist
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="could not create artist, please try again",
-        )
+    artist = Artist(name=author_name)
+    db.add(artist)
+    await db.flush()
+    return artist
 
 
 def _normalize_language(value: str) -> str:
@@ -205,52 +193,45 @@ async def create_song_for_user(
     _validate_optional_ranges(release_year, duration_seconds)
 
     artist = await _get_or_create_artist(db, clean_author)
+    song = Song(
+        artist_id=artist.id,
+        title=clean_title,
+        lyrics_text=clean_lyrics,
+        lyrics_text_ru=clean_lyrics_ru,
+        original_language=clean_language,
+        release_year=release_year,
+        duration_seconds=duration_seconds,
+        is_published=bool(is_published),
+    )
+    db.add(song)
+    await db.flush()
 
-    try:
-        song = Song(
-            artist_id=artist.id,
-            title=clean_title,
-            lyrics_text=clean_lyrics,
-            lyrics_text_ru=clean_lyrics_ru,
-            original_language=clean_language,
-            release_year=release_year,
-            duration_seconds=duration_seconds,
-            is_published=bool(is_published),
+    if clean_youtube_url:
+        db.add(
+            SongAudioSource(
+                song_id=song.id,
+                provider="youtube",
+                external_url=clean_youtube_url,
+                is_primary=True,
+            )
         )
-        db.add(song)
         await db.flush()
 
-        if clean_youtube_url:
-            db.add(
-                SongAudioSource(
-                    song_id=song.id,
-                    provider="youtube",
-                    external_url=clean_youtube_url,
-                    is_primary=True,
-                )
-            )
-            await db.flush()
-
-        unlocked = await db.execute(
-            select(UserUnlockedSong).where(
-                UserUnlockedSong.user_id == user_id,
-                UserUnlockedSong.song_id == song.id,
+    unlocked = await db.execute(
+        select(UserUnlockedSong).where(
+            UserUnlockedSong.user_id == user_id,
+            UserUnlockedSong.song_id == song.id,
+        )
+    )
+    if not unlocked.scalar_one_or_none():
+        db.add(
+            UserUnlockedSong(
+                user_id=user_id,
+                song_id=song.id,
+                source="created",
             )
         )
-        if not unlocked.scalar_one_or_none():
-            db.add(
-                UserUnlockedSong(
-                    user_id=user_id,
-                    song_id=song.id,
-                    source="created",
-                )
-            )
-            await db.flush()
-    except IntegrityError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"database conflict: {exc.orig}",
-        ) from exc
+        await db.flush()
 
     return _serialize_song(song, artist.name, clean_youtube_url, "youtube" if clean_youtube_url else None)
 
@@ -320,15 +301,6 @@ async def update_song_for_user(
 
     author_name = await _get_artist_name(db, song.artist_id)
     return _serialize_song(song, author_name, audio_url, audio_provider)
-
-
-async def delete_song(db: AsyncSession, song_id: int) -> None:
-    song = await db.get(Song, song_id)
-    if not song:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
-
-    await db.execute(delete(Song).where(Song.id == song_id))
-    await db.flush()
 
 
 async def get_song_detail(db: AsyncSession, song_id: int) -> dict[str, object]:

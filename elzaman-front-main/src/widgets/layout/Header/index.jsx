@@ -7,43 +7,32 @@ import { normalizeRole } from '@/shared/lib/roles';
 import styles from './header.module.css';
 
 const LANGUAGE_OPTIONS = Object.freeze([
-  { value: 'ru', code: 'RU', titleKey: 'Russian' },
-  { value: 'en', code: 'EN', titleKey: 'English' },
-  { value: 'ky', code: 'KY', titleKey: 'Kyrgyz' },
+  { value: 'ru', code: 'RU', title: 'Russian' },
+  { value: 'en', code: 'EN', title: 'English' },
 ]);
 
 function Header() {
   const { isAuthenticated, user, signOut } = useAuth();
-  const { language, setLanguage, t } = useI18n();
+  const { language, setLanguage } = useI18n();
   const { isDarkTheme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const languageMenuRef = useRef(null);
   const userMenuRef = useRef(null);
-  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const nickname = user?.nickname ?? 'User';
   const nextThemeLabel = isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme';
   const canAccessAdminConsole = normalizeRole(user?.role) === 'admin';
-  const currentLanguageOption =
-    LANGUAGE_OPTIONS.find((option) => option.value === language) ?? LANGUAGE_OPTIONS[0];
 
   useEffect(() => {
-    if (!isLanguageMenuOpen && !isUserMenuOpen) return undefined;
+    if (!isUserMenuOpen) return undefined;
 
     const onDocumentClick = (event) => {
-      if (!languageMenuRef.current?.contains(event.target)) {
-        setIsLanguageMenuOpen(false);
-      }
       if (!userMenuRef.current?.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     };
     const onDocumentKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setIsLanguageMenuOpen(false);
-        setIsUserMenuOpen(false);
-      }
+      if (event.key === 'Escape') setIsUserMenuOpen(false);
     };
 
     document.addEventListener('pointerdown', onDocumentClick);
@@ -53,27 +42,12 @@ function Header() {
       document.removeEventListener('pointerdown', onDocumentClick);
       document.removeEventListener('keydown', onDocumentKeyDown);
     };
-  }, [isLanguageMenuOpen, isUserMenuOpen]);
+  }, [isUserMenuOpen]);
 
   const onLogout = () => {
     setIsUserMenuOpen(false);
     signOut();
     navigate('/', { replace: true });
-  };
-
-  const onToggleLanguageMenu = () => {
-    setIsUserMenuOpen(false);
-    setIsLanguageMenuOpen((prev) => !prev);
-  };
-
-  const onSelectLanguage = (nextLanguage) => {
-    setLanguage(nextLanguage);
-    setIsLanguageMenuOpen(false);
-  };
-
-  const onToggleUserMenu = () => {
-    setIsLanguageMenuOpen(false);
-    setIsUserMenuOpen((prev) => !prev);
   };
 
   return (
@@ -86,58 +60,27 @@ function Header() {
           </div>
 
           <div className={styles.headerControls}>
-            <div className={styles.languageMenu} ref={languageMenuRef}>
-              <button
-                type="button"
-                className={`${styles.languageTrigger} ${
-                  isLanguageMenuOpen ? styles.languageTriggerOpen : ''
-                }`}
-                onClick={onToggleLanguageMenu}
-                aria-haspopup="menu"
-                aria-expanded={isLanguageMenuOpen}
-                aria-label={t('Interface language')}
-                title={t('Interface language')}>
-                <span className={styles.languageTriggerCurrent} data-i18n-skip="true">
-                  {currentLanguageOption.code}
-                </span>
-                <span className={styles.languageTriggerChevron} aria-hidden="true" />
-              </button>
+            <div className={styles.languageSwitch} role="group" aria-label="Interface language">
+              {LANGUAGE_OPTIONS.map((option) => {
+                const isActive = language === option.value;
 
-              {isLanguageMenuOpen ? (
-                <div
-                  className={styles.languageDropdown}
-                  role="menu"
-                  aria-label={t('Interface language')}>
-                  <p className={styles.languageDropdownLabel}>{t('Interface language')}</p>
-                  <div className={styles.languageDropdownList}>
-                    {LANGUAGE_OPTIONS.map((option) => {
-                      const isActive = language === option.value;
-                      const title = t(option.titleKey);
-
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          className={`${styles.languageOption} ${
-                            isActive ? styles.languageOptionActive : ''
-                          }`}
-                          onClick={() => onSelectLanguage(option.value)}
-                          role="menuitemradio"
-                          aria-checked={isActive}
-                          title={title}>
-                          <span className={styles.languageOptionCode} data-i18n-skip="true">
-                            {option.code}
-                          </span>
-                          <span className={styles.languageOptionTitle}>{title}</span>
-                          {isActive ? (
-                            <span className={styles.languageOptionMarker} aria-hidden="true" />
-                          ) : null}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`${styles.languageButton} ${
+                      isActive ? styles.languageButtonActive : ''
+                    }`}
+                    onClick={() => setLanguage(option.value)}
+                    aria-pressed={isActive}
+                    aria-label={option.title}
+                    title={option.title}>
+                    <span className={styles.languageButtonText} data-i18n-skip="true">
+                      {option.code}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             <button
@@ -156,7 +99,7 @@ function Header() {
                 <button
                   type="button"
                   className={styles.userMenuTrigger}
-                  onClick={onToggleUserMenu}
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
                   aria-haspopup="menu"
                   aria-expanded={isUserMenuOpen}
                   title="Open profile menu">

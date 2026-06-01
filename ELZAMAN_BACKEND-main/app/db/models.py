@@ -88,38 +88,6 @@ class UserSubscription(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class SubscriptionPurchaseRequest(Base):
-    __tablename__ = "subscription_purchase_requests"
-    __table_args__ = (
-        Index("ix_subscription_purchase_requests_start_token", "start_token", unique=True),
-        Index("ix_subscription_purchase_requests_user_status", "user_id", "status"),
-        Index("ix_subscription_purchase_requests_chat_status", "telegram_chat_id", "status"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    start_token: Mapped[str] = mapped_column(String(64), nullable=False)
-    site_email: Mapped[str] = mapped_column(String(255), nullable=False)
-    provided_email: Mapped[str | None] = mapped_column(String(255))
-    telegram_chat_id: Mapped[int | None] = mapped_column(BigInteger)
-    telegram_user_id: Mapped[int | None] = mapped_column(BigInteger)
-    telegram_username: Mapped[str | None] = mapped_column(String(255))
-    telegram_first_name: Mapped[str | None] = mapped_column(String(255))
-    telegram_language_code: Mapped[str | None] = mapped_column(String(16))
-    status: Mapped[str] = mapped_column(String(40), nullable=False, default="awaiting_start")
-    receipt_file_id: Mapped[str | None] = mapped_column(String(255))
-    receipt_file_unique_id: Mapped[str | None] = mapped_column(String(255))
-    receipt_submitted_at: Mapped[datetime | None] = mapped_column(DateTime)
-    submitted_at: Mapped[datetime | None] = mapped_column(DateTime)
-    admin_notified_at: Mapped[datetime | None] = mapped_column(DateTime)
-    processed_at: Mapped[datetime | None] = mapped_column(DateTime)
-    processed_by_telegram_user_id: Mapped[int | None] = mapped_column(BigInteger)
-    rejection_reason: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    user: Mapped["User"] = relationship()
-
-
 class Artist(Base):
     __tablename__ = "artists"
 
@@ -454,16 +422,3 @@ class SongTranslation(Base):
     dst_lang: Mapped[str] = mapped_column(String(10), nullable=False)
     src: Mapped[str] = mapped_column(String(255), nullable=False)
     dst_text: Mapped[str] = mapped_column(Text, nullable=False)
-
-
-class UserAchievement(Base):
-    __tablename__ = "user_achievements"
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    achievement_code: Mapped[str] = mapped_column(String(50), primary_key=True)
-    unlocked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utcnow,
-        server_default=text("now()"),
-        nullable=False,
-    )

@@ -3,9 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
-from app.modules.subscriptions.service import ensure_song_study_access
 from app.modules.exercise2.schemas import (
-    DeletePairTemplatesResponse,
     Game2AnswerRequest,
     Game2AnswerResponse,
     Game2FinishResponse,
@@ -17,7 +15,6 @@ from app.modules.exercise2.schemas import (
 )
 from app.modules.exercise2.service import (
     create_game2_pairs_templates,
-    delete_game2_pairs_templates,
     finish_pairs_session,
     get_pairs_session_status,
     list_game2_pairs_templates,
@@ -32,10 +29,9 @@ DEFAULT_EXERCISE_IDX = 2
 @router.get("/tracks/{track_id}/games/pairs/templates", response_model=list[Game2PairTemplateItem])
 async def game2_pairs_templates_endpoint(
     track_id: int,
-    user=Depends(require_current_user),
+    _: object = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     return await list_game2_pairs_templates(db, track_id=track_id, exercise_idx=DEFAULT_EXERCISE_IDX)
 
 
@@ -56,41 +52,13 @@ async def create_game2_pairs_templates_endpoint(
     return result
 
 
-@router.delete("/tracks/{track_id}/games/pairs/templates", response_model=DeletePairTemplatesResponse)
-async def delete_game2_pairs_templates_endpoint(
-    track_id: int,
-    _: object = Depends(require_admin_user),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await delete_game2_pairs_templates(
-        db, track_id=track_id, exercise_idx=DEFAULT_EXERCISE_IDX,
-    )
-    await db.commit()
-    return result
-
-
-@router.delete("/tracks/{track_id}/games/pairs/{exercise_idx}/templates", response_model=DeletePairTemplatesResponse)
-async def delete_game2_pairs_templates_by_exercise_endpoint(
-    track_id: int,
-    exercise_idx: int,
-    _: object = Depends(require_admin_user),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await delete_game2_pairs_templates(
-        db, track_id=track_id, exercise_idx=exercise_idx,
-    )
-    await db.commit()
-    return result
-
-
 @router.get("/tracks/{track_id}/games/pairs/{exercise_idx}/templates", response_model=list[Game2PairTemplateItem])
 async def game_pairs_templates_by_exercise_endpoint(
     track_id: int,
     exercise_idx: int,
-    user=Depends(require_current_user),
+    _: object = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     return await list_game2_pairs_templates(db, track_id=track_id, exercise_idx=exercise_idx)
 
 
@@ -118,7 +86,6 @@ async def start_pairs_session_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     payload = await start_pairs_session(db, user_id=user.id, track_id=track_id, exercise_idx=DEFAULT_EXERCISE_IDX)
     await db.commit()
     return payload
@@ -131,7 +98,6 @@ async def start_pairs_session_by_exercise_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     payload = await start_pairs_session(
         db,
         user_id=user.id,

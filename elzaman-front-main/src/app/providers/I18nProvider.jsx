@@ -3,8 +3,7 @@ import I18nContext from './i18nContext';
 import { translateLiteral } from '@/features/i18n/lib/translations';
 
 const LANGUAGE_STORAGE_KEY = 'elzaman-language';
-const SUPPORTED_LANGUAGE_LIST = ['ru', 'en', 'ky'];
-const SUPPORTED_LANGUAGES = new Set(SUPPORTED_LANGUAGE_LIST);
+const SUPPORTED_LANGUAGES = new Set(['ru', 'en']);
 const ATTRIBUTE_NAMES = ['placeholder', 'title', 'aria-label', 'alt'];
 const SKIPPED_TAG_NAMES = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT']);
 
@@ -22,7 +21,7 @@ function detectInitialLanguage() {
   if (persisted) return persisted;
 
   const browserLanguage = normalizeLanguage(window.navigator.language?.split('-')[0]);
-  if (browserLanguage) return browserLanguage;
+  if (browserLanguage === 'ru') return 'ru';
 
   return 'ru';
 }
@@ -117,11 +116,7 @@ export function I18nProvider({ children }) {
   const applyingRef = useRef(false);
   const frameRef = useRef(null);
 
-  const locale = {
-    ru: 'ru-RU',
-    en: 'en-US',
-    ky: 'ky-KG',
-  }[language] ?? 'en-US';
+  const locale = language === 'ru' ? 'ru-RU' : 'en-US';
 
   const setLanguage = useCallback((nextLanguage) => {
     const normalized = normalizeLanguage(nextLanguage);
@@ -203,7 +198,7 @@ export function I18nProvider({ children }) {
       locale,
       setLanguage,
       t,
-      supportedLanguages: SUPPORTED_LANGUAGE_LIST,
+      supportedLanguages: ['ru', 'en'],
     }),
     [language, locale, setLanguage, t],
   );

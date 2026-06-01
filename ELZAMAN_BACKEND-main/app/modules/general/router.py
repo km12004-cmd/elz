@@ -24,6 +24,12 @@ async def capabilities():
                 ],
             },
             {
+                "area": "Chat",
+                "endpoints": [
+                    "POST /api/chat/messages",
+                ],
+            },
+            {
                 "area": "Profile",
                 "endpoints": [
                     "GET /api/profile",

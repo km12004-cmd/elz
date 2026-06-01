@@ -3,9 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
-from app.modules.subscriptions.service import ensure_song_study_access
 from app.modules.tracks.schemas import (
-    DeleteTemplatesResponse,
     FlashcardTemplateBulkCreateRequest,
     FlashcardTemplateBulkCreateResponse,
     FlashcardTemplateItem,
@@ -17,8 +15,6 @@ from app.modules.tracks.schemas import (
 )
 from app.modules.tracks.service import (
     create_flashcard_templates,
-    delete_flashcard_templates,
-    delete_track_level_cards,
     get_learning_state,
     list_flashcard_templates,
     list_track_level_cards,
@@ -35,7 +31,6 @@ async def start_learning_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     payload = await start_learning(db, user_id=user.id, track_id=track_id)
     await db.commit()
     return payload
@@ -47,7 +42,6 @@ async def learning_state_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     return await get_learning_state(db, user_id=user.id, track_id=track_id)
 
 
@@ -55,10 +49,9 @@ async def learning_state_endpoint(
 async def flashcard_templates_endpoint(
     track_id: int,
     level: int | None = Query(default=None, ge=1),
-    user=Depends(require_current_user),
+    _: object = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     return await list_flashcard_templates(db, track_id=track_id, level=level)
 
 
@@ -78,37 +71,13 @@ async def create_flashcard_templates_endpoint(
     return result
 
 
-@router.delete("/{track_id}/flashcard-templates", response_model=DeleteTemplatesResponse)
-async def delete_flashcard_templates_endpoint(
-    track_id: int,
-    _: object = Depends(require_admin_user),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await delete_flashcard_templates(db, track_id=track_id)
-    await db.commit()
-    return result
-
-
-@router.delete("/{track_id}/levels/{level}/cards", response_model=DeleteTemplatesResponse)
-async def delete_track_level_cards_endpoint(
-    track_id: int,
-    level: int,
-    _: object = Depends(require_admin_user),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await delete_track_level_cards(db, track_id=track_id, level=level)
-    await db.commit()
-    return result
-
-
 @router.get("/{track_id}/levels/{level}/cards", response_model=TrackLevelCardsResponse)
 async def track_level_cards_endpoint(
     track_id: int,
     level: int,
-    user=Depends(require_current_user),
+    _: object = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     return await list_track_level_cards(db, track_id=track_id, level=level)
 
 
@@ -119,7 +88,6 @@ async def track_listened_endpoint(
     user=Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, track_id)
     result = await mark_listened(
         db,
         user_id=user.id,

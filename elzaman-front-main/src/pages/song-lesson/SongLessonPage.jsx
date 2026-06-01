@@ -77,7 +77,6 @@ function SongLessonPage() {
   const [learningState, setLearningState] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [isPremiumLocked, setIsPremiumLocked] = useState(false);
   const [taskError, setTaskError] = useState('');
 
   const [taskCards, setTaskCards] = useState([]);
@@ -103,6 +102,7 @@ function SongLessonPage() {
   const [isCompletingTaskFive, setIsCompletingTaskFive] = useState(false);
   const [isPreparingPairs, setIsPreparingPairs] = useState(false);
   const [isSubmittingPairsAnswer, setIsSubmittingPairsAnswer] = useState(false);
+  const [isFinishingPairs, setIsFinishingPairs] = useState(false);
   const [completionModal, setCompletionModal] = useState(null);
 
   const lyricsContainerRef = useRef(null);
@@ -127,14 +127,12 @@ function SongLessonPage() {
       setShowTranslation(false);
       setLearningState(null);
       setExerciseOneFolderId(null);
-      setIsPremiumLocked(false);
       setLoadError('Invalid song id');
       return;
     }
 
     setIsLoading(true);
     setLoadError('');
-    setIsPremiumLocked(false);
 
     try {
       const detail = await fetchSongDetail({ token, songId: normalizedSongId });
@@ -160,22 +158,12 @@ function SongLessonPage() {
       setLearningState(nextLearningState);
       setExerciseOneFolderId(normalizeId(nextLearningState?.folderId));
     } catch (error) {
-      const premiumLockedError =
-        error?.status === 403 &&
-        typeof error?.data?.detail === 'string' &&
-        error.data.detail === 'premium subscription is required to study this song';
-
       setSong(null);
       setLyrics(null);
       setLyricsRu(null);
       setLearningState(null);
       setExerciseOneFolderId(null);
-      setIsPremiumLocked(premiumLockedError);
-      setLoadError(
-        premiumLockedError
-          ? 'Premium subscription is required to study this song.'
-          : extractErrorMessage(error, { context: 'songLesson' }),
-      );
+      setLoadError(extractErrorMessage(error, { context: 'songLesson' }));
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +213,6 @@ function SongLessonPage() {
   useEffect(() => {
     setTaskCards([]);
     setTaskError('');
-    setIsPremiumLocked(false);
     setRevealedCards({});
     setExerciseOneFolderId(null);
     taskTwo.resetState();
@@ -445,69 +432,7 @@ function SongLessonPage() {
     return () => clearTimeout(timer);
   }, [lyricsWordActionError, lyricsWordActionSuccess]);
 
-  const pairsBusy = { isBusy: isPreparingPairs || isSubmittingPairsAnswer };
-  const taskTwoHasPairs = taskTwo.items.length > 0 && taskTwo.options.length > 0;
-  const taskThreeHasPairs = taskThree.items.length > 0 && taskThree.options.length > 0;
-
-  const goHome = useCallback(() => {
-    setCompletionModal(null);
-    navigate('/');
-  }, [navigate]);
-
-  const finalizePairsExercise = useCallback(
-    async ({ sessionId, entries } = {}) => {
-      const normalizedSessionId = normalizeId(sessionId);
-      const normalizedEntries = Array.isArray(entries) ? entries : [];
-
-      if (!normalizedSessionId || normalizedEntries.length === 0) {
-        return null;
-      }
-
-      for (const entry of normalizedEntries) {
-        const pairId = normalizeId(entry?.pairId);
-        if (!pairId) continue;
-
-        try {
-          await submitPairsGameAnswer({
-            token,
-            sessionId: normalizedSessionId,
-            pairId,
-            optionId: pairId,
-          });
-        } catch (error) {
-          const detail =
-            typeof error?.data?.detail === 'string' ? error.data.detail.trim() : '';
-
-          if (error?.status === 409 && detail === 'session is not in progress') {
-            break;
-          }
-
-          throw error;
-        }
-      }
-
-      const finishResult = await finishPairsGame({
-        token,
-        sessionId: normalizedSessionId,
-      }).catch(() => null);
-
-      if (finishResult?.xpApplied) {
-        applyXpResult({
-          applied: true,
-          xpDelta: finishResult.xpDelta,
-          newXp: finishResult.newXp,
-          newLevel: finishResult.newLevel,
-          nextLevelThreshold: finishResult.nextLevelThreshold,
-          xpToNextLevel: finishResult.xpToNextLevel,
-        });
-      } else if (finishResult?.passed) {
-        applyXpResult({ applied: false });
-      }
-
-      return finishResult;
-    },
-    [applyXpResult, token],
-  );
+  const pairsBusy = { isBusy: isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs };
 
   const openCardsPage = () => {
     navigate('/cards', {
@@ -646,26 +571,6 @@ function SongLessonPage() {
     setTaskError('');
 
     try {
-      let templates = [];
-      try {
-        templates = await fetchTrackPairsTemplates({
-          token,
-          trackId: normalizedSongId,
-          exerciseIdx: THIRD_TASK_LEVEL,
-        });
-      } catch (error) {
-        if (!isRetriableRouteError(error)) throw error;
-      }
-
-      if (templates.length === 0) {
-        taskThree.resetState();
-        typingFour.resetState();
-        typingFive.resetState();
-        setCompletionModal(null);
-        setActiveStage(LESSON_STAGE.TASK_3);
-        return;
-      }
-
       const session = await startTrackPairsGame({
         token,
         trackId: normalizedSongId,
@@ -894,8 +799,89 @@ function SongLessonPage() {
     }
   };
 
+  const checkTaskTwoAnswers = async () => {
+    const normalizedSessionId = taskTwo.sessionId;
+    if (!normalizedSessionId || !taskTwo.readyToCheck) return;
+
+    const pendingPairs = taskTwo.getPendingPairs();
+    if (pendingPairs.length === 0) return;
+
+    setIsSubmittingPairsAnswer(true);
+    setTaskError('');
+
+    try {
+      const checkResults = [];
+
+      for (const entry of pendingPairs) {
+        const answer = await submitPairsGameAnswer({
+          token,
+          sessionId: normalizedSessionId,
+          pairId: entry.pairId,
+          optionId: entry.optionId,
+        });
+
+        const savedPairId = normalizeId(answer?.pairId) ?? entry.pairId;
+        const savedOptionId = normalizeId(answer?.optionId) ?? entry.optionId;
+        const isCorrect = answer?.correct === true;
+
+        checkResults.push({
+          pairId: savedPairId,
+          optionId: savedOptionId,
+          isCorrect,
+        });
+      }
+
+      const { allResolved } = taskTwo.applyCheckResults(checkResults);
+
+      if (allResolved) {
+        setIsFinishingPairs(true);
+
+        let task2FinishResult = null;
+        try {
+          task2FinishResult = await finishPairsGame({
+            token,
+            sessionId: normalizedSessionId,
+          });
+        } finally {
+          setIsFinishingPairs(false);
+        }
+
+        if (task2FinishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: task2FinishResult.xpDelta,
+            newXp: task2FinishResult.newXp,
+            newLevel: task2FinishResult.newLevel,
+            nextLevelThreshold: task2FinishResult.nextLevelThreshold,
+            xpToNextLevel: task2FinishResult.xpToNextLevel,
+          });
+        } else if (task2FinishResult?.passed) {
+          applyXpResult({ applied: false });
+        }
+
+        setLearningState((previous) => ({
+          trackId: previous?.trackId ?? normalizedSongId,
+          status: previous?.status ?? 'in_progress',
+          unlockedLevel:
+            typeof previous?.unlockedLevel === 'number' ? previous.unlockedLevel : FIRST_TASK_LEVEL,
+          unlockedGame:
+            typeof previous?.unlockedGame === 'number'
+              ? Math.max(previous.unlockedGame, THIRD_TASK_LEVEL)
+              : THIRD_TASK_LEVEL,
+          folderId: exerciseOneFolderId ?? previous?.folderId ?? null,
+        }));
+      }
+    } catch (error) {
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
+    } finally {
+      setIsSubmittingPairsAnswer(false);
+      setIsFinishingPairs(false);
+    }
+  };
+
   const goToMainFromCompletionModal = () => {
-    goHome();
+    setCompletionModal(null);
+    navigate('/');
   };
 
   const openCardsFromCompletionModal = () => {
@@ -904,98 +890,65 @@ function SongLessonPage() {
   };
 
   const startTaskThreeFromTaskTwo = async () => {
-    if (isPreparingPairs || isSubmittingPairsAnswer) return;
+    if (isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs) return;
 
-    if (!taskTwo.canContinue) {
-      return;
-    }
-
-    setIsSubmittingPairsAnswer(true);
-    setTaskError('');
     try {
-      await finalizePairsExercise({
-        sessionId: taskTwo.sessionId,
-        entries: taskTwo.items,
-      });
-      setLearningState((previous) => ({
-        trackId: previous?.trackId ?? normalizedSongId,
-        status: previous?.status ?? 'in_progress',
-        unlockedLevel:
-          typeof previous?.unlockedLevel === 'number' ? previous.unlockedLevel : FIRST_TASK_LEVEL,
-        unlockedGame:
-          typeof previous?.unlockedGame === 'number'
-            ? Math.max(previous.unlockedGame, THIRD_TASK_LEVEL)
-            : THIRD_TASK_LEVEL,
-        folderId: exerciseOneFolderId ?? previous?.folderId ?? null,
-      }));
       await startTaskThreeExercise();
     } catch (error) {
       setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
-    } finally {
-      setIsSubmittingPairsAnswer(false);
     }
   };
 
   const startTaskFourFromTaskThree = async () => {
-    if (isPreparingPairs || isSubmittingPairsAnswer) return;
+    if (isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs) return;
 
-    if (!taskThree.canContinue) {
-      return;
-    }
-
-    setIsSubmittingPairsAnswer(true);
-    setTaskError('');
     try {
-      await finalizePairsExercise({
-        sessionId: taskThree.sessionId,
-        entries: taskThree.items,
-      });
-      setLearningState((previous) => {
-        const nextUnlockedGameFloor = FOURTH_TASK_LEVEL;
-        const nextStatus = previous?.status ?? 'in_progress';
-
-        if (!previous) {
-          return {
-            trackId: normalizedSongId,
-            status: nextStatus,
-            unlockedLevel: THIRD_TASK_LEVEL,
-            unlockedGame: nextUnlockedGameFloor,
-            folderId: exerciseOneFolderId ?? null,
-          };
-        }
-
-        return {
-          ...previous,
-          status: nextStatus,
-          unlockedLevel: Math.max(previous.unlockedLevel ?? 0, THIRD_TASK_LEVEL),
-          unlockedGame: Math.max(previous.unlockedGame ?? 0, nextUnlockedGameFloor),
-          folderId: exerciseOneFolderId ?? previous.folderId ?? null,
-        };
-      });
       await startTaskFourExercise();
     } catch (error) {
       setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
-    } finally {
-      setIsSubmittingPairsAnswer(false);
     }
   };
 
   const completeTaskFour = async () => {
     if (typingFour.rows.length === 0) return;
 
-    if (!typingFour.hasReviewedAnswers) {
-      typingFour.revealAnswers();
-      return;
-    }
+    const { allCorrect } = typingFour.checkAllAnswers();
+    if (!allCorrect) return;
 
     setIsCompletingTaskFour(true);
     setTaskError('');
 
     try {
-      await finalizePairsExercise({
-        sessionId: typingFour.sessionId,
-        entries: typingFour.rows,
-      });
+      if (typingFour.sessionId) {
+        for (const row of typingFour.rows) {
+          if (!row?.pairId || !row?.optionId) continue;
+          await submitPairsGameAnswer({
+            token,
+            sessionId: typingFour.sessionId,
+            pairId: row.pairId,
+            optionId: row.optionId,
+          });
+        }
+
+        const task4FinishResult = await finishPairsGame({
+          token,
+          sessionId: typingFour.sessionId,
+        }).catch(() => null);
+
+        if (task4FinishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: task4FinishResult.xpDelta,
+            newXp: task4FinishResult.newXp,
+            newLevel: task4FinishResult.newLevel,
+            nextLevelThreshold: task4FinishResult.nextLevelThreshold,
+            xpToNextLevel: task4FinishResult.xpToNextLevel,
+          });
+        } else if (task4FinishResult?.passed) {
+          applyXpResult({ applied: false });
+        }
+      }
+
       await startTaskFiveExercise();
     } catch (error) {
       setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
@@ -1007,21 +960,36 @@ function SongLessonPage() {
   const completeTaskFive = async () => {
     if (typingFive.rows.length === 0) return;
 
-    if (!typingFive.hasReviewedAnswers) {
-      typingFive.revealAnswers();
-      return;
-    }
+    const { allCorrect } = typingFive.checkAllAnswers();
+    if (!allCorrect) return;
 
     setIsCompletingTaskFive(true);
     setTaskError('');
 
     try {
-      await finalizePairsExercise({
-        sessionId: typingFive.sessionId,
-        entries: typingFive.rows,
-      });
+      let finishResult = null;
 
-      if (normalizedSongId && token) {
+      if (typingFive.sessionId) {
+        for (const row of typingFive.rows) {
+          if (!row?.pairId || !row?.optionId) continue;
+          await submitPairsGameAnswer({
+            token,
+            sessionId: typingFive.sessionId,
+            pairId: row.pairId,
+            optionId: row.optionId,
+          });
+        }
+
+        finishResult = await finishPairsGame({
+          token,
+          sessionId: typingFive.sessionId,
+        }).catch(() => null);
+      }
+
+      // Award XP: prefer song completion XP (which covers the whole lesson);
+      // fall back to task 5 exercise XP if song completion fails.
+      let songXpShown = false;
+      if (finishResult?.passed && normalizedSongId && token) {
         try {
           const songXp = await completeSong({ token, songId: normalizedSongId });
           applyXpResult({
@@ -1032,16 +1000,34 @@ function SongLessonPage() {
             nextLevelThreshold: songXp.nextLevelThreshold,
             xpToNextLevel: songXp.xpToNextLevel,
           });
+          songXpShown = true;
         } catch {
           // Silently ignore — timer gate may not have passed
         }
       }
+      if (!songXpShown) {
+        if (finishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: finishResult.xpDelta,
+            newXp: finishResult.newXp,
+            newLevel: finishResult.newLevel,
+            nextLevelThreshold: finishResult.nextLevelThreshold,
+            xpToNextLevel: finishResult.xpToNextLevel,
+          });
+        } else if (finishResult?.passed) {
+          applyXpResult({ applied: false });
+        }
+      }
 
       setLearningState((previous) => {
+        const nextStatus =
+          finishResult?.passed === false ? previous?.status ?? 'in_progress' : 'finished';
+
         if (!previous) {
           return {
             trackId: normalizedSongId,
-            status: 'finished',
+            status: nextStatus,
             unlockedLevel: THIRD_TASK_LEVEL,
             unlockedGame: FIFTH_TASK_LEVEL,
             folderId: exerciseOneFolderId ?? null,
@@ -1050,17 +1036,27 @@ function SongLessonPage() {
 
         return {
           ...previous,
-          status: 'finished',
+          status: nextStatus,
           unlockedLevel: Math.max(previous.unlockedLevel ?? 0, THIRD_TASK_LEVEL),
           unlockedGame: Math.max(previous.unlockedGame ?? 0, FIFTH_TASK_LEVEL),
           folderId: exerciseOneFolderId ?? previous.folderId ?? null,
         };
       });
 
+      const finalCorrect = finishResult?.correct ?? typingFive.rows.length;
+      const finalTotal = finishResult?.total ?? typingFive.rows.length;
+      const finalErrors = Math.max(finalTotal - finalCorrect, 0);
+      const finalAccuracy = finalTotal > 0 ? Math.round((finalCorrect / finalTotal) * 100) : 100;
+
       setCompletionModal({
-        title: 'Урок завершён',
-        subtitle: 'Ты прошёл все 5 заданий для этой песни.',
-        nextCta: 'Открыть карточки',
+        title: 'Lesson completed',
+        subtitle: 'Great work. You finished all 5 exercises for this song.',
+        correct: finalCorrect,
+        total: finalTotal,
+        errors: finalErrors,
+        checks: 1,
+        accuracy: finalAccuracy,
+        nextCta: 'Open flashcards',
       });
     } catch (error) {
       setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
@@ -1069,217 +1065,110 @@ function SongLessonPage() {
     }
   };
 
-  const lessonActionButtons = (
-    <>
-      {isTaskOneStage ? (
-        <>
-          <button
-            type="button"
-            className={styles.primaryActionButton}
-            onClick={completeTaskOne}
-            disabled={isCompletingTask || isPreparingPairs || isPreparingTask}>
-            {isCompletingTask || isPreparingPairs ? 'Подготовка...' : 'ОК'}
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryActionButton}
-            onClick={() => setActiveStage(LESSON_STAGE.SONG)}
-            disabled={isCompletingTask || isPreparingPairs}>
-            Вернуться к песне
-          </button>
-        </>
-      ) : null}
+  const checkTaskThreeAnswers = async () => {
+    const normalizedSessionId = taskThree.sessionId;
+    if (!normalizedSessionId || !taskThree.readyToCheck) return;
 
-      {isTaskTwoStage ? (
-        <>
-          {taskTwo.items.length > 0 && taskTwo.options.length > 0 ? (
-            <button
-              type="button"
-              className={styles.primaryActionButton}
-              onClick={startTaskThreeFromTaskTwo}
-              disabled={
-                isPreparingPairs ||
-                isSubmittingPairsAnswer ||
-                !taskTwo.canContinue
-              }>
-              {isPreparingPairs || isSubmittingPairsAnswer
-                ? 'Подготовка...'
-                : 'Начать задание 3'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={styles.primaryActionButton}
-              onClick={startTaskThreeFromTaskTwo}
-              disabled={isPreparingPairs || isSubmittingPairsAnswer}>
-              {isPreparingPairs || isSubmittingPairsAnswer
-                ? 'Подготовка...'
-                : 'Открыть задание 3'}
-            </button>
-          )}
+    const pendingPairs = taskThree.getPendingPairs();
+    if (pendingPairs.length === 0) return;
 
-          {taskTwoHasPairs ? (
-            <button
-              type="button"
-              className={styles.secondaryActionButton}
-              onClick={() => taskTwo.revealSolutions()}
-              disabled={isPreparingPairs || isSubmittingPairsAnswer || taskTwo.hasRevealedSolutions}>
-              {taskTwo.hasRevealedSolutions ? 'Ответы показаны' : 'Показать ответы'}
-            </button>
-          ) : null}
+    setIsSubmittingPairsAnswer(true);
+    setTaskError('');
 
-          <button
-            type="button"
-            className={styles.secondaryActionButton}
-            onClick={() => setActiveStage(LESSON_STAGE.TASK_1)}
-            disabled={isPreparingPairs || isSubmittingPairsAnswer}>
-            К заданию 1
-          </button>
-        </>
-      ) : null}
+    try {
+      const checkResults = [];
 
-      {isTaskThreeStage ? (
-        <>
-          {taskThree.items.length > 0 && taskThree.options.length > 0 ? (
-            <button
-              type="button"
-              className={styles.primaryActionButton}
-              onClick={startTaskFourFromTaskThree}
-              disabled={
-                isPreparingPairs ||
-                isSubmittingPairsAnswer ||
-                !taskThree.canContinue
-              }>
-              {isPreparingPairs || isSubmittingPairsAnswer
-                ? 'Подготовка...'
-                : 'Начать задание 4'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={styles.primaryActionButton}
-              onClick={startTaskFourFromTaskThree}
-              disabled={isPreparingPairs || isSubmittingPairsAnswer}>
-              Открыть задание 4
-            </button>
-          )}
+      for (const entry of pendingPairs) {
+        const answer = await submitPairsGameAnswer({
+          token,
+          sessionId: normalizedSessionId,
+          pairId: entry.pairId,
+          optionId: entry.optionId,
+        });
 
-          {taskThreeHasPairs ? (
-            <button
-              type="button"
-              className={styles.secondaryActionButton}
-              onClick={() => taskThree.revealSolutions()}
-              disabled={
-                isPreparingPairs || isSubmittingPairsAnswer || taskThree.hasRevealedSolutions
-              }>
-              {taskThree.hasRevealedSolutions ? 'Ответы показаны' : 'Показать ответы'}
-            </button>
-          ) : null}
+        const savedPairId = normalizeId(answer?.pairId) ?? entry.pairId;
+        const savedOptionId = normalizeId(answer?.optionId) ?? entry.optionId;
+        const isCorrect = answer?.correct === true;
 
-          <button
-            type="button"
-            className={styles.secondaryActionButton}
-            onClick={() => setActiveStage(LESSON_STAGE.TASK_2)}
-            disabled={isSubmittingPairsAnswer || isPreparingPairs}>
-            К заданию 2
-          </button>
-        </>
-      ) : null}
+        checkResults.push({
+          pairId: savedPairId,
+          optionId: savedOptionId,
+          isCorrect,
+        });
+      }
 
-      {isTaskFourStage ? (
-        <>
-          <button
-            type="button"
-            className={styles.primaryActionButton}
-            onClick={completeTaskFour}
-            disabled={
-              isCompletingTaskFour || isPreparingPairs || typingFour.rows.length === 0
-            }>
-            {isCompletingTaskFour || isPreparingPairs
-              ? 'Подготовка...'
-              : typingFour.hasReviewedAnswers
-              ? 'Начать задание 5'
-              : 'Показать ответы'}
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryActionButton}
-            onClick={() => setActiveStage(LESSON_STAGE.TASK_3)}
-            disabled={isCompletingTaskFour || isPreparingPairs}>
-            К заданию 3
-          </button>
-        </>
-      ) : null}
+      const { allResolved } = taskThree.applyCheckResults(checkResults);
 
-      {isTaskFiveStage ? (
-        <>
-          <button
-            type="button"
-            className={styles.primaryActionButton}
-            onClick={completeTaskFive}
-            disabled={
-              isCompletingTaskFive || isPreparingPairs || typingFive.rows.length === 0
-            }>
-            {isCompletingTaskFive || isPreparingPairs
-              ? 'Завершение...'
-              : typingFive.hasReviewedAnswers
-              ? 'Завершить урок'
-              : 'Показать ответы'}
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryActionButton}
-            onClick={() => setActiveStage(LESSON_STAGE.TASK_4)}
-            disabled={isCompletingTaskFive || isPreparingPairs}>
-            К заданию 4
-          </button>
-        </>
-      ) : null}
+      if (allResolved) {
+        setIsFinishingPairs(true);
 
-      {!isTaskOneStage &&
-      !isTaskTwoStage &&
-      !isTaskThreeStage &&
-      !isTaskFourStage &&
-      !isTaskFiveStage ? (
-        <button
-          type="button"
-          className={styles.primaryActionButton}
-          onClick={openTaskOne}
-          disabled={isPreparingTask}>
-          {isPreparingTask ? 'Подготовка...' : 'Начать обучение'}
-        </button>
-      ) : null}
-    </>
-  );
+        let task3FinishResult = null;
+        try {
+          task3FinishResult = await finishPairsGame({
+            token,
+            sessionId: normalizedSessionId,
+          });
+        } finally {
+          setIsFinishingPairs(false);
+        }
+
+        if (task3FinishResult?.xpApplied) {
+          applyXpResult({
+            applied: true,
+            xpDelta: task3FinishResult.xpDelta,
+            newXp: task3FinishResult.newXp,
+            newLevel: task3FinishResult.newLevel,
+            nextLevelThreshold: task3FinishResult.nextLevelThreshold,
+            xpToNextLevel: task3FinishResult.xpToNextLevel,
+          });
+        } else if (task3FinishResult?.passed) {
+          applyXpResult({ applied: false });
+        }
+
+        setLearningState((previous) => {
+          const nextUnlockedGameFloor = FOURTH_TASK_LEVEL;
+          const nextStatus = previous?.status ?? 'in_progress';
+
+          if (!previous) {
+            return {
+              trackId: normalizedSongId,
+              status: nextStatus,
+              unlockedLevel: THIRD_TASK_LEVEL,
+              unlockedGame: nextUnlockedGameFloor,
+              folderId: exerciseOneFolderId ?? null,
+            };
+          }
+
+          return {
+            ...previous,
+            status: nextStatus,
+            unlockedLevel: Math.max(previous.unlockedLevel ?? 0, THIRD_TASK_LEVEL),
+            unlockedGame: Math.max(previous.unlockedGame ?? 0, nextUnlockedGameFloor),
+            folderId: exerciseOneFolderId ?? previous.folderId ?? null,
+          };
+        });
+      }
+    } catch (error) {
+      setTaskError(extractErrorMessage(error, { context: 'songLesson' }));
+    } finally {
+      setIsSubmittingPairsAnswer(false);
+      setIsFinishingPairs(false);
+    }
+  };
 
   return (
     <section className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerTop}>
-          <div className={styles.headerActions}>
-            <button type="button" className={styles.ghostButton} onClick={() => navigate(-1)}>
-              Назад
-            </button>
-            <button type="button" className={styles.ghostButton} onClick={goHome}>
-              На главную
-            </button>
-          </div>
+          <button type="button" className={styles.ghostButton} onClick={() => navigate(-1)}>
+            Назад
+          </button>
         </div>
 
         <h2 className={styles.title}>{song?.title ?? 'Урок по песне'}</h2>
       </header>
 
       {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
-      {!isLoading && !song && isPremiumLocked ? (
-        <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={styles.primaryActionButton}
-            onClick={() => navigate('/premium')}>
-            Buy Premium
-          </button>
-        </div>
-      ) : null}
       {taskError ? <p className={styles.errorText}>{taskError}</p> : null}
 
       {isLoading ? <LessonSkeleton /> : null}
@@ -1301,21 +1190,25 @@ function SongLessonPage() {
                 title="Соедини слова из задания 1"
                 items={taskTwo.items}
                 options={taskTwo.options}
+                resolvedCount={taskTwo.resolvedCount}
                 linkedCount={taskTwo.linkedCount}
-                hasRevealedSolutions={taskTwo.hasRevealedSolutions}
+                allCorrect={taskTwo.allCorrect}
+                accuracy={taskTwo.accuracy}
+                stats={taskTwo.stats}
                 selectedPairId={taskTwo.selectedPairId}
                 assignments={taskTwo.assignments}
-                confirmedAnswers={taskTwo.answers}
                 optionOwners={taskTwo.optionOwners}
+                wrongPairs={taskTwo.wrongPairs}
                 connectorPaths={taskTwo.connectorPaths}
+                confirmedAnswers={taskTwo.answers}
                 onSelectPairItem={(pairId) => taskTwo.selectPairItem(pairId, pairsBusy)}
                 onAssignOption={(optionId) => taskTwo.assignOption(optionId, pairsBusy)}
                 boardRef={taskTwo.boardRef}
                 onBoardScroll={taskTwo.onBoardScroll}
                 registerLeftNode={taskTwo.registerLeftNode}
                 registerRightNode={taskTwo.registerRightNode}
-                isDisabled={isPreparingPairs || isSubmittingPairsAnswer}
-                successMessage="Ответы показаны. Можно переходить к заданию 3."
+                isDisabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}
+                successMessage="Все пары верны! Можно переходить к заданию 3."
                 emptyMessage="Для этого трека нет пар для задания 2."
               />
             ) : null}
@@ -1326,22 +1219,26 @@ function SongLessonPage() {
                 title="Соедини фразы из базы данных"
                 items={taskThree.items}
                 options={taskThree.options}
+                resolvedCount={taskThree.resolvedCount}
                 linkedCount={taskThree.linkedCount}
-                hasRevealedSolutions={taskThree.hasRevealedSolutions}
+                allCorrect={taskThree.allCorrect}
+                accuracy={taskThree.accuracy}
+                stats={taskThree.stats}
                 selectedPairId={taskThree.selectedPairId}
                 assignments={taskThree.assignments}
-                confirmedAnswers={taskThree.answers}
                 optionOwners={taskThree.optionOwners}
+                wrongPairs={taskThree.wrongPairs}
                 connectorPaths={taskThree.connectorPaths}
+                confirmedAnswers={taskThree.answers}
                 onSelectPairItem={(pairId) => taskThree.selectPairItem(pairId, pairsBusy)}
                 onAssignOption={(optionId) => taskThree.assignOption(optionId, pairsBusy)}
                 boardRef={taskThree.boardRef}
                 onBoardScroll={taskThree.onBoardScroll}
                 registerLeftNode={taskThree.registerLeftNode}
                 registerRightNode={taskThree.registerRightNode}
-                isDisabled={isPreparingPairs || isSubmittingPairsAnswer}
-                successMessage="Ответы показаны. Можно переходить к заданию 4."
-                emptyMessage="Для этого трека пока нет фраз для задания 3."
+                isDisabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}
+                successMessage="Все пары верны! Можно переходить к заданию 4."
+                emptyMessage="No Task 3 pairs were returned for this track. Add phrase templates in DB and restart this task."
               />
             ) : null}
 
@@ -1349,14 +1246,13 @@ function SongLessonPage() {
               <TypingTask
                 taskNumber={4}
                 title="Напиши перевод на кыргызском"
-                subtitle="Сначала напиши свой вариант, затем мы покажем правильный ответ и можно будет перейти дальше."
+                subtitle="Напиши каждое предложение на кыргызском. Регистр и пунктуация не учитываются."
                 rows={typingFour.rows}
                 inputs={typingFour.inputs}
-                hasReviewedAnswers={typingFour.hasReviewedAnswers}
+                results={typingFour.results}
+                correctCount={typingFour.correctCount}
                 onInputChange={typingFour.onInputChange}
-                isDisabled={
-                  isCompletingTaskFour || isPreparingPairs || typingFour.hasReviewedAnswers
-                }
+                isDisabled={isCompletingTaskFour || isPreparingPairs}
                 emptyMessage="Для этого трека нет заданий для упражнения 4."
               />
             ) : null}
@@ -1365,14 +1261,13 @@ function SongLessonPage() {
               <TypingTask
                 taskNumber={5}
                 title="Напиши краткий перевод"
-                subtitle="Сначала напиши свой вариант, затем мы покажем правильный ответ и можно будет завершить урок."
+                subtitle="Напиши каждое предложение на кыргызском. Регистр и пунктуация не учитываются."
                 rows={typingFive.rows}
                 inputs={typingFive.inputs}
-                hasReviewedAnswers={typingFive.hasReviewedAnswers}
+                results={typingFive.results}
+                correctCount={typingFive.correctCount}
                 onInputChange={typingFive.onInputChange}
-                isDisabled={
-                  isCompletingTaskFive || isPreparingPairs || typingFive.hasReviewedAnswers
-                }
+                isDisabled={isCompletingTaskFive || isPreparingPairs}
                 emptyMessage="Для этого трека нет заданий для упражнения 5."
               />
             ) : null}
@@ -1606,7 +1501,172 @@ function SongLessonPage() {
                 </a>
               ) : null}
 
-              <div className={styles.lessonActions}>{lessonActionButtons}</div>
+              <div className={styles.lessonActions}>
+                {isTaskOneStage ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.primaryActionButton}
+                      onClick={completeTaskOne}
+                      disabled={isCompletingTask || isPreparingPairs || isPreparingTask}>
+                      {isCompletingTask || isPreparingPairs ? 'Подготовка...' : 'ОК'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => setActiveStage(LESSON_STAGE.SONG)}
+                      disabled={isCompletingTask || isPreparingPairs}>
+                      Вернуться к песне
+                    </button>
+                  </>
+                ) : null}
+
+                {isTaskTwoStage ? (
+                  <>
+                    {taskTwo.items.length > 0 && taskTwo.options.length > 0 ? (
+                      <button
+                        type="button"
+                        className={styles.primaryActionButton}
+                        onClick={
+                          taskTwo.allCorrect ? startTaskThreeFromTaskTwo : checkTaskTwoAnswers
+                        }
+                        disabled={
+                          taskTwo.allCorrect
+                            ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                            : !taskTwo.readyToCheck ||
+                              isPreparingPairs ||
+                              isSubmittingPairsAnswer ||
+                              isFinishingPairs
+                        }>
+                        {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                          ? 'Проверка...'
+                          : taskTwo.allCorrect
+                          ? 'Начать задание 3'
+                          : 'Проверить'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.primaryActionButton}
+                        onClick={startTaskThreeFromTaskTwo}
+                        disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
+                        {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                          ? 'Подготовка...'
+                          : 'Открыть задание 3'}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => setActiveStage(LESSON_STAGE.TASK_1)}
+                      disabled={isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs}>
+                      К заданию 1
+                    </button>
+                  </>
+                ) : null}
+
+                {isTaskThreeStage ? (
+                  <>
+                    {taskThree.items.length > 0 && taskThree.options.length > 0 ? (
+                      <button
+                        type="button"
+                        className={styles.primaryActionButton}
+                        onClick={
+                          taskThree.allCorrect ? startTaskFourFromTaskThree : checkTaskThreeAnswers
+                        }
+                        disabled={
+                          taskThree.allCorrect
+                            ? isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                            : !taskThree.readyToCheck ||
+                              isPreparingPairs ||
+                              isSubmittingPairsAnswer ||
+                              isFinishingPairs
+                        }>
+                        {isPreparingPairs || isSubmittingPairsAnswer || isFinishingPairs
+                          ? 'Проверка...'
+                          : taskThree.allCorrect
+                          ? 'Начать задание 4'
+                          : 'Проверить'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.primaryActionButton}
+                        onClick={startTaskFourFromTaskThree}
+                        disabled={isPreparingPairs || isFinishingPairs || isSubmittingPairsAnswer}>
+                        Открыть задание 4
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => setActiveStage(LESSON_STAGE.TASK_2)}
+                      disabled={isFinishingPairs || isSubmittingPairsAnswer || isPreparingPairs}>
+                      К заданию 2
+                    </button>
+                  </>
+                ) : null}
+
+                {isTaskFourStage ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.primaryActionButton}
+                      onClick={completeTaskFour}
+                      disabled={
+                        isCompletingTaskFour || isPreparingPairs || typingFour.rows.length === 0
+                      }>
+                      {isCompletingTaskFour || isPreparingPairs
+                        ? 'Подготовка...'
+                        : 'Проверить и начать задание 5'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => setActiveStage(LESSON_STAGE.TASK_3)}
+                      disabled={isCompletingTaskFour || isPreparingPairs}>
+                      К заданию 3
+                    </button>
+                  </>
+                ) : null}
+
+                {isTaskFiveStage ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.primaryActionButton}
+                      onClick={completeTaskFive}
+                      disabled={
+                        isCompletingTaskFive || isPreparingPairs || typingFive.rows.length === 0
+                      }>
+                      {isCompletingTaskFive || isPreparingPairs ? 'Завершение...' : 'Завершить урок'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryActionButton}
+                      onClick={() => setActiveStage(LESSON_STAGE.TASK_4)}
+                      disabled={isCompletingTaskFive || isPreparingPairs}>
+                      К заданию 4
+                    </button>
+                  </>
+                ) : null}
+
+                {!isTaskOneStage &&
+                !isTaskTwoStage &&
+                !isTaskThreeStage &&
+                !isTaskFourStage &&
+                !isTaskFiveStage ? (
+                  <button
+                    type="button"
+                    className={styles.primaryActionButton}
+                    onClick={openTaskOne}
+                    disabled={isPreparingTask}>
+                    {isPreparingTask ? 'Подготовка...' : 'Начать обучение'}
+                  </button>
+                ) : null}
+              </div>
 
               <span className={styles.trackBadge}>
                 {isTaskFiveStage
@@ -1645,8 +1705,6 @@ function SongLessonPage() {
               </dl>
             </article>
           </aside>
-
-          <div className={styles.lessonActionsMobile}>{lessonActionButtons}</div>
         </div>
       ) : null}
 

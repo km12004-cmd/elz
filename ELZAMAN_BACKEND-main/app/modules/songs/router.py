@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
 from app.modules.songs.schemas import (
-    OkResponse,
     SongCreateRequest,
     SongCreateResponse,
     SongDetailResponse,
@@ -14,13 +13,11 @@ from app.modules.songs.schemas import (
 )
 from app.modules.songs.service import (
     create_song_for_user,
-    delete_song,
     get_song_detail,
     get_song_lyrics_for_user,
     list_songs,
     update_song_for_user,
 )
-from app.modules.subscriptions.service import ensure_song_study_access
 
 router = APIRouter(prefix="/songs", tags=["Songs"])
 
@@ -62,12 +59,7 @@ async def list_songs_endpoint(
 
 
 @router.get("/{song_id}", response_model=SongDetailResponse)
-async def song_detail_endpoint(
-    song_id: int,
-    user=Depends(require_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    await ensure_song_study_access(db, user, song_id)
+async def song_detail_endpoint(song_id: int, _: object = Depends(require_current_user), db: AsyncSession = Depends(get_db)):
     song = await get_song_detail(db, song_id)
     return {"ok": True, "song": song}
 
@@ -88,19 +80,7 @@ async def song_patch_endpoint(
     return {"ok": True, "song": song}
 
 
-@router.delete("/{song_id}", response_model=OkResponse)
-async def song_delete_endpoint(
-    song_id: int,
-    _: object = Depends(require_admin_user),
-    db: AsyncSession = Depends(get_db),
-):
-    await delete_song(db, song_id)
-    await db.commit()
-    return OkResponse()
-
-
 @router.get("/{song_id}/lyrics", response_model=SongLyricsResponse)
 async def song_lyrics_endpoint(song_id: int, user=Depends(require_current_user), db: AsyncSession = Depends(get_db)):
-    await ensure_song_study_access(db, user, song_id)
     current_song_id, lyrics_text, lyrics_text_ru = await get_song_lyrics_for_user(db, user_id=user.id, song_id=song_id)
     return {"ok": True, "song_id": current_song_id, "lyrics_text": lyrics_text, "lyrics_text_ru": lyrics_text_ru}

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
@@ -494,44 +494,4 @@ async def mark_listened(
         "unlocked_level": int(progress.unlocked_level or 1),
         "unlocked_game": int(progress.unlocked_game or 1),
         "folder_id": folder_id,
-    }
-
-
-async def delete_flashcard_templates(
-    db: AsyncSession,
-    *,
-    track_id: int,
-) -> dict[str, object]:
-    await _get_track_or_404(db, track_id)
-    result = await db.execute(
-        delete(TrackFlashcardTemplate).where(
-            TrackFlashcardTemplate.track_id == track_id,
-        )
-    )
-    await db.flush()
-    return {
-        "track_id": int(track_id),
-        "deleted_count": int(result.rowcount or 0),
-    }
-
-
-async def delete_track_level_cards(
-    db: AsyncSession,
-    *,
-    track_id: int,
-    level: int,
-) -> dict[str, object]:
-    if level < 1:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="level must be >= 1")
-    await _get_track_or_404(db, track_id)
-    result = await db.execute(
-        delete(TrackFlashcardTemplate).where(
-            TrackFlashcardTemplate.track_id == track_id,
-            TrackFlashcardTemplate.level_idx == level,
-        )
-    )
-    await db.flush()
-    return {
-        "track_id": int(track_id),
-        "deleted_count": int(result.rowcount or 0),
     }

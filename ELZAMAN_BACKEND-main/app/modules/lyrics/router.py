@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules.auth.dependencies import require_admin_user, require_current_user
-from app.modules.subscriptions.service import ensure_song_study_access
 from app.modules.lyrics.schemas import (
     BulkTranslationRequest,
     SongTranslationsResponse,
@@ -30,10 +29,9 @@ router = APIRouter(prefix="/lyrics", tags=["Lyrics & Translations"])
 @router.get("/songs/{song_id}", response_model=TokenizedLyricsResponse)
 async def get_tokenized_lyrics_endpoint(
     song_id: int,
-    user=Depends(require_current_user),
+    _: object = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, song_id)
     data = await get_tokenized_lyrics(db, song_id)
     return {"ok": True, **data}
 
@@ -42,10 +40,9 @@ async def get_tokenized_lyrics_endpoint(
 async def get_song_translations_endpoint(
     song_id: int,
     lang: str = Query("ru"),
-    user=Depends(require_current_user),
+    _: object = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ensure_song_study_access(db, user, song_id)
     data = await get_song_translations(db, song_id, lang)
     return {"ok": True, **data}
 

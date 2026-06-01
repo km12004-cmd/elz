@@ -42,6 +42,14 @@ This project now exposes a JSON-only API.
   - Returns current authenticated user identity.
   - Includes `created_at` (UTC ISO-8601) and `role` (`user`/`admin`).
 
+## Chat (`/api/chat`)
+
+- `POST /messages`
+  - Body: `{ message, history }`, where `history` is up to 6 `{ role, content }` items.
+  - Returns: `{ ok: true, answer }`.
+  - Proxies to an OpenAI-compatible provider using server-side `AI_API_KEY`.
+  - Returns `503` when AI env settings are missing and `429` when the in-memory rate limit is exceeded.
+
 ## Profile (`/api/profile`)
 
 - `GET /`

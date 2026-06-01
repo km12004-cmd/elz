@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { fetchAchievements } from '@/entities/achievements/api';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useProgress } from '@/features/xp/hooks/useProgress';
 import { useI18n } from '@/features/i18n/hooks/useI18n';
@@ -68,41 +66,30 @@ function normalizeStreak(value, fallback = 0) {
   return Math.max(0, Math.trunc(parsed));
 }
 
-function formatStreakDays(value, t) {
-  const safeValue = normalizeStreak(value);
-  return t(`${safeValue} day${safeValue === 1 ? '' : 's'}`);
+function pluralRu(value, one, few, many) {
+  const count = Math.abs(Number(value) || 0);
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
 }
 
-const CATEGORY_ORDER = ['starter', 'streak', 'vocabulary', 'xp', 'songs', 'perfect'];
+function formatStreakDays(value, language) {
+  const safeValue = normalizeStreak(value);
+  if (language === 'ru') {
+    return `${safeValue} ${pluralRu(safeValue, 'день', 'дня', 'дней')}`;
+  }
 
-const CATEGORY_ICONS = {
-  starter: '\u{1F31F}',
-  streak: '\u{1F525}',
-  vocabulary: '\u{1F4DA}',
-  xp: '\u{26A1}',
-  songs: '\u{1F3B5}',
-  perfect: '\u{1F48E}',
-};
+  return `${safeValue} day${safeValue === 1 ? '' : 's'}`;
+}
 
 function ProfilePage() {
-  const { isAuthenticated, user, token, signOut } = useAuth();
+  const { isAuthenticated, user, signOut } = useAuth();
   const { progress } = useProgress();
   const { language, locale, setLanguage, t } = useI18n();
   const navigate = useNavigate();
-
-  const [achievements, setAchievements] = useState([]);
-  const [achievementsLoaded, setAchievementsLoaded] = useState(false);
-  const achievementsLoading = Boolean(token) && !achievementsLoaded;
-
-  useEffect(() => {
-    if (!token) return undefined;
-    let cancelled = false;
-    fetchAchievements({ token })
-      .then((items) => { if (!cancelled) setAchievements(items); })
-      .catch(() => { if (!cancelled) setAchievements([]); })
-      .finally(() => { if (!cancelled) setAchievementsLoaded(true); });
-    return () => { cancelled = true; };
-  }, [token]);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -155,17 +142,6 @@ function ProfilePage() {
     setLanguage(event.target.value);
   };
 
-  const groupedAchievements = CATEGORY_ORDER.reduce((groups, category) => {
-    const items = achievements.filter((a) => a.category === category);
-    if (items.length > 0) {
-      groups.push({ category, items });
-    }
-    return groups;
-  }, []);
-
-  const unlockedCount = achievements.filter((a) => a.unlocked).length;
-  const totalCount = achievements.length;
-
   return (
     <section className={styles.page}>
       <div className={styles.hero}>
@@ -175,7 +151,7 @@ function ProfilePage() {
               <img
                 className={styles.avatar}
                 src={user.avatarUrl}
-                alt={t(`${nickname} avatar`)}
+                alt={language === 'ru' ? `Аватар ${nickname}` : `${nickname} avatar`}
               />
             ) : (
               <span className={styles.avatarFallback}>{avatarLetter}</span>
@@ -193,11 +169,11 @@ function ProfilePage() {
               <span className={styles.streakPill}>
                 <span className={styles.streakIcon} aria-hidden="true" />
                 <span className={styles.streakLabel}>{t('Current streak')}</span>
-                <span className={styles.streakValue}>{formatStreakDays(currentStreak, t)}</span>
+                <span className={styles.streakValue}>{formatStreakDays(currentStreak, language)}</span>
               </span>
               <span className={`${styles.streakPill} ${styles.streakPillMuted}`}>
                 <span className={styles.streakLabel}>{t('Best')}</span>
-                <span className={styles.streakValue}>{formatStreakDays(bestStreak, t)}</span>
+                <span className={styles.streakValue}>{formatStreakDays(bestStreak, language)}</span>
               </span>
             </div>
           </div>
@@ -223,14 +199,19 @@ function ProfilePage() {
           const { level, xpTotal, nextLevelThreshold, xpToNextLevel } = progress;
           const fillPercent = xpFillPercent(level, xpTotal);
           const isMaxLevel = xpToNextLevel === 0;
-          const progressAriaLabel = t(`Level ${level}, ${xpToNextLevel} XP to next level`);
+          const progressAriaLabel =
+            language === 'ru'
+              ? `Уровень ${level}, ${xpToNextLevel} XP до следующего уровня`
+              : `Level ${level}, ${xpToNextLevel} XP to next level`;
           return (
             <>
               <div className={styles.progressHeader}>
                 <span className={styles.progressLevel}>{`${t('Level')} ${level}`}</span>
                 {!isMaxLevel && (
                   <span className={styles.progressXpMeta}>
-                    {t(`${xpToNextLevel} XP to Lv. ${level + 1}`)}
+                    {language === 'ru'
+                      ? `${xpToNextLevel} XP до ур. ${level + 1}`
+                      : `${xpToNextLevel} XP to Lv. ${level + 1}`}
                   </span>
                 )}
                 {isMaxLevel && (
@@ -271,67 +252,6 @@ function ProfilePage() {
         })()}
       </div>
 
-      <div className={styles.achievementsSection}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>{t('Achievements')}</h3>
-          <p className={styles.subtitle}>
-            {t('Your progress and milestones.')}
-            {totalCount > 0 && (
-              <span className={styles.achievementsCount}>
-                {' '}{unlockedCount}/{totalCount}
-              </span>
-            )}
-          </p>
-        </div>
-
-        {achievementsLoading && (
-          <p className={styles.achievementsLoading}>...</p>
-        )}
-
-        {!achievementsLoading && groupedAchievements.length > 0 && (
-          <div className={styles.achievementCategories}>
-            {groupedAchievements.map(({ category, items }) => (
-              <div key={category} className={styles.achievementCategoryBlock}>
-                <h4 className={styles.achievementCategoryTitle}>
-                  <span className={styles.achievementCategoryIcon} aria-hidden="true">
-                    {CATEGORY_ICONS[category] ?? ''}
-                  </span>
-                  {t(category)}
-                </h4>
-                <div className={styles.achievementGrid}>
-                  {items.map((achievement) => {
-                    const title = language === 'ru' && achievement.titleRu
-                      ? achievement.titleRu
-                      : t(achievement.title);
-                    const description = language === 'ru' && achievement.descriptionRu
-                      ? achievement.descriptionRu
-                      : t(achievement.description);
-
-                    return (
-                      <article
-                        key={achievement.code}
-                        className={`${styles.achievementCard} ${achievement.unlocked ? styles.achievementUnlocked : styles.achievementLocked}`}
-                      >
-                        <div className={styles.achievementHeader}>
-                          <span className={styles.achievementTitle}>{title}</span>
-                          {achievement.unlocked && (
-                            <span className={styles.achievementCheckmark} aria-label={t('Unlocked')}>
-                              &#x2713;
-                            </span>
-                          )}
-                        </div>
-                        <p className={styles.achievementDescription}>{description}</p>
-                        <span className={styles.achievementXp}>+{achievement.xpReward} XP</span>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       <div className={styles.content}>
         <div className={styles.sectionHeader}>
           <h3 className={styles.sectionTitle}>{t('Account Details')}</h3>
@@ -350,7 +270,6 @@ function ProfilePage() {
           >
             <option value="ru">{t('Russian')}</option>
             <option value="en">{t('English')}</option>
-            <option value="ky">{t('Kyrgyz')}</option>
           </select>
         </div>
 

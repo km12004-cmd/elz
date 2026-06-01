@@ -50,7 +50,7 @@ Modules: `auth`, `profile`, `general`, `flashcards`, `playlists`, `songs`, `trac
 ### Key Subsystems
 
 **Authentication** ([app/core/security.py](app/core/security.py))
-- JWT access tokens (HS256, 3 day TTL) via `Authorization: Bearer <token>`
+- JWT access tokens (HS256, 15 min TTL) via `Authorization: Bearer <token>`
 - Refresh tokens stored in HttpOnly cookies with rotation
 - Revokable sessions tracked in `refresh_sessions` table
 
@@ -75,7 +75,7 @@ The app reads from `.env`. Key variables:
 DATABASE_URL=postgresql+asyncpg://...
 JWT_SECRET_KEY=...
 APP_SECRET_KEY=...
-ACCESS_TOKEN_TTL_MINUTES=4320
+ACCESS_TOKEN_TTL_MINUTES=15
 REFRESH_TOKEN_TTL_DAYS=14
 STORAGE_BACKEND=local
 MEDIA_ROOT=app/media

@@ -3,6 +3,7 @@
 .serena/
 schema.sql
 *.sql
+*.db
 venv/
 .venv/
 __pycache__/

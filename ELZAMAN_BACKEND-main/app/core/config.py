@@ -22,33 +22,6 @@ def _positive_int_env(name: str, default_value: int) -> int:
     return value
 
 
-def _string_env_or_none(name: str) -> str | None:
-    raw = os.getenv(name)
-    if raw is None:
-        return None
-
-    value = raw.strip()
-    return value or None
-
-
-def _csv_int_env(name: str) -> tuple[int, ...]:
-    raw = _string_env_or_none(name)
-    if not raw:
-        return ()
-
-    values: list[int] = []
-    for item in raw.split(","):
-        chunk = item.strip()
-        if not chunk:
-            continue
-        try:
-            values.append(int(chunk))
-        except ValueError:
-            continue
-
-    return tuple(values)
-
-
 @dataclass(frozen=True)
 class Settings:
     app_name: str
@@ -62,15 +35,11 @@ class Settings:
     jwt_refresh_audience: str
     access_token_ttl_minutes: int
     refresh_token_ttl_days: int
-    telegram_bot_token: str | None
-    telegram_bot_username: str | None
-    telegram_webhook_secret: str | None
-    telegram_admin_chat_ids: tuple[int, ...]
-    telegram_payment_qr_url: str | None
-    telegram_support_url: str
-    telegram_premium_price_label: str
-    telegram_premium_days: int
-    telegram_premium_plan_code: str
+    ai_provider: str
+    ai_api_key: str | None
+    ai_base_url: str
+    ai_model: str
+    ai_timeout_seconds: int
 
 
 @lru_cache(maxsize=1)
@@ -78,6 +47,16 @@ def get_settings() -> Settings:
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise RuntimeError(f"DATABASE_URL is missing. Looked for .env at: {ENV_PATH}")
+
+    ai_provider = os.getenv("AI_PROVIDER", "gemini").strip().lower()
+    if ai_provider not in {"gemini", "openai"}:
+        ai_provider = "gemini"
+    default_ai_base_url = (
+        "https://generativelanguage.googleapis.com/v1beta"
+        if ai_provider == "gemini"
+        else "https://api.openai.com/v1"
+    )
+    default_ai_model = "gemini-2.5-flash-lite" if ai_provider == "gemini" else "gpt-5-nano"
 
     return Settings(
         app_name=os.getenv("APP_NAME", "Elzaman API"),
@@ -89,15 +68,11 @@ def get_settings() -> Settings:
         jwt_issuer=os.getenv("JWT_ISSUER", "elzaman"),
         jwt_access_audience=os.getenv("JWT_ACCESS_AUDIENCE", "elzaman-api"),
         jwt_refresh_audience=os.getenv("JWT_REFRESH_AUDIENCE", "elzaman-refresh"),
-        access_token_ttl_minutes=_positive_int_env("ACCESS_TOKEN_TTL_MINUTES", 4320),
+        access_token_ttl_minutes=_positive_int_env("ACCESS_TOKEN_TTL_MINUTES", 15),
         refresh_token_ttl_days=_positive_int_env("REFRESH_TOKEN_TTL_DAYS", 14),
-        telegram_bot_token=_string_env_or_none("TELEGRAM_BOT_TOKEN"),
-        telegram_bot_username=_string_env_or_none("TELEGRAM_BOT_USERNAME"),
-        telegram_webhook_secret=_string_env_or_none("TELEGRAM_WEBHOOK_SECRET"),
-        telegram_admin_chat_ids=_csv_int_env("TELEGRAM_ADMIN_CHAT_IDS"),
-        telegram_payment_qr_url=_string_env_or_none("TELEGRAM_PAYMENT_QR_URL"),
-        telegram_support_url=os.getenv("TELEGRAM_SUPPORT_URL", "https://www.instagram.com/elzaman.kg").strip(),
-        telegram_premium_price_label=os.getenv("TELEGRAM_PREMIUM_PRICE_LABEL", "149 KGS / month").strip(),
-        telegram_premium_days=_positive_int_env("TELEGRAM_PREMIUM_DAYS", 30),
-        telegram_premium_plan_code=os.getenv("TELEGRAM_PREMIUM_PLAN_CODE", "telegram_qr_manual").strip(),
+        ai_provider=ai_provider,
+        ai_api_key=os.getenv("AI_API_KEY") or None,
+        ai_base_url=os.getenv("AI_BASE_URL", default_ai_base_url).rstrip("/"),
+        ai_model=os.getenv("AI_MODEL", default_ai_model),
+        ai_timeout_seconds=_positive_int_env("AI_TIMEOUT_SECONDS", 20),
     )

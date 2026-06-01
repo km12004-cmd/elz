@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchArtists } from '@/entities/artist/api';
 import { fetchSongsCatalog } from '@/entities/song/api';
@@ -13,7 +13,6 @@ import {
   createFlashcardFolder,
   deleteFlashcardFolder,
 } from '@/entities/flashcard/api';
-import { fetchAchievements } from '@/entities/achievements/api';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { extractErrorMessage } from '@/features/auth/lib/extractErrorMessage';
 import ConfirmDialog from '@/shared/ui/ConfirmDialog';
@@ -28,7 +27,6 @@ import GuestScreen from '@/widgets/dashboard/GuestScreen';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import CreateFolderModal from './CreateFolderModal';
 import { normalizeId } from '@/shared/lib/normalizeId';
-import { getPremiumLockedSongIds } from '@/shared/lib/premiumSongs';
 import {
   getArtistInitials,
   normalizeText,
@@ -78,9 +76,6 @@ function DashboardPage() {
   const [folderToDelete, setFolderToDelete] = useState(null);
   const [deletingFolderId, setDeletingFolderId] = useState(null);
 
-  // Achievements state
-  const [achievements, setAchievements] = useState([]);
-
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
@@ -91,7 +86,6 @@ function DashboardPage() {
   const isPremiumUser = hasPremiumAccess(user?.isPremium ?? user?.is_premium);
   const premiumButtonLabel = isPremiumUser ? 'Premium on' : 'Buy Premium';
   const premiumButtonTitle = isPremiumUser ? 'Premium is active' : 'Go to premium plans';
-  const lockedSongIds = useMemo(() => getPremiumLockedSongIds(songs), [songs]);
   const closeAuth = () => setAuthView(null);
 
   const showToast = (message, type = 'success') => {
@@ -232,19 +226,6 @@ function DashboardPage() {
   useEffect(() => {
     loadFolders();
   }, [loadFolders]);
-
-  // Load achievements
-  useEffect(() => {
-    let cancelled = false;
-    if (!isAuthenticated) {
-      setAchievements([]);
-      return undefined;
-    }
-    fetchAchievements({ token })
-      .then((items) => { if (!cancelled) setAchievements(items); })
-      .catch(() => { if (!cancelled) setAchievements([]); });
-    return () => { cancelled = true; };
-  }, [token, isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) return;
@@ -392,9 +373,6 @@ function DashboardPage() {
         <div className={styles.blockHeader}>
           <div>
             <h2 className={styles.blockTitle}>Songs</h2>
-            {!isPremiumUser ? (
-              <p className={styles.blockSubtitle}>The latest 4 songs are available with Premium.</p>
-            ) : null}
           </div>
         </div>
         {isLoadingSongs && (
@@ -411,29 +389,15 @@ function DashboardPage() {
           <div className={`${styles.itemGrid} ${styles.songsGrid}`}>
             {songs.map((song, index) => {
               const id = normalizeId(song.id);
-              const isSongLocked = Boolean(id) && !isPremiumUser && lockedSongIds.has(id);
               return (
-                <article
-                  key={id ?? `song-${index}`}
-                  className={`${styles.itemCard} ${isSongLocked ? styles.songCardLocked : ''}`}>
+                <article key={id ?? `song-${index}`} className={styles.itemCard}>
                   <button
                     type="button"
                     className={styles.itemMainButton}
-                    onClick={() => {
-                      if (!id) return;
-                      if (isSongLocked) {
-                        navigate('/premium');
-                        return;
-                      }
-                      navigate(`/songs/${id}`);
-                    }}
-                    disabled={!id}
-                    title={isSongLocked ? 'Premium subscription is required to study this song.' : undefined}>
+                    onClick={() => id && navigate(`/songs/${id}`)}
+                    disabled={!id}>
                     <p className={styles.itemTitle}>{song.title}</p>
                     {song.author && <p className={styles.itemMeta}>{song.author}</p>}
-                    {isSongLocked ? (
-                      <span className={styles.songPremiumBadge}>Available with Premium</span>
-                    ) : null}
                   </button>
                 </article>
               );
@@ -538,47 +502,28 @@ function DashboardPage() {
         </div>
 
         {isAuthenticated ? (
-          <div className={styles.profileSplitRow}>
-            <div className={styles.profileLeft}>
-              <div className={styles.profileAuthRow}>
-                <XpWidget />
-                <Link
-                  to="/profile"
-                  className={styles.streakPill}
-                  aria-label={`Current streak: ${streakLabel}`}
-                  title={`Current streak: ${streakLabel}`}>
-                  <span className={styles.streakFlame} aria-hidden="true" />
-                  <span className={styles.streakText}>{streakLabel}</span>
-                </Link>
-              </div>
-
+          <>
+            <div className={styles.profileAuthRow}>
+              <XpWidget />
               <Link
-                to="/premium"
-                className={`${styles.premiumLink} ${styles.profilePremiumLink} ${
-                  isPremiumUser ? styles.premiumLinkOn : ''
-                }`}
-                title={premiumButtonTitle}>
-                {premiumButtonLabel}
+                to="/profile"
+                className={styles.streakPill}
+                aria-label={`Current streak: ${streakLabel}`}
+                title={`Current streak: ${streakLabel}`}>
+                <span className={styles.streakFlame} aria-hidden="true" />
+                <span className={styles.streakText}>{streakLabel}</span>
               </Link>
             </div>
 
-            <div className={styles.profileDividerVertical} />
-
-            <div className={styles.profileRight}>
-              <div className={styles.achievementsPreviewHeader}>
-                <h3 className={styles.achievementsPreviewTitle}>Achievements</h3>
-                {achievements.length > 0 && (
-                  <span className={styles.achievementsPreviewCount}>
-                    {achievements.filter((a) => a.unlocked).length}/{achievements.length}
-                  </span>
-                )}
-              </div>
-
-              <Link to="/profile" className={styles.viewAllAchievements}>
-                View all achievements
-              </Link>
-            </div>
-          </div>
+            <Link
+              to="/premium"
+              className={`${styles.premiumLink} ${styles.profilePremiumLink} ${
+                isPremiumUser ? styles.premiumLinkOn : ''
+              }`}
+              title={premiumButtonTitle}>
+              {premiumButtonLabel}
+            </Link>
+          </>
         ) : (
           <>
             <div className={styles.profileTopRow}>

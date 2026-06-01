@@ -29,7 +29,7 @@ function loadStoredAuth() {
   const stored = safeParseJson(localStorage.getItem(STORAGE_KEY));
   if (!stored || typeof stored !== 'object') return EMPTY_AUTH;
 
-  const token = typeof stored.token === 'string' ? stored.token.trim() || null : null;
+  const token = typeof stored.token === 'string' ? stored.token : null;
   const user = stored.user && typeof stored.user === 'object' ? stored.user : null;
   const rawStartedAt = Number(stored.sessionStartedAt);
   const sessionStartedAt = Number.isFinite(rawStartedAt) && rawStartedAt > 0 ? rawStartedAt : Date.now();

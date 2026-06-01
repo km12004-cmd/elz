@@ -1,12 +1,10 @@
-import asyncio
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException
 
-from app.modules.songs.service import _normalize_youtube_url, _serialize_song, delete_song
+from app.modules.songs.service import _normalize_youtube_url, _serialize_song
 
 
 def test_normalize_youtube_url_accepts_youtube_domain():
@@ -70,32 +68,3 @@ def test_serialize_song_hides_youtube_url_for_non_youtube_provider():
         "s3",
     )
     assert payload["youtube_url"] is None
-
-
-def test_delete_song_raises_404_when_song_missing():
-    async def run():
-        db = MagicMock()
-        db.get = AsyncMock(return_value=None)
-
-        with pytest.raises(HTTPException) as exc:
-            await delete_song(db, 99)
-
-        assert exc.value.status_code == 404
-        assert exc.value.detail == "not found"
-
-    asyncio.run(run())
-
-
-def test_delete_song_executes_delete_query_when_song_exists():
-    async def run():
-        db = MagicMock()
-        db.get = AsyncMock(return_value=MagicMock())
-        db.execute = AsyncMock()
-        db.flush = AsyncMock()
-
-        await delete_song(db, 5)
-
-        db.execute.assert_awaited_once()
-        db.flush.assert_awaited_once()
-
-    asyncio.run(run())

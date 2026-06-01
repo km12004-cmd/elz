@@ -22,13 +22,6 @@
   gap: 10px;
 }
 
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .ghostButton {
   border-radius: 12px;
   border: 1px solid var(--color-border-soft);
@@ -550,10 +543,6 @@
   gap: 8px;
 }
 
-.lessonActionsMobile {
-  display: none;
-}
-
 .primaryActionButton,
 .secondaryActionButton {
   border-radius: 12px;
@@ -914,11 +903,6 @@
   background: var(--color-success-soft);
 }
 
-.pairsOptionButtonWrong {
-  border-color: var(--color-danger-border-stronger);
-  background: var(--color-danger-soft);
-}
-
 .pairsMainText {
   font-size: 14px;
   font-weight: 700;
@@ -994,17 +978,22 @@
   cursor: not-allowed;
 }
 
-.typingInputReviewed {
-  border-color: var(--color-border-accent);
-  background: var(--color-surface-hover);
+.typingInputCorrect {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
 }
 
-.typingAnswer {
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
+.typingInputWrong {
+  border-color: var(--color-danger-border-stronger);
+  background: var(--color-danger-soft-muted);
+}
+
+.typingRowState {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--color-text-secondary);
-  overflow-wrap: anywhere;
 }
 
 .completionModalBackdrop {
@@ -1205,20 +1194,6 @@
     order: -1;
   }
 
-  .lessonActions {
-    display: none;
-  }
-
-  .lessonActionsMobile {
-    display: grid;
-    gap: 8px;
-    padding: 14px;
-    border-radius: 16px;
-    border: 1px solid var(--color-border-soft);
-    background: var(--color-bg-card);
-    box-shadow: var(--shadow-card);
-  }
-
   .title {
     font-size: 28px;
   }
@@ -1226,11 +1201,6 @@
   .headerTop {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .headerActions {
-    width: 100%;
-    flex-direction: column;
   }
 
   .ghostButton {

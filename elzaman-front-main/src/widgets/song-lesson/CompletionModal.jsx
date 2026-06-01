@@ -16,6 +16,27 @@ function CompletionModal({ data, onGoToMain, onOpenCards }) {
         </h3>
         <p className={styles.completionModalSubtitle}>{data.subtitle}</p>
 
+        <dl className={styles.completionStats}>
+          <div className={styles.completionStatItem}>
+            <dt>Точность</dt>
+            <dd>{data.accuracy}%</dd>
+          </div>
+          <div className={styles.completionStatItem}>
+            <dt>Правильно</dt>
+            <dd>
+              {data.correct}/{data.total}
+            </dd>
+          </div>
+          <div className={styles.completionStatItem}>
+            <dt>Ошибки</dt>
+            <dd>{data.errors}</dd>
+          </div>
+          <div className={styles.completionStatItem}>
+            <dt>Проверки</dt>
+            <dd>{data.checks}</dd>
+          </div>
+        </dl>
+
         <div className={styles.completionModalActions}>
           <button
             type="button"
